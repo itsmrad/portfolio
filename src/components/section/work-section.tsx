@@ -11,12 +11,27 @@ import {
 import { DATA } from "@/data/resume";
 import { cn } from "@/lib/utils";
 
-function LogoImage({ src, alt }: { src: string; alt: string }) {
-	const [imageError, setImageError] = useState(false);
-
-	if (!src || imageError) {
+function LogoImage({
+	src,
+	alt,
+}: {
+	src: string | { light: string; dark: string };
+	alt: string;
+}) {
+	if (typeof src === "object") {
 		return (
-			<div className="size-8 md:size-10 p-1 border rounded-full shadow ring-2 ring-border bg-muted flex-none" />
+			<>
+				<img
+					src={src.light}
+					alt={alt}
+					className="size-8 md:size-10 p-1 border rounded-full shadow ring-2 ring-border overflow-hidden object-contain flex-none dark:hidden bg-background"
+				/>
+				<img
+					src={src.dark}
+					alt={alt}
+					className="size-8 md:size-10 p-1 border rounded-full shadow ring-2 ring-border overflow-hidden object-contain flex-none hidden dark:block bg-background"
+				/>
+			</>
 		);
 	}
 
@@ -24,8 +39,7 @@ function LogoImage({ src, alt }: { src: string; alt: string }) {
 		<img
 			src={src}
 			alt={alt}
-			className="size-8 md:size-10 p-1 border rounded-full shadow ring-2 ring-border overflow-hidden object-contain flex-none"
-			onError={() => setImageError(true)}
+			className="size-8 md:size-10 p-1 border rounded-full shadow ring-2 ring-border overflow-hidden object-contain flex-none bg-background"
 		/>
 	);
 }

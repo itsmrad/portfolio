@@ -28,7 +28,7 @@ export default function Page() {
 								text={`Hi, I'm ${DATA.name.split(" ")[0]}`}
 							/>
 							<BlurFadeText
-								className="text-muted-foreground max-w-[600px] md:text-lg lg:text-xl"
+								className="text-muted-foreground max-w-150 md:text-lg lg:text-xl"
 								delay={BLUR_FADE_DELAY}
 								text={DATA.description}
 							/>
@@ -72,7 +72,7 @@ export default function Page() {
 					<div className="flex flex-col gap-8">
 						{DATA.education.map((education, index) => (
 							<BlurFade
-								key={education.school}
+								key={`${education.school}-${education.degree}`}
 								delay={BLUR_FADE_DELAY * 8 + index * 0.05}
 							>
 								<Link
