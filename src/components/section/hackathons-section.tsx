@@ -11,7 +11,9 @@ import { DATA } from "@/data/resume";
 
 export default function HackathonsSection() {
 	return (
-		<section id="hackathons" className="overflow-hidden">
+		<section
+			id="hackathons"
+			className="overflow-hidden">
 			<div className="flex min-h-0 flex-col gap-y-8 w-full">
 				<div className="flex flex-col gap-y-4 items-center justify-center">
 					<div className="flex items-center w-full">
@@ -28,11 +30,11 @@ export default function HackathonsSection() {
 							I like building things
 						</h2>
 						<p className="text-muted-foreground md:text-lg/relaxed lg:text-base/relaxed xl:text-lg/relaxed text-balance text-center">
-							During my time in university, I attended {DATA.hackathons.length}+
-							hackathons. People from around the country would come together and
-							build incredible things in 2-3 days. It was eye-opening to see the
-							endless possibilities brought to life by a group of motivated and
-							passionate individuals.
+							I attended {DATA.hackathons.length}+ hackathons. People from
+							around the country would come together and build incredible things
+							in 2-3 days. It was eye-opening to see the endless possibilities
+							brought to life by a group of motivated and passionate
+							individuals.
 						</p>
 					</div>
 				</div>
@@ -40,8 +42,7 @@ export default function HackathonsSection() {
 					{DATA.hackathons.map((hackathon) => (
 						<TimelineItem
 							key={hackathon.title + hackathon.dates}
-							className="w-full flex items-start justify-between gap-10"
-						>
+							className="w-full flex items-start justify-between gap-10">
 							<TimelineConnectItem className="flex items-start justify-center">
 								{hackathon.image ? (
 									<img
@@ -81,8 +82,7 @@ export default function HackathonsSection() {
 												href={link.href}
 												key={idx}
 												target="_blank"
-												rel="noopener noreferrer"
-											>
+												rel="noopener noreferrer">
 												<Badge className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground">
 													{link.icon}
 													{link.title}
