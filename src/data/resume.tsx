@@ -245,6 +245,125 @@ export const DATA = {
 				"https://blogfolio-five-liard.vercel.app/_next/image?url=https%3A%2F%2Fsincere-okapi-500.convex.cloud%2Fapi%2Fstorage%2F28fcca2e-ab79-4b58-ad27-4e1173ec6253&w=3840&q=75",
 			video: "",
 		},
+		{
+			title: "Syuniqe's Official Website",
+			href: "https://syuniqe.com",
+			dates: "Jun 2025 - Jul 2025",
+			active: true,
+			description:
+				"Designed and developed the official company website during my internship, leveraging Next.js for a performant, SEO-optimized architecture. Implemented complex, high-fidelity animations and interactive UI components using Framer Motion to create an engaging user experience, while seamlessly integrating backend services like Clerk and SMTP with Zoho for functionality.",
+			technologies: [
+				"Next.js",
+				"Clerk",
+				"SMTP",
+				"Zoho",
+				"TypeScript",
+				"Tailwind CSS",
+				"ShadCN UI",
+				"Framer Motion",
+				"Vercel",
+			],
+			links: [
+				{
+					type: "Website",
+					href: "https://syuniqe.com",
+					icon: <Icons.globe className="size-3" />,
+				},
+			],
+			image:
+				"https://www.syuniqe.com/_next/image?url=%2Fimages%2Fpowerhub-transparent.png&w=828&q=75",
+			video: "",
+		},
+    {
+      title: "AirBnb Clone",
+      href: "https://airbnb-6m7n.onrender.com",
+      dates: "Apr 2025 - May 2025",
+      active: true,
+      description:
+        "Developed a full-stack Airbnb clone with React and Vite, featuring property listings, user authentication, and booking management. Built with a modern tech stack including React Router for navigation, Axios for API integration, and Tailwind CSS for responsive design, delivering a seamless rental marketplace experience.",
+      technologies: [
+        "React",
+        "Vite",
+        "React Router",
+        "Axios",
+        "Tailwind CSS",
+        "JavaScript",
+      ],
+      links: [
+        {
+          type: "Website",
+          href: "https://airbnb-6m7n.onrender.com",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "Source",
+          href: "https://github.com/itsmrad/AirBnb-Clone",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image:
+        "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*EeUSITAmhPij7jNFHaltJw.jpeg",
+      video: "",
+    },
+    {
+      title: "Rewaste",
+      href: "https://rewaste.netlify.app",
+      dates: "Aug 2024",
+      active: true,
+      description:
+        "Built a sustainable marketplace platform using Next.js and Cosmic CMS for managing user-generated content. Integrated Stripe payment infrastructure for seamless one-time and subscription payments, delivering a fully functional e-commerce solution with dark mode support.",
+      technologies: [
+        "Next.js",
+        "React",
+        "Cosmic CMS",
+        "Stripe",
+        "JavaScript",
+        "Sass",
+        "React Hot Toast",
+      ],
+      links: [
+        {
+          type: "Website",
+          href: "https://rewaste.netlify.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "Source",
+          href: "https://github.com/itsmrad/rewaste",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "https://rewaste.netlify.app/_next/image?url=https%3A%2F%2Fimgix.cosmicjs.com%2F8aed2060-d92b-11ec-bb19-d9085ce408df-figures.png&w=3840&q=60",
+      video: "",
+    },
+    {
+      title: "React Todo List",
+      href: "https://react-todo-list-itsmrad.netlify.app/",
+      dates: "Feb 2026 - ongoing", // Based on current date
+      active: true,
+      description:
+        "Built a dynamic task management application using React, featuring an intuitive interface for creating, organizing, and tracking todos. Implemented modern React patterns with component-based architecture for a responsive and efficient user experience.",
+      technologies: [
+        "React",
+        "JavaScript",
+        "HTML",
+        "CSS",
+      ],
+      links: [
+        {
+          type: "Website",
+          href: "https://react-todo-list-itsmrad.netlify.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "Source",
+          href: "https://github.com/itsmrad/react-todo-list",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "https://assets.toptal.io/images?url=https%3A%2F%2Fbs-uploads.toptal.io%2Fblackfish-uploads%2Fcomponents%2Fblog_post_page%2F5992673%2Fcover_image%2Fregular_1708x683%2F1005_Design-Patterns-in-React_Cover-e8070fe5cfb7016ec4a511be35a69cbd.png", // You'll need to add your own image URL
+      video: "",
+    },
 	],
 	hackathons: [
 		// {
@@ -269,6 +388,71 @@ export const DATA = {
 		// 		},
 		// 	],
 		// },
+		{
+			title: "HackHound 3.0",
+			dates: "Feb 27th - 28th, 2025",
+			location: "Modinagar, Uttar Pradesh",
+			description:
+				"Developed Zenden, a real-time collaborative productivity platform featuring AI-powered rich-text editing and visual diagramming. Built with Next.js, Convex, and Kinde Auth to deliver seamless team synchronization and a modern, secure user experience.",
+			image:
+				"https://hackhound2k25.devfolio.co/_next/image?url=https%3A%2F%2Fassets.devfolio.co%2Fhackathons%2Fdbc36efa2d1e4d53ac84ebe25c9ebef5%2Fassets%2Ffavicon%2F241.png&w=1440&q=75",
+			win: "became in top 10",
+			links: [
+				{
+					title: "Source",
+					icon: <Icons.github className="h-4 w-4" />,
+					href: "https://github.com/itsmrad/zenden",
+				},
+				{
+					title: "Post",
+					icon: <Icons.globe className="h-4 w-4" />,
+					href: "https://www.linkedin.com/posts/itsmrad_hackathons-tech-digitalnomadjourney-activity-7327719907633102849-nZBP?utm_source=share&utm_medium=member_desktop&rcm=ACoAADmhk2AB0nBDB3FsITyn4CDVq3egSJLnMAU",
+				},
+			],
+		},
+		{
+			title: "HackWiE 3.0",
+			dates: "Jan 29th - 31th, 2025",
+			location: "New Delhi, Delhi",
+			description:
+				"Built Rewaste, a full-stack waste management platform using Next.js and Cosmic Headless CMS for dynamic content. Integrated Stripe for secure payments and optimized performance with SSR, delivering a scalable, responsive user experience.",
+			image: "https://www.msit.in/static/img/msit.png",
+			win: "became in top 10",
+			links: [
+				{
+					title: "Source",
+					icon: <Icons.github className="h-4 w-4" />,
+					href: "https://github.com/itsmrad/rewaste",
+				},
+				{
+					title: "Website",
+					icon: <Icons.globe className="h-4 w-4" />,
+					href: "https://rewaste.netlify.app/",
+				},
+			],
+		},
+		{
+			title: "Avensis’25 HackFormers",
+			dates: "Jan 29th - 30th, 2025",
+			location: "New Delhi, Delhi",
+			description:
+			  "Built Rewaste, a full-stack waste management platform using Next.js and Cosmic Headless CMS for dynamic content. Integrated Stripe for secure payments and optimized performance with SSR, delivering a scalable, responsive user experience.",
+			image:
+				"https://content.reskilll.com/WhatsApp%20Image%202025-01-24%20at%204eqGVMMC.40",
+			win: "Participant",
+			links: [
+				{
+					title: "Source",
+					icon: <Icons.github className="h-4 w-4" />,
+					href: "https://github.com/itsmrad/rewaste",
+				},
+				{
+					title: "Website",
+					icon: <Icons.globe className="h-4 w-4" />,
+					href: "https://rewaste.netlify.app/",
+				},
+			],
+		},
 		{
 			title: "HackHazards",
 			dates: "Mar 16th - 17th, 2024",
