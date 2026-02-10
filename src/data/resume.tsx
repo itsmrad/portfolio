@@ -201,6 +201,25 @@ export const DATA = {
 		// 	video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
 		// },
 		{
+			title: "SolScan - Solana Wallet Explorer",
+			href: "https://github.com/itsmrad/SolScan",
+			dates: "Feb 2026 - Feb 2026",
+			active: true,
+			description:
+				"Developed a native mobile wallet explorer app for Solana blockchain using React Native and Expo. Integrated real-time Solana RPC API to fetch wallet balances, SPL token holdings, and transaction history with seamless cross-platform support for iOS, Android, and Web.",
+			technologies: ["React Native", "Expo", "TypeScript", "Solana RPC API"],
+			links: [
+				{
+					type: "Source",
+					href: "https://github.com/itsmrad/SolScan",
+					icon: <Icons.github className="size-3" />,
+				},
+			],
+			image:
+				"https://tangem.com/_astro/Earn_More_with_the_New_Tangem_Validator_for_Solana_Staking_f9bee39fcc_ZBreS5.png",
+			video: "",
+		},
+		{
 			title: "Dash Wallet",
 			href: "https://dash-wallet-beta.vercel.app/",
 			dates: "Nov 2025 - ongoing",
@@ -216,7 +235,7 @@ export const DATA = {
 				},
 			],
 			image:
-				"https://tangem.com/_astro/Earn_More_with_the_New_Tangem_Validator_for_Solana_Staking_f9bee39fcc_ZBreS5.png",
+				"https://pixelplex.io/wp-content/uploads/2025/08/1600x700_How-to-Build-a-Crypto-Wallet_-a-Complete-Guide-min.jpg",
 			video: "",
 		},
 		{
@@ -274,96 +293,93 @@ export const DATA = {
 				"https://www.syuniqe.com/_next/image?url=%2Fimages%2Fpowerhub-transparent.png&w=828&q=75",
 			video: "",
 		},
-    {
-      title: "AirBnb Clone",
-      href: "https://airbnb-6m7n.onrender.com",
-      dates: "Apr 2025 - May 2025",
-      active: true,
-      description:
-        "Developed a full-stack Airbnb clone with React and Vite, featuring property listings, user authentication, and booking management. Built with a modern tech stack including React Router for navigation, Axios for API integration, and Tailwind CSS for responsive design, delivering a seamless rental marketplace experience.",
-      technologies: [
-        "React",
-        "Vite",
-        "React Router",
-        "Axios",
-        "Tailwind CSS",
-        "JavaScript",
-      ],
-      links: [
-        {
-          type: "Website",
-          href: "https://airbnb-6m7n.onrender.com",
-          icon: <Icons.globe className="size-3" />,
-        },
-        {
-          type: "Source",
-          href: "https://github.com/itsmrad/AirBnb-Clone",
-          icon: <Icons.github className="size-3" />,
-        },
-      ],
-      image:
-        "https://miro.medium.com/v2/resize:fit:1400/format:webp/1*EeUSITAmhPij7jNFHaltJw.jpeg",
-      video: "",
-    },
-    {
-      title: "Rewaste",
-      href: "https://rewaste.netlify.app",
-      dates: "Aug 2024",
-      active: true,
-      description:
-        "Built a sustainable marketplace platform using Next.js and Cosmic CMS for managing user-generated content. Integrated Stripe payment infrastructure for seamless one-time and subscription payments, delivering a fully functional e-commerce solution with dark mode support.",
-      technologies: [
-        "Next.js",
-        "React",
-        "Cosmic CMS",
-        "Stripe",
-        "JavaScript",
-        "Sass",
-        "React Hot Toast",
-      ],
-      links: [
-        {
-          type: "Website",
-          href: "https://rewaste.netlify.app/",
-          icon: <Icons.globe className="size-3" />,
-        },
-        {
-          type: "Source",
-          href: "https://github.com/itsmrad/rewaste",
-          icon: <Icons.github className="size-3" />,
-        },
-      ],
-      image: "https://rewaste.netlify.app/_next/image?url=https%3A%2F%2Fimgix.cosmicjs.com%2F8aed2060-d92b-11ec-bb19-d9085ce408df-figures.png&w=3840&q=60",
-      video: "",
-    },
-    {
-      title: "React Todo List",
-      href: "https://react-todo-list-itsmrad.netlify.app/",
-      dates: "Feb 2026 - ongoing", // Based on current date
-      active: true,
-      description:
-        "Built a dynamic task management application using React, featuring an intuitive interface for creating, organizing, and tracking todos. Implemented modern React patterns with component-based architecture for a responsive and efficient user experience.",
-      technologies: [
-        "React",
-        "JavaScript",
-        "HTML",
-        "CSS",
-      ],
-      links: [
-        {
-          type: "Website",
-          href: "https://react-todo-list-itsmrad.netlify.app/",
-          icon: <Icons.globe className="size-3" />,
-        },
-        {
-          type: "Source",
-          href: "https://github.com/itsmrad/react-todo-list",
-          icon: <Icons.github className="size-3" />,
-        },
-      ],
-      image: "https://assets.toptal.io/images?url=https%3A%2F%2Fbs-uploads.toptal.io%2Fblackfish-uploads%2Fcomponents%2Fblog_post_page%2F5992673%2Fcover_image%2Fregular_1708x683%2F1005_Design-Patterns-in-React_Cover-e8070fe5cfb7016ec4a511be35a69cbd.png", // You'll need to add your own image URL
-      video: "",
-    },
+		{
+			title: "AirBnb Clone",
+			href: "https://airbnb-6m7n.onrender.com",
+			dates: "Apr 2025 - May 2025",
+			active: true,
+			description:
+				"Developed a full-stack Airbnb clone with React and Vite, featuring property listings, user authentication, and booking management. Built with a modern tech stack including React Router for navigation, Axios for API integration, and Tailwind CSS for responsive design, delivering a seamless rental marketplace experience.",
+			technologies: [
+				"React",
+				"Vite",
+				"React Router",
+				"Axios",
+				"Tailwind CSS",
+				"JavaScript",
+			],
+			links: [
+				{
+					type: "Website",
+					href: "https://airbnb-6m7n.onrender.com",
+					icon: <Icons.globe className="size-3" />,
+				},
+				{
+					type: "Source",
+					href: "https://github.com/itsmrad/AirBnb-Clone",
+					icon: <Icons.github className="size-3" />,
+				},
+			],
+			image:
+				"https://miro.medium.com/v2/resize:fit:1400/format:webp/1*EeUSITAmhPij7jNFHaltJw.jpeg",
+			video: "",
+		},
+		{
+			title: "Rewaste",
+			href: "https://rewaste.netlify.app",
+			dates: "Aug 2024",
+			active: true,
+			description:
+				"Built a sustainable marketplace platform using Next.js and Cosmic CMS for managing user-generated content. Integrated Stripe payment infrastructure for seamless one-time and subscription payments, delivering a fully functional e-commerce solution with dark mode support.",
+			technologies: [
+				"Next.js",
+				"React",
+				"Cosmic CMS",
+				"Stripe",
+				"JavaScript",
+				"Sass",
+				"React Hot Toast",
+			],
+			links: [
+				{
+					type: "Website",
+					href: "https://rewaste.netlify.app/",
+					icon: <Icons.globe className="size-3" />,
+				},
+				{
+					type: "Source",
+					href: "https://github.com/itsmrad/rewaste",
+					icon: <Icons.github className="size-3" />,
+				},
+			],
+			image:
+				"https://rewaste.netlify.app/_next/image?url=https%3A%2F%2Fimgix.cosmicjs.com%2F8aed2060-d92b-11ec-bb19-d9085ce408df-figures.png&w=3840&q=60",
+			video: "",
+		},
+		{
+			title: "React Todo List",
+			href: "https://react-todo-list-itsmrad.netlify.app/",
+			dates: "Feb 2026 - ongoing", // Based on current date
+			active: true,
+			description:
+				"Built a dynamic task management application using React, featuring an intuitive interface for creating, organizing, and tracking todos. Implemented modern React patterns with component-based architecture for a responsive and efficient user experience.",
+			technologies: ["React", "JavaScript", "HTML", "CSS"],
+			links: [
+				{
+					type: "Website",
+					href: "https://react-todo-list-itsmrad.netlify.app/",
+					icon: <Icons.globe className="size-3" />,
+				},
+				{
+					type: "Source",
+					href: "https://github.com/itsmrad/react-todo-list",
+					icon: <Icons.github className="size-3" />,
+				},
+			],
+			image:
+				"https://assets.toptal.io/images?url=https%3A%2F%2Fbs-uploads.toptal.io%2Fblackfish-uploads%2Fcomponents%2Fblog_post_page%2F5992673%2Fcover_image%2Fregular_1708x683%2F1005_Design-Patterns-in-React_Cover-e8070fe5cfb7016ec4a511be35a69cbd.png", // You'll need to add your own image URL
+			video: "",
+		},
 	],
 	hackathons: [
 		// {
@@ -436,7 +452,7 @@ export const DATA = {
 			dates: "Jan 29th - 30th, 2025",
 			location: "New Delhi, Delhi",
 			description:
-			  "Built Rewaste, a full-stack waste management platform using Next.js and Cosmic Headless CMS for dynamic content. Integrated Stripe for secure payments and optimized performance with SSR, delivering a scalable, responsive user experience.",
+				"Built Rewaste, a full-stack waste management platform using Next.js and Cosmic Headless CMS for dynamic content. Integrated Stripe for secure payments and optimized performance with SSR, delivering a scalable, responsive user experience.",
 			image:
 				"https://content.reskilll.com/WhatsApp%20Image%202025-01-24%20at%204eqGVMMC.40",
 			win: "Participant",
