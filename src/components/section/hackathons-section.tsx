@@ -11,9 +11,7 @@ import { DATA } from "@/data/resume";
 
 export default function HackathonsSection() {
 	return (
-		<section
-			id="hackathons"
-			className="overflow-hidden">
+		<section id="hackathons" className="overflow-hidden">
 			<div className="flex min-h-0 flex-col gap-y-8 w-full">
 				<div className="flex flex-col gap-y-4 items-center justify-center">
 					<div className="flex items-center w-full">
@@ -42,7 +40,8 @@ export default function HackathonsSection() {
 					{DATA.hackathons.map((hackathon) => (
 						<TimelineItem
 							key={hackathon.title + hackathon.dates}
-							className="w-full flex items-start justify-between gap-10">
+							className="w-full flex items-start justify-between gap-10"
+						>
 							<TimelineConnectItem className="flex items-start justify-center">
 								{hackathon.image ? (
 									<img
@@ -82,7 +81,8 @@ export default function HackathonsSection() {
 												href={link.href}
 												key={idx}
 												target="_blank"
-												rel="noopener noreferrer">
+												rel="noopener noreferrer"
+											>
 												<Badge className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground">
 													{link.icon}
 													{link.title}

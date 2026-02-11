@@ -1,10 +1,26 @@
+"use client";
+
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import BlurFade from "@/components/magicui/blur-fade";
 import { ProjectCard } from "@/components/project-card";
 import { DATA } from "@/data/resume";
+import { Button } from "../ui/button";
 
-const BLUR_FADE_DELAY = 0.04;
+const BLUR_FADE_DELAY = 0.001;
+const INITIAL_COUNT = 6;
+const LOAD_MORE_COUNT = 4;
 
 export default function ProjectsSection() {
+	const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+	const totalProjects = DATA.projects.length;
+	const hasMore = visibleCount < totalProjects;
+	const visibleProjects = DATA.projects.slice(0, visibleCount);
+
+	const handleViewMore = () => {
+		setVisibleCount((prev) => Math.min(prev + LOAD_MORE_COUNT, totalProjects));
+	};
+
 	return (
 		<section id="projects">
 			<div className="flex min-h-0 flex-col gap-y-8">
@@ -28,11 +44,11 @@ export default function ProjectsSection() {
 						</p>
 					</div>
 				</div>
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-[800px] mx-auto auto-rows-fr">
-					{DATA.projects.map((project, id) => (
+				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-200 mx-auto auto-rows-fr">
+					{visibleProjects.map((project, id) => (
 						<BlurFade
 							key={project.title}
-							delay={BLUR_FADE_DELAY * 12 + id * 0.05}
+							delay={BLUR_FADE_DELAY * 12 + id * 0.03}
 							className="h-full"
 						>
 							<ProjectCard
@@ -49,6 +65,20 @@ export default function ProjectsSection() {
 						</BlurFade>
 					))}
 				</div>
+				{hasMore && (
+					<BlurFade delay={BLUR_FADE_DELAY * 12 + visibleCount * 0.001}>
+						<div className="flex justify-center">
+							<Button
+								onClick={handleViewMore}
+								variant={"default"}
+								className="cursor-pointer"
+							>
+								View More
+								<ChevronDown className="size-4 transition-transform group-hover:translate-y-0.5" />
+							</Button>
+						</div>
+					</BlurFade>
+				)}
 			</div>
 		</section>
 	);
