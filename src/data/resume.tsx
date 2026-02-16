@@ -90,20 +90,7 @@ export const DATA = {
 		// 		"Developed a middle-out compression algorithm that achieves theoretical limit compression. Won TechCrunch Disrupt. Pivot to video chat app 'PiperChat'.",
 		// },
 		{
-			company: "Syuniqe",
-			href: "https://www.syuniqe.com/",
-			badges: [],
-			location: "Remote",
-			title: "Full Stack Software Engineer",
-			logoUrl:
-				"https://www.syuniqe.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fsyuniqe-blank-logo.cad740e9.png&w=256&q=75",
-			start: "Jan 2014",
-			end: "Jan 2015",
-			description:
-				"Developed a middle-out compression algorithm that achieves theoretical limit compression. Won TechCrunch Disrupt. Pivot to video chat app 'PiperChat'.",
-		},
-		{
-			company: "Namespace",
+			company: "Namespace Society",
 			href: "https://www.namespace.world/",
 			badges: [],
 			location: "Remote",
@@ -112,8 +99,21 @@ export const DATA = {
 				light: "https://www.namespace.world/Logo.png",
 				dark: "https://www.namespace.world/Logo-dark.png",
 			},
-			start: "Jan 2014",
-			end: "Jan 2015",
+			start: "Nov 2023",
+			end: "present",
+			description:
+				"Developed a middle-out compression algorithm that achieves theoretical limit compression. Won TechCrunch Disrupt. Pivot to video chat app 'PiperChat'.",
+		},
+    {
+			company: "Syuniqe",
+			href: "https://www.syuniqe.com/",
+			badges: [],
+			location: "Remote",
+			title: "Full Stack Software Engineer",
+			logoUrl:
+				"https://www.syuniqe.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fsyuniqe-blank-logo.cad740e9.png&w=256&q=75",
+			start: "Jun 2025",
+			end: "July 2025",
 			description:
 				"Developed a middle-out compression algorithm that achieves theoretical limit compression. Won TechCrunch Disrupt. Pivot to video chat app 'PiperChat'.",
 		},
