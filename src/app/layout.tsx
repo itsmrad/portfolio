@@ -23,17 +23,63 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
 	metadataBase: new URL(DATA.url),
 	title: {
-		default: DATA.name,
-		template: `%s | ${DATA.name}`,
+		default:
+			"Anupam Das — Full Stack Developer | React, Next.js, TypeScript, Node.js",
+		template: "%s | Anupam Das — Full Stack Developer",
 	},
-	description: DATA.description,
+	description:
+		"Anupam Das is a Full Stack Developer and Software Engineer from New Delhi, India. Specializing in React, Next.js, TypeScript, Node.js, Python, PostgreSQL, Docker, and Kubernetes. Building scalable web applications and distributed systems.",
+	keywords: [
+		"Anupam Das",
+		"Anupam Das developer",
+		"Anupam Das portfolio",
+		"Anupam Das software engineer",
+		"itsmrad",
+		"full stack developer",
+		"full stack developer India",
+		"full stack developer New Delhi",
+		"software engineer India",
+		...DATA.skills.map((skill) => skill.name),
+		...DATA.skills.map((skill) => `${skill.name} developer`),
+		...DATA.work.map((work) => work.company),
+		...DATA.education.map((edu) => edu.school),
+		"frontend developer",
+		"backend developer",
+		"MERN stack developer",
+		"Solana developer",
+		"blockchain developer",
+		"hackathon developer India",
+		"React Native developer",
+		"systems engineer",
+		"distributed systems",
+	],
+	authors: [{ name: "Anupam Das", url: DATA.url }],
+	creator: "Anupam Das",
+	publisher: "Anupam Das",
+	formatDetection: {
+		email: false,
+		address: false,
+		telephone: false,
+	},
+	alternates: {
+		canonical: DATA.url,
+	},
 	openGraph: {
-		title: `${DATA.name}`,
-		description: DATA.description,
+		title: "Anupam Das — Full Stack Developer & Software Engineer",
+		description:
+			"Full Stack Developer specializing in React, Next.js, TypeScript, Node.js, and distributed systems. Based in New Delhi, India.",
 		url: DATA.url,
-		siteName: `${DATA.name}`,
+		siteName: "Anupam Das — Portfolio",
+		images: [
+			{
+				url: DATA.avatarUrl,
+				width: 800,
+				height: 800,
+				alt: "Anupam Das - Full Stack Developer",
+			},
+		],
 		locale: "en_US",
-		type: "website",
+		type: "profile",
 	},
 	robots: {
 		index: true,
@@ -47,12 +93,15 @@ export const metadata: Metadata = {
 		},
 	},
 	twitter: {
-		title: `${DATA.name}`,
+		title: "Anupam Das — Full Stack Developer & Software Engineer",
 		card: "summary_large_image",
+		description:
+			"Full Stack Developer specializing in React, Next.js, TypeScript, Node.js. Building scalable web apps and distributed systems.",
+		creator: "@anupamio",
+		images: [DATA.avatarUrl],
 	},
 	verification: {
-		google: "",
-		yandex: "",
+		google: "add-your-google-site-verification-here", // REPLACE THIS
 	},
 };
 
@@ -62,15 +111,18 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html
+			lang="en"
+			suppressHydrationWarning>
 			<body
 				className={cn(
 					"min-h-screen bg-background font-sans antialiased relative",
 					geist.variable,
 					geistMono.variable,
-				)}
-			>
-				<ThemeProvider attribute="class" defaultTheme="dark">
+				)}>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="dark">
 					<TooltipProvider delayDuration={0}>
 						<div className="absolute inset-0 top-0 left-0 right-0 h-25 overflow-hidden z-0">
 							<FlickeringGrid

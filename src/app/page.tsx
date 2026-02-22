@@ -14,9 +14,96 @@ import { DATA } from "@/data/resume";
 
 const BLUR_FADE_DELAY = 0.04;
 
+const personJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "Person",
+	name: DATA.name,
+	alternateName: DATA.initials,
+	url: DATA.url,
+	image: `${DATA.url}${DATA.avatarUrl}`,
+	jobTitle: "Full Stack Developer",
+	description: DATA.description,
+	email: DATA.contact.email,
+	telephone: DATA.contact.tel,
+	address: {
+		"@type": "PostalAddress",
+		addressLocality: "New Delhi",
+		addressRegion: "Delhi",
+		addressCountry: "IN",
+	},
+	alumniOf: DATA.education.map((edu) => ({
+		"@type": "EducationalOrganization",
+		name: edu.school,
+		url: edu.href,
+	})),
+	worksFor: DATA.work.map((work) => ({
+		"@type": "Organization",
+		name: work.company,
+		url: work.href,
+	})),
+	knowsAbout: [
+		...DATA.skills.map((skill) => skill.name),
+		"Full Stack Development",
+		"Web Development",
+		"Distributed Systems",
+		"Software Engineering",
+		"System Design",
+	],
+	sameAs: Object.values(DATA.contact.social)
+		.filter((social) => social.name !== "Send Email")
+		.map((social) => social.url),
+};
+
+const websiteJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "WebSite",
+	name: `${DATA.name} — Full Stack Developer Portfolio`,
+	url: DATA.url,
+	description: DATA.description,
+	author: {
+		"@type": "Person",
+		name: DATA.name,
+	},
+};
+
+const profilePageJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "ProfilePage",
+	mainEntity: {
+		"@type": "Person",
+		name: DATA.name,
+		url: DATA.url,
+	},
+	url: DATA.url,
+	name: `${DATA.name} — Full Stack Developer`,
+	description: DATA.description,
+};
+
 export default function Page() {
 	return (
 		<main className="min-h-dvh flex flex-col gap-14 relative">
+			<h1 className="sr-only">{DATA.name} - Full Stack Developer</h1>
+			<script
+				type="application/ld+json"
+				suppressHydrationWarning
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c"),
+				}}
+			/>
+			<script
+				type="application/ld+json"
+				suppressHydrationWarning
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c"),
+				}}
+			/>
+			<script
+				type="application/ld+json"
+				suppressHydrationWarning
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify(profilePageJsonLd).replace(/</g, "\\u003c"),
+				}}
+			/>
 			<section id="hero">
 				<div className="mx-auto w-full max-w-2xl space-y-8">
 					<div className="gap-2 gap-y-6 flex flex-col md:flex-row justify-between">
@@ -33,9 +120,14 @@ export default function Page() {
 								text={DATA.description}
 							/>
 						</div>
-						<BlurFade delay={BLUR_FADE_DELAY} className="order-1 md:order-2">
+						<BlurFade
+							delay={BLUR_FADE_DELAY}
+							className="order-1 md:order-2">
 							<Avatar className="size-24 md:size-32 border rounded-full shadow-lg ring-4 ring-muted">
-								<AvatarImage alt={DATA.name} src={DATA.avatarUrl} />
+								<AvatarImage
+									alt={DATA.name}
+									src={DATA.avatarUrl}
+								/>
 								<AvatarFallback>{DATA.initials}</AvatarFallback>
 							</Avatar>
 						</BlurFade>
@@ -73,14 +165,12 @@ export default function Page() {
 						{DATA.education.map((education, index) => (
 							<BlurFade
 								key={`${education.school}-${education.degree}`}
-								delay={BLUR_FADE_DELAY * 8 + index * 0.05}
-							>
+								delay={BLUR_FADE_DELAY * 8 + index * 0.05}>
 								<Link
 									href={education.href}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="flex items-center gap-x-3 justify-between group"
-								>
+									className="flex items-center gap-x-3 justify-between group">
 									<div className="flex items-center gap-x-3 flex-1 min-w-0">
 										{education.logoUrl ? (
 											<img
@@ -124,8 +214,7 @@ export default function Page() {
 						{DATA.skills.map((skill, id) => (
 							<BlurFade
 								key={skill.name}
-								delay={BLUR_FADE_DELAY * 10 + id * 0.05}
-							>
+								delay={BLUR_FADE_DELAY * 10 + id * 0.05}>
 								<div className="border bg-background border-border ring-2 ring-border/20 rounded-xl h-8 w-fit px-4 flex items-center gap-2">
 									{skill.icon && (
 										<skill.icon className="size-4 rounded overflow-hidden object-contain" />

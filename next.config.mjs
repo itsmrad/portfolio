@@ -24,6 +24,37 @@ const nextConfig = {
 						key: "Permissions-Policy",
 						value: "camera=(), microphone=(), geolocation=()",
 					},
+					{
+						key: "X-Robots-Tag",
+						value: "all",
+					},
+				],
+			},
+			{
+				source: "/_next/static/:path*",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
+					},
+				],
+			},
+			{
+				source: "/fonts/:path*",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
+					},
+				],
+			},
+			{
+				source: "/:path*.(png|jpg|jpeg|gif|webp|svg|ico)",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=604800, stale-while-revalidate=86400",
+					},
 				],
 			},
 		];
