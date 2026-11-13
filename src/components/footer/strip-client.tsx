@@ -56,33 +56,36 @@ export function Scramble(props: React.ComponentProps<"div">) {
   );
 }
 
-const clock = (timeZone?: string) =>
+const clock = (timeZone: string) =>
   new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
-/** Minutes since midnight on the wall clock of `timeZone` (the visitor's when omitted). */
-function wallMinutes(date: Date, timeZone?: string) {
-  const [hours = 0, minutes = 0] = clock(timeZone).format(date).split(":").map(Number);
-  return hours * 60 + minutes;
+/** UTC offset in minutes of `timeZone` at `date` (DST, half- and quarter-hour zones included); the visitor's own when omitted. */
+function utcOffset(date: Date, timeZone?: string) {
+  if (!timeZone) return -date.getTimezoneOffset();
+  const name = new Intl.DateTimeFormat("en", { timeZone, timeZoneName: "longOffset" })
+    .formatToParts(date)
+    .find((part) => part.type === "timeZoneName")?.value;
+  // "GMT+05:30", "GMT-10:00", or plain "GMT" for UTC itself.
+  const [, sign, hours = "0", minutes = "0"] = /GMT([+-])(\d{2}):(\d{2})/.exec(name ?? "") ?? [];
+  return (sign === "-" ? -1 : 1) * (Number(hours) * 60 + Number(minutes));
 }
 
 /**
  * The owner's local time, ticking each minute, and how far it is from the
- * visitor's. The server renders the zone alone, which stays true whenever the
- * page was built.
+ * visitor's (nothing when they share it). The server renders the zone alone,
+ * which stays true whenever the page was built.
  */
 export function Clock({
   timeZone,
   zone,
   ahead,
   behind,
-  same,
   children,
 }: {
   timeZone: string;
   zone: string;
   ahead: string;
   behind: string;
-  same: string;
   children: React.ReactNode;
 }) {
   const [now, setNow] = useState<Date | null>(null);
@@ -100,8 +103,8 @@ export function Clock({
 
   if (!now) return children;
 
-  // Minutes between the two wall clocks, folded into -12h..+12h.
-  const diff = ((wallMinutes(now, timeZone) - wallMinutes(now) + 2160) % 1440) - 720;
+  // Signed minutes the owner's clock is ahead of the visitor's: -8h 30m (Kiribati) to +17h 30m (Baker Island).
+  const diff = utcOffset(now, timeZone) - utcOffset(now);
   const hours = Math.floor(Math.abs(diff) / 60);
   const minutes = Math.abs(diff) % 60;
   const span = [hours && `${hours}h`, minutes && `${minutes}m`].filter(Boolean).join(" ");
@@ -111,7 +114,7 @@ export function Clock({
       <time dateTime={now.toISOString()}>
         {clock(timeZone).format(now)} {zone}
       </time>
-      <span className="text-muted-foreground"> · {diff === 0 ? same : `${span} ${diff > 0 ? ahead : behind}`}</span>
+      {diff !== 0 && <span className="text-muted-foreground"> · {`${span} ${diff > 0 ? ahead : behind}`}</span>}
     </>
   );
 }

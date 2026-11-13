@@ -15,7 +15,6 @@ export const footer = {
   /** The clock's note on the visitor's own time zone. */
   timeAhead: "ahead of you",
   timeBehind: "behind you",
-  timeSame: "your time too",
   signAgain: "Sign again",
   visitorsUnit: "visitors so far",
 } as const;

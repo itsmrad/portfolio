@@ -19,7 +19,7 @@ export async function StatusStrip() {
     <Scramble className="px-4 py-5" data-print="hide">
       <dl className="grid gap-x-10 gap-y-1.5 font-mono text-xs/5 font-medium tracking-[0.06em] uppercase sm:grid-cols-2">
         <Fact label={labels.location} icon={<PinIcon />}>
-          <span data-scramble>{site.location.label}</span>
+          <Scrambled text={site.location.label} />
         </Fact>
         <Fact label={labels.time} icon={<ClockIcon />}>
           <Clock
@@ -27,23 +27,34 @@ export async function StatusStrip() {
             zone={footer.zone}
             ahead={footer.timeAhead}
             behind={footer.timeBehind}
-            same={footer.timeSame}
           >
             {footer.zoneFallback}
           </Clock>
         </Fact>
         <Fact label={labels.work} icon={<CommitIcon />}>
-          <span data-scramble>{`${footer.buildingPrefix} ${work.name}`}</span>
+          <Scrambled text={`${footer.buildingPrefix} ${work.name}`} />
           <span className="text-muted-foreground">
             {" · "}
             <time dateTime={work.date}>{DATE.format(new Date(work.date))}</time>
           </span>
         </Fact>
         <Fact label={labels.availability} icon={<LiveDot />}>
-          <span data-scramble>{footer.availabilityShort}</span>
+          <Scrambled text={footer.availabilityShort} />
         </Fact>
       </dl>
     </Scramble>
+  );
+}
+
+/** Text that scrambles in; screen readers get a still copy, never the glyphs. */
+function Scrambled({ text }: { text: string }) {
+  return (
+    <>
+      <span data-scramble aria-hidden>
+        {text}
+      </span>
+      <span className="sr-only">{text}</span>
+    </>
   );
 }
 
