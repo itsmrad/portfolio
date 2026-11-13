@@ -1,3 +1,4 @@
+import { achievements } from "@/content/home";
 import { about, building, education, experience, projects, seo, site, socials, stack } from "@/content/site";
 import { resumePdf } from "@/lib/resume";
 
@@ -9,9 +10,15 @@ export function formatMonth(value: string) {
   return `${months[Number(month) - 1]} ${year}`;
 }
 
-export function formatRange(start: string, end: string | null) {
+export function formatRange(start: string, end?: string | null) {
   return `${formatMonth(start)} – ${end ? formatMonth(end) : "present"}`;
 }
+
+/** Email and booking page: the same two lines in the Markdown copy and in llms.txt. */
+const reach = () => [
+  ...(site.email ? [`Email: ${site.email}`] : []),
+  ...(site.calUrl ? [`Book a call: ${site.calUrl}`] : []),
+];
 
 const list = (items: readonly string[]) => items.map((item) => `- ${item}`).join("\n");
 
@@ -27,7 +34,8 @@ export function pageMarkdown() {
     `## Experience`,
     ...experience.map((job) =>
       [
-        `### ${job.role}, ${job.org} (${formatRange(job.start, job.end)})`,
+        `### ${job.role}, ${job.org}${job.start ? ` (${formatRange(job.start, job.end)})` : ""}`,
+        [job.location, job.url].filter(Boolean).join(" · "),
         job.summary,
         list(job.highlights),
         list((job.links ?? []).map((link) => `[${link.label}](${link.href})`)),
@@ -55,10 +63,17 @@ export function pageMarkdown() {
     `## Stack`,
     list(stack.map((row) => `${row.label}: ${row.items.join(", ")}`)),
     `## Education`,
-    list(education.map((entry) => `${entry.degree}, ${entry.school} (${entry.short}). ${entry.status}.`)),
+    list(
+      education.map(
+        (entry) =>
+          `${entry.degree}, ${entry.school} (${entry.short}), ${entry.location}, ${formatRange(entry.start, entry.end)}. ${entry.status}.`,
+      ),
+    ),
+    `## Achievements`,
+    list(achievements),
     `## Contact`,
     list([
-      ...(site.email ? [`Email: ${site.email}`] : []),
+      ...reach(),
       ...socials.map((social) => `${social.label}: [${social.handle}](${social.href})`),
       ...(resume ? [`Resume: [PDF](${site.url}${resume})`] : []),
     ]),
@@ -85,5 +100,5 @@ ${list(projects.map((project) => `[${project.name}](${project.url ?? project.rep
 ## Profiles
 
 ${list(socials.map((social) => `[${social.label}](${social.href}): ${social.handle}`))}
-`;
+${reach().length ? `\n## Contact\n\n${list(reach())}\n` : ""}`;
 }

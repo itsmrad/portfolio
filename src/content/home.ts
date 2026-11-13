@@ -12,3 +12,9 @@ export const taglineMarks: readonly string[] = ["AI products", "native tools"];
  */
 export type HireQuestion = { question: string; answer: string };
 export const hireQuestions: HireQuestion[] = [];
+
+/** From the owner's resume. Shown under education. */
+export const achievements: readonly string[] = [
+  "Finalist at multiple national-level hackathons.",
+  "150+ data structures and algorithms problems solved on Codeforces and LeetCode, across arrays, trees, graphs and dynamic programming.",
+];

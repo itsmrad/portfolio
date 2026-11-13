@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { projects, seo, site, socials, xHandle, type Project } from "@/content/site";
+import { education, experience, projects, seo, site, socials, xHandle, type Project } from "@/content/site";
 
 const abs = (path: string) => new URL(path, site.url).toString();
 const personId = `${site.url}/#person`;
@@ -57,8 +57,16 @@ function softwareApplication(project: Project) {
   };
 }
 
+const organization = (job: (typeof experience)[number]) => ({
+  "@type": "Organization",
+  name: job.org,
+  ...(job.url && { url: job.url }),
+});
+
 /** WebSite + Person: rendered by the root layout on every page. */
 export function siteGraph() {
+  const work = experience.filter((job) => job.kind === "work");
+  const current = work.filter((job) => !job.end).map(organization);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -81,7 +89,11 @@ export function siteGraph() {
         image: abs(site.avatar.src.src),
         description: seo.description,
         jobTitle: site.role,
-        worksFor: { "@type": "Organization", name: "Plancover" },
+        ...(current.length > 0 && { worksFor: current.length === 1 ? current[0] : current }),
+        alumniOf: [
+          ...education.map((entry) => ({ "@type": "CollegeOrUniversity", name: entry.school })),
+          ...work.filter((job) => job.end).map(organization),
+        ],
         knowsAbout: seo.knowsAbout,
         address: {
           "@type": "PostalAddress",
@@ -90,6 +102,9 @@ export function siteGraph() {
         },
         sameAs: socials.map((social) => social.href),
         ...(site.email && { email: site.email }),
+        ...(site.calUrl && {
+          contactPoint: { "@type": "ContactPoint", contactType: "Book a call", url: site.calUrl },
+        }),
         // Never add `telephone`.
       },
     ],

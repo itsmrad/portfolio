@@ -9,8 +9,9 @@
  *
  * Content rules (binding):
  * - Only owner-verified facts. No invented achievements or metrics.
- * - No phone number anywhere. `email` stays null until the owner confirms it.
- * - Plancover is named but never linked. xflow: no user, download or star claims.
+ * - No phone number anywhere, although the resume PDF itself carries one.
+ * - The resume is the source of truth for experience, education, skills and achievements.
+ * - PlanCover is named but its repositories are never linked. xflow: no user, download or star claims.
  * - larpcc and vidura are one-line "currently building" entries only.
  */
 import type { StaticImageData } from "next/image";
@@ -29,29 +30,29 @@ export const site = {
   tagline: "I build AI products and fast native tools, end to end.",
   /** Rotating mono line under the name. */
   taglines: [
-    "AI Intern at Plancover",
+    "AI/LLM Intern at PlanCover",
     "Building Codenaya",
     "Building xflow in Rust",
     "Final-year B.Tech at BPIT",
   ],
   location: { label: "New Delhi, India", locality: "New Delhi", country: "IN", timeZone: "Asia/Kolkata" },
   availability: "Open to full-time roles, internships and freelance work",
-  /** Pending owner confirmation. While null, no address is rendered or emitted anywhere. */
-  email: null as string | null,
+  /** Confirmed by the owner. If set to null, no address is rendered or emitted anywhere. */
+  email: "itsmrad@gmail.com" as string | null,
   avatar: {
     src: avatar,
     alt: "Anupam Das in profile, wearing glasses and a white shirt, lit by warm orange light",
   },
   /** The PDF is served from /public at this path. While the file is absent, nothing is rendered. */
-  resume: { pdf: "/resume.pdf", fileName: "Anupam-Das-Resume.pdf", updated: "2026-11" },
+  resume: { pdf: "/Anupam-Das-Resume.pdf", fileName: "Anupam-Das-Resume.pdf", updated: "2026-09" },
   // The site's own repository is deliberately not linked anywhere on the page.
   license: "MIT",
   /** Search Console meta tag; empty means not emitted (DNS verification is preferred). */
   googleVerification: "" as string,
   created: "2026-11-13",
   updated: "2026-11-13",
-  /** Cal.com booking page. Pending the owner; while empty no "Book a call" action is rendered anywhere. */
-  calUrl: "" as string,
+  /** Cal.com booking page. While empty no "Book a call" action is rendered anywhere. */
+  calUrl: "https://cal.com/itsmrad" as string,
 } as const;
 
 export const seo = {
@@ -91,7 +92,7 @@ export const nav: NavItem[] = [
 
 /** Three short paragraphs. `**bold**` marks the key phrase of each. */
 export const about: string[] = [
-  "I'm a final-year B.Tech student at BPIT in New Delhi and an **AI Intern at Plancover**. I like owning a product end to end: the interface, the backend, the release pipeline and the numbers that show it works.",
+  "I'm a final-year B.Tech student at BPIT in New Delhi and an **AI/LLM Intern at PlanCover**. I like owning a product end to end: the interface, the backend, the release pipeline and the numbers that show it works.",
   "**Codenaya** is my own product: a browser IDE where a coding agent writes your app file by file, runs it in a cloud sandbox with a live preview and exports it to GitHub. It is live at codenaya.tech.",
   "**xflow** is the systems side: a native Rust dictation daemon for macOS and Linux that idles at 3 MiB of memory and returns text a median 255 ms after you stop speaking. The benchmarks are published in the repo.",
 ];
@@ -99,11 +100,14 @@ export const about: string[] = [
 export type Experience = {
   org: string;
   role: string;
-  kind: "internship" | "community";
-  /** YYYY-MM */
-  start: string;
+  /** Paid or professional work, or community work (shown as a smaller group, without dates). */
+  kind: "work" | "community";
+  /** City, as the resume gives it. */
+  location?: string;
+  /** YYYY-MM. Absent where the resume gives no dates. */
+  start?: string;
   /** YYYY-MM, or null while ongoing. */
-  end: string | null;
+  end?: string | null;
   /** Organisation site. Omitted where the owner wants no link. */
   url?: string;
   logo?: StaticImageData;
@@ -112,29 +116,52 @@ export type Experience = {
   links?: { label: string; href: string }[];
 };
 
+/** From the owner's resume (September 2026), newest first; community entries last. */
 export const experience: Experience[] = [
   {
-    org: "Plancover",
-    role: "AI Intern",
-    kind: "internship",
+    org: "PlanCover",
+    role: "AI/LLM Intern",
+    kind: "work",
+    location: "Gurugram",
     start: "2026-09",
     end: null,
-    summary: "Six-month AI internship.",
-    highlights: [],
+    summary: "Building the production AI assistant of an insurance broker.",
+    highlights: [
+      "Deployed a production AI insurance assistant: retrieval over policy documents and SOPs plus authenticated LLM tool-calling across four data domains (policies, claims, benefits and employees), in Python with FastAPI, LangGraph, Pinecone and OpenRouter.",
+      "Engineered grounded answers over two execution paths, vector retrieval and live REST APIs, with role-based access control, real-time streaming and source citations.",
+      "Built observability across three stages, retrieval, model generation and tool calls, using Langfuse, Sentry and Docker.",
+      "Found and responsibly disclosed an authentication vulnerability in the first week.",
+    ],
+  },
+  {
+    org: "Dasgupta Maiti & Associates",
+    role: "AI Full-Stack Developer & Automation Systems Associate",
+    kind: "work",
+    location: "Kolkata",
+    start: "2026-06",
+    end: "2026-07",
+    url: "https://dasguptamaitiassociates.com/",
+    summary: "Delivered the firm's production web platform and the pipeline that releases it.",
+    highlights: [
+      "Delivered a production MERN platform with a user base of 100+: JWT authentication with bcrypt hashing and role-based access, Zoho Mail over OAuth 2.0, Cloudinary media, multi-collection search, and SEO with XML sitemaps.",
+      "Automated releases with a one-click cPanel build pipeline; configured SSL and DNS (MX, SPF, DKIM) and migrated PDF data with pdf-parse.",
+      "Optimized the Yashoda Bhawan web system with a role-based admin dashboard and a restructured database schema, cutting query response time by 40% on shared hosting.",
+    ],
+    links: [{ label: "Yashoda Bhawan", href: "https://yashodabhawan.in/" }],
   },
   {
     org: "Syuniqe",
-    role: "Full Stack Software Engineer",
-    kind: "internship",
+    role: "Full Spectrum Product Engineering Intern",
+    kind: "work",
+    location: "Faridabad",
     start: "2025-06",
-    end: "2025-07",
-    url: "https://syuniqe.com",
-    summary:
-      "Built the company website frontend and a Raspberry Pi kiosk image for a startup making a portable solar power station.",
+    end: "2025-08",
+    url: "https://www.syuniqe.com/",
+    summary: "Product engineering across the website, the embedded interface and the kiosk.",
     highlights: [
-      "Company website in Next.js: product landing page, an animated roadmap, a contact form with email delivery and a waitlist API.",
-      "A one-command build for a flashable Raspberry Pi image that boots into a full-screen web app, with a small Rust service for on-screen Wi-Fi setup.",
-      "Interface design in Figma.",
+      "Led end-to-end engineering of the production website in Next.js, TypeScript and Tailwind CSS, with a Clerk waitlist.",
+      "Unified validation across client and server with Zod in the Zoho Mail contact pipeline, removing duplicated logic.",
+      "Took the product across three surfaces: the marketing site, the embedded PowerHub interface and a Raspberry Pi kiosk, with high-fidelity Figma prototypes and a custom flashable OS built with rpi-image-gen.",
     ],
     links: [
       { label: "Website archive", href: "https://github.com/itsmrad/syuniqe-web-archive" },
@@ -142,21 +169,18 @@ export const experience: Experience[] = [
     ],
   },
   {
-    org: "Namespace",
-    role: "Tech Team Member",
+    org: "SheBuilds Hackathon",
+    role: "Social Media Lead",
     kind: "community",
-    start: "2023-11",
-    end: null,
-    summary: "College coding society. Contributed to society projects and organized a hackathon.",
+    summary:
+      "Owned the social media strategy end to end and drove 2,000+ registrations nationwide, the event's highest participant count.",
     highlights: [],
   },
   {
-    org: "SheBuilds",
-    role: "Organizing Team",
+    org: "Namespace",
+    role: "College coding society",
     kind: "community",
-    start: "2025-02",
-    end: "2025-04",
-    summary: "Helped organize the SheBuilds hackathon.",
+    summary: "Contributed to society projects and organized a hackathon.",
     highlights: [],
   },
 ];
@@ -165,7 +189,10 @@ export const education = [
   {
     school: "Bhagwan Parshuram Institute of Technology",
     short: "BPIT",
-    degree: "B.Tech",
+    degree: "B.Tech in Information Technology",
+    location: "New Delhi",
+    start: "2023-08",
+    end: "2027-08",
     status: "Final year",
   },
 ] as const;
@@ -319,11 +346,25 @@ export const building = [
   },
 ] as const;
 
-/** Numbered stack rows. Every item is in use in the owner's public repositories. */
+/** Numbered stack rows: the resume's skill groups, plus Rust (xflow and larpcc are written in it). */
 export const stack = [
-  { label: "Languages", items: ["Rust", "TypeScript", "Python"] },
-  { label: "Frontend", items: ["React", "Next.js", "Tailwind CSS", "CodeMirror"] },
-  { label: "Backend", items: ["Convex", "Inngest", "PostgreSQL", "SQLite"] },
-  { label: "AI", items: ["Agent runtimes", "Cloud sandboxes", "Speech-to-text providers"] },
-  { label: "Tooling", items: ["GitHub Actions", "Playwright", "Vitest", "Nix", "Sentry"] },
+  { label: "Languages", items: ["Rust", "TypeScript", "JavaScript", "Python", "C/C++", "SQL", "HTML", "CSS"] },
+  {
+    label: "Backend & APIs",
+    items: ["Node.js", "Express.js", "FastAPI", "REST APIs", "JWT", "OAuth 2.0", "RBAC", "Authentication & Authorization"],
+  },
+  { label: "Frontend", items: ["React.js", "Next.js", "Tailwind CSS", "Material-UI", "shadcn/ui"] },
+  { label: "Databases & Data", items: ["PostgreSQL", "MongoDB", "Convex", "Pinecone", "Vector Databases"] },
+  {
+    label: "AI/LLM",
+    items: ["Agentic AI", "RAG Systems", "LangChain", "LangGraph", "LLM Tool Calling", "OpenRouter", "Vercel AI SDK", "Langfuse"],
+  },
+  {
+    label: "Engineering",
+    items: ["System Design", "Data Structures & Algorithms", "CI/CD", "Docker", "Git", "GitHub", "Sentry", "Postman", "Figma"],
+  },
+  {
+    label: "Libraries & Platforms",
+    items: ["Zod", "Jest", "TanStack Query", "Zustand", "Better Auth", "Passport.js", "Inngest", "WebContainers", "E2B"],
+  },
 ] as const;
