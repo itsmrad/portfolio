@@ -11,7 +11,7 @@
 
 @media (min-width: 40rem) {
   .rows > div {
-    grid-template-columns: 9rem 1fr;
+    grid-template-columns: 11.5rem 1fr;
     gap: 0;
     padding-block: 0;
   }

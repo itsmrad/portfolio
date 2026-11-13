@@ -3,13 +3,17 @@
   interpolate-size: allow-keywords;
 }
 
-.role summary {
+.role summary,
+.school {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
   column-gap: 0.75rem;
   padding: 0.875rem 1rem;
+}
+
+.role summary {
   cursor: pointer;
   list-style: none;
   transition: background-color 0.15s ease-out;
@@ -115,10 +119,26 @@
   white-space: nowrap;
 }
 
+/* Under the dates of a school: where the course stands. */
+.status {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--foreground);
+}
+
 /* On a phone the dates drop under the role, so the title keeps the row's width. */
 @media (max-width: 40rem) {
-  .role summary {
+  .role summary,
+  .school {
     grid-template-columns: auto 1fr auto;
+  }
+  .status {
+    display: inline;
+    margin: 0;
+  }
+  .status::before {
+    content: " · ";
+    color: var(--muted-foreground);
   }
   .tile {
     grid-row: span 2;

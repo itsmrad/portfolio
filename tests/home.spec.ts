@@ -30,7 +30,7 @@ test.describe("hero", () => {
     await expect(portrait).toHaveAttribute("alt", /Anupam Das/);
     expect((await portrait.locator("xpath=ancestor::div[3]").boundingBox())?.width).toBe(96);
     await expect(page.locator("#top h1 + ul li")).toHaveText([
-      "AI Intern at Plancover",
+      "AI/LLM Intern at PlanCover",
       "Building Codenaya",
       "Building xflow in Rust",
       "Final-year B.Tech at BPIT",
@@ -152,27 +152,55 @@ test.describe("script budget", () => {
   });
 });
 
+test.describe("hero actions", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("resume and booking sit on one row at 390px and go where they should", async ({ page }) => {
+    await page.goto("/");
+    const resume = page.locator('#top a[href="/Anupam-Das-Resume.pdf"]');
+    const call = page.locator("#top").getByRole("link", { name: /book a call/i });
+    await expect(resume).toHaveAttribute("download", "Anupam-Das-Resume.pdf");
+    await expect(call).toHaveAttribute("href", "https://cal.com/itsmrad");
+    await expect(call).toHaveAttribute("target", "_blank");
+    await expect(call).toHaveAttribute("rel", "noopener");
+    const [first, second] = [(await resume.boundingBox())!, (await call.boundingBox())!];
+    expect(second.y).toBe(first.y);
+    expect(second.x + second.width).toBeLessThanOrEqual(390 - 8 - 16);
+    // The first screen still ends inside the hero's facts: nothing was pushed out by the new row.
+    await expect(page.locator("#top [data-clock]")).toBeInViewport();
+  });
+});
+
 test.describe("experience", () => {
-  test("four roles in order, the current one open, Plancover never linked", async ({ page }) => {
+  test("three roles from the resume, the current one open, then the community group", async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto("/");
     const roles = page.locator("#experience ol > li");
-    await expect(roles.locator("h3")).toHaveText(["Plancover", "Syuniqe", "Namespace", "SheBuilds"]);
-    expect(await roles.locator("details").evaluateAll((all) => all.map((details) => (details as HTMLDetailsElement).open))).toEqual([true, false, false, false]);
+    await expect(roles.locator("h3")).toHaveText(["PlanCover", "Dasgupta Maiti & Associates", "Syuniqe"]);
+    expect(await roles.locator("details").evaluateAll((all) => all.map((details) => (details as HTMLDetailsElement).open))).toEqual([true, false, false]);
 
     const plancover = roles.first();
-    await expect(plancover).toContainText("AI Intern");
+    await expect(plancover).toContainText("AI/LLM Intern");
     await expect(plancover.locator("time")).toHaveAttribute("datetime", "2026-09");
     await expect(plancover.locator("summary")).toContainText("present");
+    // Named, never linked; the security finding is one line with no detail of the attack.
     await expect(plancover.locator("a")).toHaveCount(0);
+    await expect(plancover.locator("li", { hasText: "vulnerability" })).toHaveText("Found and responsibly disclosed an authentication vulnerability in the first week.");
+    await expect(page.locator("#experience")).not.toContainText(/OTP|bypass|impersonat/i);
 
     // Closed rows open from the keyboard, with no script involved.
-    const syuniqe = roles.nth(1);
-    await expect(syuniqe.locator("a").first()).toBeHidden();
-    await syuniqe.locator("summary").focus();
+    const dasgupta = roles.nth(1);
+    await expect(dasgupta.locator("time")).toHaveText(["Jun 2026", "Jul 2026"]);
+    await expect(dasgupta.locator("a").first()).toBeHidden();
+    await dasgupta.locator("summary").focus();
     await page.keyboard.press("Enter");
-    await expect(syuniqe.getByRole("link", { name: /Kiosk image/ })).toBeVisible();
-    await expect(syuniqe.locator("time")).toHaveCount(2);
+    await expect(dasgupta.getByRole("link", { name: /dasguptamaitiassociates\.com/ })).toBeVisible();
+    await expect(dasgupta).toContainText("40%");
+    await expect(roles.nth(2).locator("time")).toHaveText(["Jun 2025", "Aug 2025"]);
+
+    const community = page.locator("#experience h4");
+    await expect(community).toHaveText(["SheBuilds Hackathon", "Namespace"]);
+    await expect(page.locator("#experience")).toContainText("2,000+ registrations");
     expect(errors).toEqual([]);
   });
 });
@@ -225,27 +253,63 @@ test.describe("activity", () => {
 test.describe("stack, education, contact", () => {
   test("numbered stack rows and the education entry", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("#stack dt")).toHaveText(["01Languages", "02Frontend", "03Backend", "04AI", "05Tooling"]);
+    await expect(page.locator("#stack dt")).toHaveText([
+      "01Languages",
+      "02Backend & APIs",
+      "03Frontend",
+      "04Databases & Data",
+      "05AI/LLM",
+      "06Engineering",
+      "07Libraries & Platforms",
+    ]);
+    await expect(page.locator("#stack li").first()).toHaveText("Rust");
     await expect(page.locator("#stack li", { hasText: "TypeScript" }).locator("i")).toHaveCount(1);
-    await expect(page.locator("#education")).toContainText("B.Tech");
-    await expect(page.locator("#education")).toContainText("Final year");
+    const education = page.locator("#education");
+    await expect(education).toContainText("B.Tech in Information Technology");
+    await expect(education.locator("time")).toHaveText(["Aug 2023", "Aug 2027"]);
+    await expect(education).toContainText("Final year");
+    await expect(education.locator("ul").last().locator("li")).toHaveText([/national-level hackathons/, /^150\+ data structures and algorithms problems/]);
   });
 
-  test("contact is socials only until the owner sets an email and a booking page", async ({ page }) => {
+  test("contact shows the email, the booking and resume actions and the socials, and never a phone", async ({ page }) => {
     await page.goto("/");
-    const links = page.locator("#contact ul a");
+    const contact = page.locator("#contact");
+    await expect(contact.locator('a[href="mailto:itsmrad@gmail.com"]')).toHaveText("itsmrad@gmail.com");
+    await expect(contact.getByRole("link", { name: /book a call/i })).toHaveAttribute("href", "https://cal.com/itsmrad");
+    await expect(contact.locator('a[href="/Anupam-Das-Resume.pdf"]')).toBeVisible();
+    const links = contact.locator("ul a");
     expect(await links.evaluateAll((all) => all.map((a) => a.getAttribute("href")))).toEqual([
       "https://github.com/itsmrad",
       "https://x.com/AnupamIO",
       "https://www.linkedin.com/in/itsmrad",
     ]);
     for (const link of await links.all()) await expect(link).toHaveAttribute("rel", /\bme\b/);
-    // No phone ever; no address, booking link or hire questions while their content is empty.
     await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
-    await expect(page.locator('a[href^="mailto:"], [data-copy]')).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /book a call/i })).toHaveCount(0);
-    await expect(page.locator('a[href*="cal.com"]')).toHaveCount(0);
+    // No third-party script or frame comes with the booking link, and no hire questions without answers.
+    await expect(page.locator('script[src*="cal.com"], iframe')).toHaveCount(0);
     await expect(page.getByText("Before you hire me")).toHaveCount(0);
+  });
+
+  test.describe("copying the email", () => {
+    test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
+    test("the very first click copies, says so for two seconds, then resets", async ({ page }) => {
+      const errors = collectErrors(page);
+      await page.goto("/");
+      await settle(page);
+      // No input has happened yet, so the click itself fetches the code that handles it.
+      const button = page.locator("#contact [data-copy]");
+      await button.click();
+      await expect(button).toHaveAttribute("data-copied", "");
+      await expect(button.locator("[role=status]")).toHaveText("Copied");
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("itsmrad@gmail.com");
+      await expect(button).not.toHaveAttribute("data-copied", "", { timeout: 4000 });
+      await expect(button.locator("[role=status]")).toHaveText("");
+      // The address in the hero's facts copies too.
+      await page.locator("#top [data-copy]").click();
+      await expect(page.locator("#top [data-copy]")).toHaveAttribute("data-copied", "");
+      expect(errors).toEqual([]);
+    });
   });
 });
 

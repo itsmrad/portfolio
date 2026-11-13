@@ -64,7 +64,7 @@ function Fact({ icon, label, children }: { icon: React.ReactNode; label: string;
 }
 
 export function Hero() {
-  const current = experience.find((job) => job.kind === "internship" && !job.end);
+  const current = experience.find((job) => job.kind === "work" && !job.end);
   return (
     <Section id="top" rule={false} aria-labelledby="top-title">
       <div className={styles.cover}>
