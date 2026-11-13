@@ -33,22 +33,88 @@ test("the visitor cell stays empty and the endpoint answers 404 while no store i
   await expect(page.locator("footer dt", { hasText: "Visitors" })).toHaveCount(0);
   expect((await request.get("/api/visit")).status()).toBe(404);
   expect((await request.post("/api/visit")).status()).toBe(404);
+  // Only GET and POST exist.
+  for (const method of ["PUT", "DELETE", "PATCH"]) expect((await request.fetch("/api/visit", { method })).status()).toBe(405);
 });
 
-test("the strip scrambles in without moving, then settles on the true text with a live clock", async ({ page }) => {
+test("the strip scrambles in cell by cell without moving, then settles on the true text", async ({ page }) => {
   await page.goto("/");
-  const before = await strip(page).evaluate((element) => [element.getBoundingClientRect().height, element.textContent]);
-  const box = await strip(page).boundingBox();
-  await strip(page).scrollIntoViewIfNeeded();
-  await page.waitForTimeout(250);
-  // Mid-scramble: same box, different glyphs.
-  expect(await strip(page).evaluate((element) => element.getBoundingClientRect().height)).toBe(before[0]);
-  expect((await strip(page).boundingBox())?.width).toBe(box?.width);
-  await page.waitForTimeout(2000);
-  const text = await strip(page).innerText();
-  expect(text).toMatch(/\b\d{2}:\d{2} IST\b/);
-  expect(text).toContain("NEW DELHI, INDIA");
-  expect(text).toContain("OPEN TO WORK");
+  const spans = page.locator("footer [data-scramble]");
+  const finals = await spans.allTextContents();
+  expect(finals.length).toBe(3);
+  // Record every scrambled span's text and width on each frame from the moment the strip is reached.
+  const frames = await strip(page).evaluate(async (element) => {
+    const nodes = [...element.querySelectorAll<HTMLElement>("[data-scramble]")];
+    element.scrollIntoView({ block: "center" });
+    const samples: { text: string[]; width: number[] }[] = [];
+    const start = performance.now();
+    while (performance.now() - start < 2500) {
+      await new Promise(requestAnimationFrame);
+      samples.push({ text: nodes.map((node) => node.textContent ?? ""), width: nodes.map((node) => node.getBoundingClientRect().width) });
+    }
+    return samples;
+  });
+  finals.forEach((final, index) => {
+    // It really scrambled: some frame showed other glyphs, always as many characters.
+    expect(frames.some((frame) => frame.text[index] !== final)).toBe(true);
+    expect(frames.every((frame) => frame.text[index]!.length === final.length)).toBe(true);
+    // And never moved: the same width on every frame.
+    expect(new Set(frames.map((frame) => frame.width[index])).size).toBe(1);
+  });
+  expect(await spans.allTextContents()).toEqual(finals);
+  expect(await strip(page).innerText()).toMatch(/\b\d{2}:\d{2} IST\b/);
+});
+
+/** Owner in Asia/Kolkata (UTC+5:30, no DST): what the clock tells visitors elsewhere. */
+const ZONES = [
+  { zone: "America/Los_Angeles", date: "2026-11-13T12:00:00Z", note: "13h 30m ahead of you" },
+  { zone: "America/Los_Angeles", date: "2026-07-01T12:00:00Z", note: "12h 30m ahead of you" },
+  { zone: "America/Denver", date: "2026-11-13T12:00:00Z", note: "12h 30m ahead of you" },
+  { zone: "Pacific/Honolulu", date: "2026-11-13T12:00:00Z", note: "15h 30m ahead of you" },
+  { zone: "Europe/London", date: "2026-11-13T12:00:00Z", note: "5h 30m ahead of you" },
+  { zone: "Europe/London", date: "2026-07-01T12:00:00Z", note: "4h 30m ahead of you" },
+  { zone: "Asia/Kathmandu", date: "2026-11-13T12:00:00Z", note: "15m behind you" },
+  { zone: "Asia/Tokyo", date: "2026-11-13T12:00:00Z", note: "3h 30m behind you" },
+  { zone: "Pacific/Auckland", date: "2026-11-13T12:00:00Z", note: "7h 30m behind you" },
+  { zone: "Pacific/Auckland", date: "2026-07-01T12:00:00Z", note: "6h 30m behind you" },
+  { zone: "Asia/Kolkata", date: "2026-11-13T12:00:00Z", note: null },
+] as const;
+
+for (const { zone, date, note } of ZONES) {
+  test(`the clock is true for a visitor in ${zone} on ${date.slice(0, 10)}`, async ({ browser }) => {
+    const context = await browser.newContext({ timezoneId: zone });
+    const page = await context.newPage();
+    await page.clock.setFixedTime(new Date(date));
+    await page.goto("/");
+    const time = page.locator("footer dd", { hasText: " IST" }).first();
+    // 12:00 UTC is 17:30 in New Delhi.
+    await expect(time).toContainText("17:30 IST");
+    const text = (await time.textContent()) ?? "";
+    if (note) expect(text).toContain(`· ${note}`);
+    else expect(text).not.toMatch(/ahead|behind|·/);
+    await context.close();
+  });
+}
+
+test("if the footer's code cannot load, the signature still shows signed and nothing throws", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  // From here on every script request fails, as after going offline or a newer deployment.
+  await page.route("**/_next/static/chunks/**", (route) => route.abort());
+  await toFooter(page);
+  await toSignature(page);
+  // Shown whole at once: a real drawing would still be mid-stroke after 300ms.
+  await expect(ink(page)).toHaveCSS("opacity", "1", { timeout: 300 });
+  await expect(ink(page)).toHaveCSS("stroke-dashoffset", "0px", { timeout: 300 });
+  await page.waitForTimeout(500);
+  await expect(page.locator("footer [data-drawn]")).toHaveCount(0);
+  expect(errors.filter((error) => !error.includes("Failed to load resource"))).toEqual([]);
+});
+
+test("the signature is a button the hand-drawn hover applies to", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Sign again" })).toHaveAttribute("data-slot", "button");
 });
 
 test("the signature draws when seen, and the pen signs it again on click", async ({ page }) => {
