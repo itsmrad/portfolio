@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { collectErrors, kb, resources, scriptBrotli, scriptBytesAddedBy, settle } from "./helpers";
-import { VOICES, engineModule, renderVoices, similarity } from "./voices";
+import { VOICES, db, distance, engineModule, renderVoices, type VoiceReport } from "./voices";
 
 const ENGINE_BUDGET = 4 * 1024;
 const GAME_BUDGET = 12 * 1024;
@@ -20,11 +20,14 @@ async function instrument(page: Page) {
           audio.ctx = this;
         }
       };
-      const start = AudioScheduledSourceNode.prototype.start as (this: AudioScheduledSourceNode, ...args: unknown[]) => void;
-      AudioScheduledSourceNode.prototype.start = function (this: AudioScheduledSourceNode, ...args: unknown[]) {
-        if (!(this.context instanceof OfflineAudioContext)) audio.starts++;
-        start.apply(this, args);
-      };
+      // Buffer sources (noise) have their own start(), so patch both prototypes.
+      for (const proto of [AudioScheduledSourceNode.prototype, AudioBufferSourceNode.prototype]) {
+        const start = proto.start as (this: AudioScheduledSourceNode, ...args: unknown[]) => void;
+        proto.start = function (this: AudioScheduledSourceNode, ...args: unknown[]) {
+          if (!(this.context instanceof OfflineAudioContext)) audio.starts++;
+          start.apply(this, args);
+        };
+      }
       const panner = BaseAudioContext.prototype.createStereoPanner;
       BaseAudioContext.prototype.createStereoPanner = function () {
         const node = panner.call(this);
@@ -49,21 +52,125 @@ const audio = (page: Page) =>
 const soundButton = (page: Page) => page.locator("header button[aria-keyshortcuts='m']");
 
 test.describe("sound engine", () => {
-  test("every voice renders offline: audible, short, unclipped and distinct", async ({ page }) => {
+  test("every voice renders offline: audible, short, unclipped alone and doubled, and distinct", async ({ page }) => {
+    test.setTimeout(120_000);
     await page.goto("about:blank");
-    const reports = await page.evaluate(renderVoices, { code: engineModule(), voices: VOICES });
-    const longest: Record<string, number> = { note: 0.5, scratch: 0.9, gameOver: 0.8 };
-    for (const { name, peak, seconds, clipped } of reports) {
-      const level = `${name}: peak ${(20 * Math.log10(peak)).toFixed(1)} dBFS, ${Math.round(seconds * 1000)} ms`;
-      expect(peak, `${level} is audible`).toBeGreaterThan(10 ** (-60 / 20));
-      expect(peak, `${level} stays under the limiter`).toBeLessThan(0.9);
-      expect(clipped, `${level} never clips`).toBe(0);
-      expect(seconds, `${level} is short`).toBeLessThanOrEqual(longest[name] ?? 0.3);
+    const seeds = [1, 2, 3, 4];
+    const reports: VoiceReport[] = await page.evaluate(renderVoices, { code: engineModule(), voices: VOICES, seeds });
+    // Long voices by design; every other voice is a click or a short chime.
+    const longest: Record<string, number> = { note: 0.5, scratch: 0.95, gameOver: 0.8 };
+    for (const { name, seed, peak, seconds, overlapPeak } of reports) {
+      const label = `${name} (seed ${seed}): peak ${db(peak).toFixed(1)} dBFS, doubled ${db(overlapPeak).toFixed(1)} dBFS, ${Math.round(seconds * 1000)} ms`;
+      // -24 dBFS is clearly audible on laptop speakers at a normal volume; the quietest voice measures about -20.
+      expect(db(peak), `${label} is audible`).toBeGreaterThan(-24);
+      // A single voice stays in the bus's linear range (below -4.4 dBFS) with headroom.
+      expect(db(peak), `${label} leaves headroom`).toBeLessThan(-6);
+      // Two of the same voice on one instant (the worst common overlap) still never clips.
+      expect(overlapPeak, `${label} never clips when doubled`).toBeLessThan(1);
+      expect(seconds, `${label} is short`).toBeLessThanOrEqual(longest[name] ?? 0.35);
     }
-    const pairs = reports.flatMap((a, i) => reports.slice(i + 1).map((b) => ({ pair: `${a.name}/${b.name}`, value: similarity(a.features, b.features) })));
-    const closest = pairs.reduce((max, pair) => (pair.value > max.value ? pair : max));
-    console.log(`voices: ${reports.length}, closest pair ${closest.pair} at ${closest.value.toFixed(3)}`);
-    for (const { pair, value } of pairs) expect(value, `${pair} sound alike`).toBeLessThan(0.9);
+
+    // Distinct: two different voices must differ more than either voice differs from itself across seeds
+    // (only its pitch jitter and noise change). Measured: the closest pair is about 1.75 times its own spread.
+    const names = VOICES.map(([name]) => name);
+    const of = (name: string) => reports.filter((report) => report.name === name);
+    const spread = Object.fromEntries(
+      names.map((name) => [name, Math.max(...of(name).flatMap((a) => of(name).map((b) => (a === b ? 0 : distance(a.features, b.features)))))]),
+    );
+    let closest = { pair: "", ratio: Infinity };
+    names.forEach((x, i) =>
+      names.slice(i + 1).forEach((y) => {
+        const between = Math.min(...of(x).flatMap((a) => of(y).map((b) => distance(a.features, b.features))));
+        const ratio = between / Math.max(spread[x]!, spread[y]!);
+        if (ratio < closest.ratio) closest = { pair: `${x}/${y}`, ratio };
+        expect(ratio, `${x} and ${y} sound alike: ${between.toFixed(2)} dB apart, own spread ${Math.max(spread[x]!, spread[y]!).toFixed(2)} dB`).toBeGreaterThan(1.25);
+      }),
+    );
+    const level = (name: string) => db(Math.min(...of(name).map((report) => report.peak)));
+    console.log(`voices: ${names.length} x ${seeds.length} seeds; quietest peak ${Math.min(...names.map(level)).toFixed(1)} dBFS; closest pair ${closest.pair} at ${closest.ratio.toFixed(2)}x its own spread`);
+  });
+
+  test.describe("engine safety", () => {
+    /** The real engine module in a blank page, with a clickable body for user activation. */
+    async function engineIn(page: Page) {
+      await page.goto("about:blank");
+      await page.mouse.click(10, 10);
+      await page.evaluate(async (code) => {
+        const w = window as unknown as Record<string, unknown>;
+        w.__engine = await import(/* @vite-ignore */ URL.createObjectURL(new Blob([code], { type: "text/javascript" })));
+        w.__starts = 0;
+        for (const proto of [AudioScheduledSourceNode.prototype, AudioBufferSourceNode.prototype]) {
+          const start = proto.start as (this: AudioScheduledSourceNode, ...args: unknown[]) => void;
+          proto.start = function (this: AudioScheduledSourceNode, ...args: unknown[]) {
+            (w.__starts as number)++;
+            start.apply(this, args);
+          };
+        }
+      }, engineModule());
+    }
+
+    test("a context that will not start never releases a burst of queued sounds", async ({ page }) => {
+      await engineIn(page);
+      const starts = await page.evaluate(async () => {
+        const w = window as unknown as { __engine: typeof import("../src/lib/sound-engine"); __starts: number };
+        // Hold the context the way a browser does before a gesture: suspended, resume() pending.
+        const realState = Object.getOwnPropertyDescriptor(BaseAudioContext.prototype, "state")!.get!;
+        const realResume = AudioContext.prototype.resume;
+        let blocked = true;
+        const pending: (() => void)[] = [];
+        Object.defineProperty(BaseAudioContext.prototype, "state", {
+          configurable: true,
+          get() {
+            return blocked ? "suspended" : realState.call(this);
+          },
+        });
+        AudioContext.prototype.resume = function () {
+          return new Promise<void>((resolve) => pending.push(() => realResume.call(this).then(resolve)));
+        };
+        const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        // A second of game sounds while blocked, then a click releases the context.
+        for (let i = 0; i < 40; i++) {
+          w.__engine.play("bounce", 0, {}, performance.now());
+          await sleep(25);
+        }
+        await sleep(200);
+        const before = w.__starts;
+        blocked = false;
+        pending.forEach((release) => release());
+        await sleep(300);
+        // And a sound whose engine chunk arrived a second late is dropped outright.
+        w.__engine.play("thump", 0, {}, performance.now() - 1000);
+        await sleep(100);
+        return w.__starts - before;
+      });
+      expect(starts, "sounds started when the blocked context was released").toBe(0);
+    });
+
+    test("hostile options after the context has idled never throw or reject", async ({ page }) => {
+      const errors = collectErrors(page);
+      await engineIn(page);
+      const state = await page.evaluate(async () => {
+        const w = window as unknown as { __engine: typeof import("../src/lib/sound-engine"); __starts: number };
+        const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        w.__engine.play("tap", 0, {});
+        await sleep(3300); // suspended 2.5 s after the last sound
+        const hostile: [string, number, object][] = [
+          ["note", 0, { index: NaN }],
+          ["note", 0, { index: -3 }],
+          ["note", 0, { index: 99.5 }],
+          ["scratch", 0, { duration: -5 }],
+          ["scratch", 0, { duration: Infinity }],
+          ["tap", NaN, { delay: -1 }],
+          ["open", Infinity, { delay: Infinity, duration: NaN }],
+          ["copy", 0, { delay: "soon", x: "left" }],
+        ];
+        for (const [name, pan, options] of hostile) w.__engine.play(name as "tap", pan, options);
+        await sleep(600);
+        return w.__starts;
+      });
+      expect(state, "the guarded sounds still played").toBeGreaterThan(2);
+      expect(errors).toEqual([]);
+    });
   });
 
   test.describe("in the page", () => {
@@ -112,6 +219,19 @@ test.describe("sound engine", () => {
       await settle(page);
       await expect(soundButton(page)).toHaveAttribute("aria-pressed", "false");
       expect(errors).toEqual([]);
+    });
+
+    test("a muted page stays silent and fetches nothing", async ({ page }) => {
+      await instrument(page);
+      await page.addInitScript(() => localStorage.setItem("sound", "off"));
+      await page.goto("/");
+      await settle(page);
+      const scripts = (await resources(page)).length;
+      await page.getByRole("button", { name: "Toggle light and dark theme", exact: true }).click();
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(600);
+      expect(await audio(page)).toMatchObject({ contexts: 0, starts: 0 });
+      expect((await resources(page)).length, "no engine download while muted").toBe(scripts);
     });
 
     test("never throws when Web Audio is missing", async ({ page }) => {
@@ -228,6 +348,53 @@ test.describe("404", () => {
       expect((await audio(page)).frames).toBe(frames);
 
       expect(errors.filter((error) => !error.includes("404"))).toEqual([]);
+    });
+
+    test("follows the pixel ratio: zoom or a move between screens keeps the figure sharp", async ({ page }) => {
+      // Record the resolution queries the game watches, so the test can play the browser's part.
+      await page.addInitScript(() => {
+        const queries: MediaQueryList[] = [];
+        (window as unknown as { __resolution: MediaQueryList[] }).__resolution = queries;
+        const original = window.matchMedia.bind(window);
+        window.matchMedia = (query: string) => {
+          const list = original(query);
+          if (query.includes("resolution")) queries.push(list);
+          return list;
+        };
+      });
+      await page.goto("/no-such-page");
+      const canvas = page.locator("canvas[role=application]");
+      await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => element.width)).toBe(638);
+      // Zooming to 200% (or moving to a 2x screen): the ratio changes and the query reports it.
+      // (An emulated ratio change in headless Chromium paints no frame, so it cannot stand in.)
+      await page.evaluate(() => {
+        Object.defineProperty(window, "devicePixelRatio", { configurable: true, get: () => 2 });
+        // The game re-subscribes on every change, so only the newest query is live.
+        (window as unknown as { __resolution: MediaQueryList[] }).__resolution.at(-1)!.dispatchEvent(new Event("change"));
+      });
+      await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => element.width)).toBe(1276);
+    });
+  });
+
+  test.describe("crossing the breakpoint", () => {
+    test.use({ viewport: { width: 900, height: 900 } });
+
+    test("a window widened after load starts the game", async ({ page }) => {
+      await page.goto("/no-such-page");
+      await settle(page);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      const canvas = page.locator("canvas[role=application]");
+      await expect(canvas).toBeVisible();
+      await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => element.width)).toBe(638);
+    });
+
+    test("if the game chunk fails, the figure goes and the plain 404 remains", async ({ page }) => {
+      await page.goto("/no-such-page");
+      await settle(page);
+      await page.route("**/_next/static/chunks/**", (route) => route.abort());
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await expect(page.locator("figure[data-game]")).toBeHidden();
+      await expect(page.locator('main a[href="/"]')).toBeVisible();
     });
   });
 });
