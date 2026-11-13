@@ -74,13 +74,13 @@ function Arrow({ vertical, className }: { vertical: boolean; className?: string 
   );
 }
 
-/** Must equal --frame-width in globals.css (40rem). */
+/** Must equal --frame-width in globals.css. */
 const FRAME_WIDTH = 640;
 
 /** The strip above the hero that states the column's width. Shown only once the column is that wide. */
 export function FrameDimension({ className }: { className?: string }) {
   return (
-    <div className={cn("relative hidden h-8 min-[41rem]:block", className)} aria-hidden data-print="hide">
+    <div className={cn("relative hidden h-8 min-[656px]:block", className)} aria-hidden data-print="hide">
       <Dimension className="absolute -inset-x-px inset-y-0">
         <DimensionExtension className="inset-y-1 left-0" />
         <DimensionExtension className="inset-y-1 right-0" />

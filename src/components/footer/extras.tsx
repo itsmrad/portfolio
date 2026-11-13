@@ -5,7 +5,11 @@
  * - <StatusStrip />: above the title block. Two columns of mono, uppercase
  *   facts with scramble-in text. Server-rendered; no client request.
  * - <VisitorCounter />: a cell of the title block. Return a
- *   <TitleBlockField label="Visitors">…</TitleBlockField>.
+ *   <TitleBlockField label="Visitors">…</TitleBlockField>. Its backend is the
+ *   one dynamic route this branch also owns, `src/app/api/visit/**` (a
+ *   key-value store read through `KV_REST_API_*` environment variables). The
+ *   cell stays empty while those are absent, and the page itself stays static:
+ *   the count is fetched by the client, never rendered on the server.
  * - <Signature />: the "Approved by" cell. Return a
  *   <TitleBlockField label="Approved by" className="col-span-2">…</TitleBlockField>.
  * - <Wordmark />: the full-width hatched wordmark under the title block.
