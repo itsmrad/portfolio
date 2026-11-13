@@ -1,11 +1,32 @@
 /**
- * SLOT (command + theme branch): mounted once at the end of <body>.
+ * Mounted once at the end of <body> (command branch): the always-on key
+ * listener with the lazy palette, and the phone dock.
  *
- * Renders nothing until filled. Put here: the always-on key listener (at most
- * 1 KB; ignores typing in inputs and events with Ctrl/Meta/Alt), the lazy
- * palette dialog and the phone dock. Shortcuts that need no palette (nav keys,
- * `d`, `m`, `r`, `g` chords) run in the listener from ./shortcuts.
+ * The listener gets two tiny key maps built here from the registry, so the
+ * registry and the content file stay out of first-load JavaScript.
  */
+import { resumePdf } from "@/lib/resume";
+import { Commands } from "@/components/command/commands";
+import { Dock } from "@/components/command/dock";
+import { actions } from "@/components/command/shortcuts";
+
 export function CommandRoot() {
-  return null;
+  const resume = resumePdf() !== null;
+  const keys: Record<string, string> = {};
+  const chords: Record<string, string> = {};
+  for (const action of actions) {
+    if (action.id === "resume" && !resume) continue;
+    if (action.key) {
+      const inPage = action.href?.startsWith("/#");
+      keys[action.key] = action.control ? "click" : inPage ? action.href! : action.id;
+    }
+    if (action.chord && action.href) chords[action.chord] = action.href;
+  }
+
+  return (
+    <>
+      <Commands keys={keys} chords={chords} resume={resume} />
+      <Dock />
+    </>
+  );
 }

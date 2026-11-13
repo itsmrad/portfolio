@@ -1,0 +1,7 @@
+/* Single-key shortcuts switched off (./commands puts .off on <html>): the
+   header's bracketed hints stay in place, faded and struck through, so the
+   bar does not move and the hint no longer promises a key that does nothing. */
+.off :global(nav[aria-label="Primary"] a > span[aria-hidden]) {
+  opacity: 0.4;
+  text-decoration: line-through;
+}

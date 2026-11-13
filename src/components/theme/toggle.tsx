@@ -1,30 +1,28 @@
 /**
- * SLOT (command + theme branch): the header's theme toggle.
- *
- * This working stub flips the theme through lib/theme. Replace it with the
- * final control (circular reveal from the button via
- * document.startViewTransition when supported and motion is not reduced, icon
- * spin, `d` shortcut). Contract:
- * - Call only `toggleTheme()` / `setTheme()` / `currentTheme()` from
- *   lib/theme; they own the class on <html>, storage and <meta theme-color>.
- * - One 32px ghost icon button with an accessible name. Never read the theme
- *   during render (the server cannot know it); style by `dark:` instead.
- * - Keep the split used here: this server component renders the classes and
- *   the icon, the client file holds only the handler. A client file that
- *   imports `cn`, <Button> or an icon library drags them into first-load JS
- *   (inline icons: components/ui/icons.tsx).
+ * The header's theme toggle (command branch): light and dark only, following
+ * the system until pressed. One 32px ghost icon button; `d` presses it from
+ * anywhere through its `aria-keyshortcuts`. The half-filled disc turns 180° in
+ * dark (500ms); the circular reveal lives in the client half.
+ * Contract kept: calls only lib/theme, never reads the theme while rendering
+ * (style by `dark:`), and this server file renders the classes and the icon.
  */
 import { ToggleButton } from "@/components/theme/toggle-button";
 import { buttonVariants } from "@/components/ui/button";
-import { ContrastIcon } from "@/components/ui/icons";
 
 export function ThemeToggle() {
   return (
     <ToggleButton
       aria-label="Toggle light and dark theme"
+      aria-keyshortcuts="d"
+      data-slot="button"
       className={buttonVariants({ variant: "ghost", size: "icon" })}
     >
-      <ContrastIcon className="transition-transform duration-500 dark:rotate-180" />
+      <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden>
+        <path
+          d="M16 .5C7.4.5.5 7.4.5 16S7.4 31.5 16 31.5 31.5 24.6 31.5 16 24.6.5 16 .5zm0 28.1V3.4C23 3.4 28.6 9 28.6 16S23 28.6 16 28.6z"
+          className="origin-center transition-transform duration-500 ease-[ease] dark:rotate-180"
+        />
+      </svg>
     </ToggleButton>
   );
 }
