@@ -54,8 +54,8 @@
   --color-dimension: var(--dimension);
   --color-dimension-foreground: var(--dimension-foreground);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-geist-sans), "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), "Instrument Fallback", ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono), ui-monospace, Menlo, "Courier New", monospace;
   --font-pixel: var(--font-geist-pixel), var(--font-geist-mono), ui-monospace, Menlo, monospace;
   /* Slashed zero and tabular figures wherever mono is used. */
@@ -65,11 +65,59 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/*
+ * Fallbacks shown until the web fonts arrive, so the swap moves as little as
+ * possible. Each is a same-width system face under every name it goes by
+ * (Arial on Windows and Apple systems, Liberation Sans or Arimo on Linux,
+ * Roboto on Android, which is within about 1% of Arial; Times New Roman,
+ * Liberation Serif, Tinos), scaled with size-adjust to the web font's width
+ * as measured on this site's own text, one face per weight in use, with the
+ * web font's ascent and descent. Recalibrate if the fonts change.
+ * The family names must not start with a generic keyword such as "serif":
+ * the minifier drops the quotes and the browser then discards the name.
+ */
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 400;
+  size-adjust: 102.43%;
+  ascent-override: 98.12%;
+  descent-override: 28.80%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 500;
+  size-adjust: 104.75%;
+  ascent-override: 95.94%;
+  descent-override: 28.16%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 600 700;
+  size-adjust: 107.14%;
+  ascent-override: 93.80%;
+  descent-override: 27.53%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Instrument Fallback";
+  src: local("Times New Roman"), local("Liberation Serif"), local("Tinos"), local("Times");
+  font-weight: 400;
+  size-adjust: 82.40%;
+  ascent-override: 120.15%;
+  descent-override: 37.62%;
+  line-gap-override: 0%;
+}
+
 :root {
   color-scheme: light dark;
 
   /* Layout */
-  --frame-width: 40rem; /* the single column, 640px */
+  --frame-width: 640px; /* the single column; px so the "640" dimension label is always true */
   --frame-gutter: 0.5rem; /* viewport edge to column on small screens */
   --header-height: 3.5rem; /* 56px */
   --separator-height: 2rem; /* 32px hatch band */
@@ -94,12 +142,14 @@
   --input: light-dark(oklch(0.92 0.004 286.32), oklch(1 0 0 / 0.15));
   --ring: light-dark(oklch(0.705 0.015 286.067), oklch(0.552 0.016 285.938));
   --surface: light-dark(oklch(0.985 0 0), oklch(0.21 0.006 285.885));
+  /* For dots and fills. As text on the light background it is only 2.2:1. */
   --success: oklch(0.723 0.219 149.579);
   --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.505 0.213 27.518));
 
   /* The one colour: state only (active, hover, live, selected). */
   --signal: light-dark(oklch(0.488 0.243 264.376), oklch(0.623 0.214 259.815));
-  --signal-foreground: oklch(0.985 0 0);
+  /* Text on a signal fill: white on the light theme's blue, ink on the dark theme's. */
+  --signal-foreground: light-dark(oklch(0.985 0 0), oklch(0.141 0.005 285.823));
 
   /* Drawing lines */
   --line: color-mix(in oklab, var(--border) 64%, var(--background));
@@ -352,8 +402,14 @@
   .screen-line-bottom::after {
     content: none !important;
   }
-  section {
+  /* Keep an entry whole; a whole section is often taller than the page. */
+  li,
+  article {
     break-inside: avoid;
+  }
+  h2,
+  h3 {
+    break-after: avoid;
   }
   a[href^="http"]::after {
     content: " (" attr(href) ")";
