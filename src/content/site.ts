@@ -10,6 +10,10 @@
 import type { StaticImageData } from "next/image";
 
 import avatar from "@/assets/avatar.jpg";
+import codenayaHome from "@/assets/projects/codenaya-home.webp";
+import codenayaIde from "@/assets/projects/codenaya-ide.webp";
+import xflowHomeDark from "@/assets/projects/xflow-home-dark.webp";
+import xflowHomeLight from "@/assets/projects/xflow-home-light.webp";
 
 export const site = {
   name: "Anupam Das",
@@ -180,7 +184,8 @@ export type Project = {
   started: string;
   /** YYYY-MM-DD, the last verified activity. */
   updated: string;
-  screenshots: { src: StaticImageData; alt: string }[];
+  /** The first one sits in the card's window. A `theme` pair shows the one matching the page theme. */
+  screenshots: { src: StaticImageData; alt: string; theme?: "light" | "dark" }[];
   highlights: string[];
   metrics: Metric[];
   /** Where the metrics come from, shown beside them. */
@@ -192,6 +197,32 @@ export type Project = {
   version?: string;
   /** True only where the product can really be used at no cost. */
   free: boolean;
+  /** Meta line above the name. */
+  category?: string;
+  /** A second product image, under the card. */
+  figure?: { src: StaticImageData; alt: string; caption: string };
+  /** The stack grouped by what each part does. */
+  layers?: { layer: string; tools: string }[];
+  decisions?: Decision[];
+  /** Published measurements, drawn as a figure. */
+  benchmarks?: Benchmarks;
+  /** The page's "What I built" list: the highlights not already shown by the decisions or benchmarks. */
+  built?: string[];
+};
+
+export type Decision = { title: string; constraint: string; decision: string; result: string };
+
+/** Values are strings as published (precision kept); bar lengths are read from them. */
+export type Benchmarks = {
+  memory: { unit: string; max: number; rows: { label: string; value: string; note?: string }[] };
+  latency: {
+    unit: string;
+    max: number;
+    rows: { label: string; p50: string; p95: string; part?: { label: string; value: string } }[];
+  };
+  idle: string;
+  conditions: string;
+  source: { label: string; href: string };
 };
 
 /** Project entries are append-only: add fields or entries, never reorder. */
@@ -223,7 +254,12 @@ export const projects: Project[] = [
     ],
     started: "2026-02",
     updated: "2026-11-07",
-    screenshots: [],
+    screenshots: [
+      {
+        src: codenayaHome,
+        alt: "The codenaya.tech landing page: “Build with AI. Ship from your browser.” above a prompt box and starter ideas",
+      },
+    ],
     highlights: [
       "Durable agent runs: they survive deploys, can be cancelled, and must pass a type-check and a build inside the sandbox before they finish.",
       "Live preview in a cloud sandbox with boot steps, a terminal and a device toggle.",
@@ -246,6 +282,51 @@ export const projects: Project[] = [
     ],
     schema: "WebApplication",
     free: true,
+    category: "AI browser IDE",
+    figure: {
+      src: codenayaIde,
+      alt: "The Codenaya IDE: a chat panel, the project's file tree and App.jsx open in the editor",
+      caption: "The IDE as it runs on codenaya.tech: the agent's chat, the file tree and the CodeMirror editor.",
+    },
+    layers: [
+      { layer: "Interface", tools: "Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, CodeMirror 6" },
+      { layer: "Data and auth", tools: "Convex, Clerk" },
+      { layer: "Agent", tools: "Inngest AgentKit on OpenRouter, OpenAI, Anthropic and Groq" },
+      { layer: "Preview", tools: "E2B cloud sandboxes, WebContainer" },
+      { layer: "Quality", tools: "Vitest, Playwright, Sentry" },
+    ],
+    decisions: [
+      {
+        title: "Agent runs that outlive a deploy",
+        constraint:
+          "A run takes minutes and makes many model and tool calls. A web request cannot hold it, and it has to survive deploys and be cancellable.",
+        decision:
+          "Each run is a durable Inngest AgentKit function. Database writes and side effects run as steps, so a crash or a deploy resumes the run instead of losing it.",
+        result: "Runs can be cancelled from another request and are observable in the Inngest dashboard and in Sentry.",
+      },
+      {
+        title: "Keys that never touch run history",
+        constraint:
+          "The runtime stores every step's return value. A step that returned a decrypted key would write the user's secret into history.",
+        decision:
+          "Keys are resolved in the function body, outside every step, on each replay. Stored keys are sealed with AES-256-GCM envelope encryption.",
+        result:
+          "Keys stay in process memory. A rejected key ends the run with a pointer to settings and never falls back to the platform key.",
+      },
+      {
+        title: "Done means it builds",
+        constraint: "A model can report success on an app that does not compile.",
+        decision:
+          "A finish gate: if files changed after the last passing check, the agent must run tsc and vite build in the sandbox again, with up to two fix attempts.",
+        result: "A run cannot end with unchecked changes, and an end-to-end spec holds the gate in place.",
+      },
+    ],
+    built: [
+      "Live preview in a cloud sandbox with boot steps, a terminal and a device toggle.",
+      "CodeMirror 6 editor with ghost-text suggestions, quick edit, checkpoints and restore, and GitHub import and export.",
+      "Bring your own key for OpenRouter, OpenAI, Anthropic, Groq or a custom endpoint.",
+      "Engineering process: 11 architecture decision records, CI, unit and end-to-end tests.",
+    ],
   },
   {
     slug: "xflow",
@@ -261,7 +342,18 @@ export const projects: Project[] = [
     stack: ["Rust", "clap", "ratatui", "CPAL", "SQLite", "Swift", "Nix", "GitHub Actions"],
     started: "2026-09",
     updated: "2026-11-09",
-    screenshots: [],
+    screenshots: [
+      {
+        src: xflowHomeDark,
+        alt: "The xflow website: “Hold Fn and talk. xflow types it.” beside an editor window where a dictated sentence has just been inserted",
+        theme: "dark",
+      },
+      {
+        src: xflowHomeLight,
+        alt: "The xflow website: “Hold Fn and talk. xflow types it.” beside an editor window where a dictated sentence has just been inserted",
+        theme: "light",
+      },
+    ],
     highlights: [
       "Idles at 3.0 MiB of memory and peaks at 20.8 MiB while dictating.",
       "Text arrives a median 255 ms after you stop speaking (378 ms at p95) across 30 live dictations.",
@@ -292,6 +384,79 @@ export const projects: Project[] = [
     license: "MIT",
     version: "0.2.1-beta",
     free: true,
+    category: "Native dictation daemon",
+    layers: [
+      { layer: "Daemon and CLI", tools: "Rust, clap, ratatui" },
+      { layer: "Audio and history", tools: "CPAL, SQLite" },
+      { layer: "Desktop", tools: "macOS Accessibility, Swift, a GNOME Shell extension" },
+      { layer: "Release", tools: "GitHub Actions, Nix, Homebrew, .deb and .rpm" },
+      { layer: "Benchmarks", tools: "Python" },
+    ],
+    decisions: [
+      {
+        title: "Twenty-minute dictations without the wait",
+        constraint:
+          "Uploading a long recording only when the speaker stops makes them wait for the whole clip, and holding it all in memory grows without limit.",
+        decision:
+          "The daemon drains the capture buffer every second and transcribes 30 to 60 second segments, cut at the quietest 250 ms, while recording continues.",
+        result: "Memory stays bounded, and stopping only waits for the last segment.",
+      },
+      {
+        title: "Paste into whatever has focus, safely",
+        constraint:
+          "Text has to land at the cursor in any app, Electron apps and terminals included, and never in a password field or the wrong window.",
+        decision:
+          "Read the frontmost app, window and focused Accessibility element, paste with the key that types “v” in the current layout, and refuse secure fields.",
+        result:
+          "When the target is unknown or has changed, nothing is typed: the text is copied and kept for recovery.",
+      },
+      {
+        title: "Silence is not speech",
+        constraint: "Speech models invent words from silence and clicks.",
+        decision:
+          "Before upload, 20 ms frames must hold at least 80 ms above a configurable floor, and known silence hallucinations from quiet clips are discarded.",
+        result: "A silent press ends with “Didn’t catch anything” instead of pasting invented text.",
+      },
+    ],
+    benchmarks: {
+      memory: {
+        unit: "MiB",
+        max: 25,
+        rows: [
+          { label: "Idle footprint", value: "3.0", note: "median of 1 Hz samples over 300 s" },
+          { label: "Peak while dictating", value: "20.8", note: "daemon and recording pill" },
+          { label: "xflowd binary", value: "7.40", note: "release, stripped" },
+          { label: "xflow binary", value: "6.03", note: "release, stripped" },
+        ],
+      },
+      latency: {
+        unit: "ms",
+        max: 700,
+        rows: [
+          {
+            label: "Stop to text",
+            p50: "255",
+            p95: "378",
+            part: { label: "provider speech-to-text, p50", value: "250" },
+          },
+          { label: "Warm start to status", p50: "85.2", p95: "118" },
+          { label: "Cold start to status", p50: "588", p95: "669" },
+        ],
+      },
+      idle: "Idle CPU 0.0001 %, 0.00 wakeups per second.",
+      conditions:
+        "Measured 2026-10-29 at commit 6ebd451 on an Apple M2 with 8 GB, macOS 26.7.1. Stop to text: 30 live Groq dictations of one 7.0 s clip, from the stop request to text in a file, real paste excluded. Start times: 30 launches each, sensitive to load.",
+      source: {
+        label: "scoreboard-macos.json",
+        href: "https://github.com/itsmrad/xflow/blob/main/docs/benchmarks/scoreboard-macos.json",
+      },
+    },
+    built: [
+      "Ten cloud speech providers plus local whisper.cpp servers behind one interface.",
+      "A CLI and a terminal UI for setup, history search and export, the dictionary and snippets.",
+      "Release engineering: CI-gated tagged releases, a checksum-verifying installer, .deb and .rpm packages for amd64 and arm64, an Arch PKGBUILD, a Nix flake, a signed macOS package and a Homebrew tap.",
+      "A Rust workspace of four crates with about 1,000 tests.",
+    ],
   },
 ];
 
