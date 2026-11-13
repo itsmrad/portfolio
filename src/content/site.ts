@@ -44,6 +44,8 @@ export const site = {
   googleVerification: "" as string,
   created: "2026-11-13",
   updated: "2026-11-13",
+  /** Cal.com booking page. Pending the owner; while empty no "Book a call" action is rendered anywhere. */
+  calUrl: "" as string,
 } as const;
 
 export const seo = {
