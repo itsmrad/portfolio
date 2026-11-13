@@ -84,23 +84,44 @@ const browser = typeof window !== "undefined";
 let on: boolean | undefined;
 let pointerX: number | undefined;
 const listeners = new Set<() => void>();
+const lastPlayed: Partial<Record<SoundName, number>> = {};
 
 type Engine = typeof import("@/lib/sound-engine");
 let engine: Promise<Engine> | undefined;
+/** The engine once its chunk has arrived, so gestures and sounds can reach it synchronously. */
+let ready: Engine | undefined;
 const load = () =>
-  (engine ??= import("@/lib/sound-engine").catch((error) => {
-    engine = undefined; // offline or a failed deploy: try again on the next sound
-    throw error;
-  }));
+  (engine ??= import("@/lib/sound-engine").then(
+    (module) => (ready = module),
+    (error) => {
+      engine = undefined; // offline or a failed deploy: try again on the next sound
+      throw error;
+    },
+  ));
+
+const paint = (next: boolean) => {
+  document.documentElement.dataset.sound = next ? "on" : "off";
+  listeners.forEach((listener) => listener());
+};
 
 if (browser) {
-  // Start fetching the engine on the first press, so the click it ends in is not late.
-  const warm = (event: Event) => {
-    pointerX = event instanceof PointerEvent ? event.clientX : undefined;
-    if (soundOn()) load().catch(() => {});
+  // Fetch the engine on the first press, so the click it ends in is not late; once it is
+  // here, start the audio context inside each gesture (Safari starts it nowhere else).
+  const gesture = (event: Event) => {
+    if (event instanceof PointerEvent) pointerX = event.clientX;
+    else if (event.type === "keydown") pointerX = undefined;
+    if (!soundOn()) return;
+    if (ready) ready.unlock();
+    else load().catch(() => {});
   };
-  addEventListener("pointerdown", warm, { capture: true, passive: true });
-  addEventListener("keydown", warm, { capture: true, passive: true });
+  for (const type of ["pointerdown", "pointerup", "keydown", "touchend"])
+    addEventListener(type, gesture, { capture: true, passive: true });
+  // Another tab changed the setting.
+  addEventListener("storage", (event) => {
+    if (event.key !== KEY && event.key !== null) return;
+    on = undefined;
+    paint(soundOn());
+  });
 }
 
 /** Whether sound (and with it, haptics) is on. Defaults to on. */
@@ -123,8 +144,7 @@ export function setSound(next: boolean): void {
   } catch {
     // Blocked storage: the choice lasts for this page.
   }
-  document.documentElement.dataset.sound = next ? "on" : "off";
-  listeners.forEach((listener) => listener());
+  if (browser) paint(next);
 }
 
 /** Flip sound on or off with its paired voice (the `m` key and the header button call this). */
@@ -146,18 +166,27 @@ export function play(name: SoundName, options: SoundOptions = {}): void {
   if (!browser || !soundOn()) return;
   // No sound before the visitor has interacted with the page.
   if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+  const now = performance.now();
+  // Machine-gun guard: the same voice at most every 25 ms (key repeat: 50 ms). Sequences are exempt.
+  if (!options.delay) {
+    if (now - (lastPlayed[name] ?? -Infinity) < (name === "key" ? 50 : 25)) return;
+    lastPlayed[name] = now;
+  }
   const pattern = HAPTICS[name];
   if (pattern !== undefined && !options.delay) vibrate(pattern);
-  let x = options.x ?? pointerX;
+  let x = Number.isFinite(options.x) ? options.x! : pointerX;
   if (x === undefined) {
     const box = document.activeElement?.getBoundingClientRect();
     x = box && box.width ? box.left + box.width / 2 : innerWidth / 2;
   }
-  const pan = 0.6 * Math.min(1, Math.max(-1, (x / innerWidth) * 2 - 1));
-  load().then(
-    (module) => module.play(name, pan, options),
-    () => {},
-  );
+  const pan = innerWidth > 0 ? 0.6 * Math.min(1, Math.max(-1, (x / innerWidth) * 2 - 1)) : 0;
+  // Synchronously when the engine is here, so the sound starts inside the caller's gesture.
+  if (ready) ready.play(name, pan, options, now);
+  else
+    load().then(
+      (module) => module.play(name, pan, options, now),
+      () => {},
+    );
 }
 
 /** A bare vibration for phones, outside the voice pairs. Follows the mute setting. */
