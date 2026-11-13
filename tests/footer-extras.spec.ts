@@ -8,6 +8,9 @@ const FOOTER_LAZY_BUDGET = 8 * 1024;
 const strip = (page: Page) => page.locator("footer dl").first();
 const ink = (page: Page) => page.locator("footer button svg path").first();
 const toFooter = (page: Page) => page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+// The signature signs once it is wholly in view and clear of the bottom 96px, as a reader would see it.
+const toSignature = (page: Page) =>
+  page.getByRole("button", { name: "Sign again" }).evaluate((button) => button.scrollIntoView({ block: "center" }));
 
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false });
@@ -51,7 +54,7 @@ test("the strip scrambles in without moving, then settles on the true text with 
 test("the signature draws when seen, and the pen signs it again on click", async ({ page }) => {
   await page.goto("/");
   await expect(ink(page)).toHaveCSS("opacity", "0");
-  await page.getByRole("button", { name: "Sign again" }).scrollIntoViewIfNeeded();
+  await toSignature(page);
   await expect(ink(page)).toHaveCSS("stroke-dashoffset", "0px", { timeout: 5000 });
   await page.getByRole("button", { name: "Sign again" }).click();
   await page.waitForTimeout(600);
@@ -79,7 +82,7 @@ test.describe("reduced motion", () => {
     // The clock may have started; everything else is untouched.
     const unclocked = (text: string) => text.replace(/^.*IST.*$/m, "");
     expect(unclocked(await strip(page).innerText())).toBe(unclocked(final));
-    await page.getByRole("button", { name: "Sign again" }).scrollIntoViewIfNeeded();
+    await toSignature(page);
     await expect(ink(page)).toHaveCSS("stroke-dashoffset", "0px");
     await expect(ink(page)).toHaveCSS("opacity", "1");
     await toFooter(page);
