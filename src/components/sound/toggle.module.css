@@ -1,0 +1,43 @@
+/* Speaker waves slide out one after the other when muted; an x takes their place. */
+.wave,
+.mute {
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    translate 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    scale 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.far {
+  transition-delay: 50ms;
+}
+
+.mute {
+  opacity: 0;
+  scale: 0.5;
+  transform-origin: 19px 12px;
+}
+
+:global(html[data-sound="off"]) .wave {
+  opacity: 0;
+  translate: -3px 0;
+}
+
+:global(html[data-sound="off"]) .far {
+  transition-delay: 0ms;
+}
+
+:global(html[data-sound="off"]) .mute {
+  opacity: 1;
+  scale: 1;
+  transition-delay: 80ms;
+}
+
+/* The footer switch shows the word for the current state. */
+.whenOff,
+:global(html[data-sound="off"]) .whenOn {
+  display: none;
+}
+
+:global(html[data-sound="off"]) .whenOff {
+  display: inline;
+}
