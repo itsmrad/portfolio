@@ -6,11 +6,16 @@
  * working. Derived from the content file. `./root` turns it into the small key
  * map the always-on listener gets, so the listener never imports this file.
  *
- * Reserved keys: a/e/w (header nav, from content), d theme, m mute, r resume,
+ * Reserved keys: a/e/w (header nav, from content), d theme, m mute (calls
+ * toggleSound from lib/sound), r resume,
  * c copy email, g chord prefix, ? shortcut list, / and Ctrl/Cmd+K palette.
  * Shift+R is left free for the hot-reload easter egg.
  */
-import { nav, pageIndex, projects, site, socials } from "@/content/site";
+import { commandCopy as copy, pageIndex } from "@/content/command";
+import { nav, projects, site, socials } from "@/content/site";
+
+// `calUrl` is added to `site` by the home branch; read it optionally so this file builds before and after.
+const { calUrl } = site as typeof site & { calUrl?: string | null };
 
 export type Action = {
   id: string;
@@ -82,11 +87,10 @@ export const actions: Action[] = [
     href: social.href,
     external: true,
   })),
-  { id: "source", label: "View source", group: "Links", icon: "code", keywords: "repository github code", href: site.repo, external: true },
-  { id: "llms", label: "llms.txt", group: "Links", icon: "file", keywords: "agents ai plain text markdown", href: "/llms.txt", external: true },
+  { id: "llms", label: copy.llms, group: "Links", icon: "file", keywords: "agents ai plain text markdown", href: "/llms.txt", external: true },
   {
     id: "resume",
-    label: "Download resume",
+    label: copy.resume,
     group: "General",
     icon: "download",
     key: "r",
@@ -94,11 +98,14 @@ export const actions: Action[] = [
     href: site.resume.pdf,
     download: site.resume.fileName,
   },
-  ...(site.email
-    ? [{ id: "copy-email", label: "Copy email", group: "General" as const, icon: "mail", key: "c", hint: site.email, keywords: "contact address" }]
+  ...(calUrl
+    ? [{ id: "call", label: copy.call, group: "General" as const, icon: "calendar", keywords: "meeting schedule chat interview hire", href: calUrl, external: true }]
     : []),
-  { id: "copy-link", label: "Copy link", group: "General", icon: "link", keywords: "url share address" },
-  { id: "shortcuts", label: "Keyboard shortcuts", group: "General", icon: "keyboard", key: "?", keywords: "keys hotkeys help" },
-  { id: "theme", label: "Toggle theme", group: "Preferences", icon: "theme", key: "d", keywords: "dark light mode appearance", control: true },
-  { id: "sound", label: "Toggle sound", group: "Preferences", icon: "sound", key: "m", keywords: "mute audio volume", control: true },
+  ...(site.email
+    ? [{ id: "copy-email", label: copy.copyEmail, group: "General" as const, icon: "mail", key: "c", hint: site.email, keywords: "contact address" }]
+    : []),
+  { id: "copy-link", label: copy.copyLink, group: "General", icon: "link", keywords: "url share address" },
+  { id: "shortcuts", label: copy.shortcuts, group: "General", icon: "keyboard", key: "?", keywords: "keys hotkeys help" },
+  { id: "theme", label: copy.theme, group: "Preferences", icon: "theme", key: "d", keywords: "dark light mode appearance", control: true },
+  { id: "sound", label: copy.sound, group: "Preferences", icon: "sound", key: "m", keywords: "mute audio volume" },
 ];

@@ -2,23 +2,33 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 
+import { toggleSound } from "@/lib/sound";
 import type { View } from "@/components/command/palette";
 
-type PaletteProps = { view: View; onView: (view: View) => void; resume: boolean; seed: string };
+type PaletteProps = { view: View; onView: (view: View) => void; resume: boolean; take: () => string };
 
 const load = () => import("@/components/command/palette");
+
+// From an open request until the palette's input has focus, typed characters
+// are kept here for its search instead of reaching the shortcuts.
+let typed: string | null = null;
+const take = () => {
+  const text = typed ?? "";
+  typed = null;
+  return text;
+};
 
 /**
  * The always-on part (budget 1 KB): single keys, `g` chords, `/` and Ctrl/Cmd+K,
  * and the clicks on anything marked `data-command-open`. The palette chunk
  * loads on first use. Key maps come from ./root, built from the registry:
- * a value is an in-page href, "click" (press the control that declares the
- * key in `aria-keyshortcuts`) or an action id the palette chunk runs.
+ * a value is an in-page href, "sound" (toggleSound), "click" (press the
+ * control that declares the key in `aria-keyshortcuts`: the theme toggle, so
+ * `d` gets the reveal from the button) or an action id the palette chunk runs.
  */
 export function Commands({ keys, chords, resume }: { keys: Record<string, string>; chords: Record<string, string>; resume: boolean }) {
   const [Palette, setPalette] = useState<ComponentType<PaletteProps> | null>(null);
   const [view, setView] = useState<View>(null);
-  const [seed, setSeed] = useState("");
   const isOpen = useRef(false);
 
   useEffect(() => {
@@ -26,16 +36,16 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
   });
 
   useEffect(() => {
-    // While the chunk loads, typed characters go to the search, not to the shortcuts.
-    let typed: string | null = null;
     const open = (next: View) => {
       typed ??= "";
-      load().then((module) => {
-        setSeed(typed ?? "");
-        typed = null;
-        setPalette(() => module.Palette);
-        setView(next);
-      });
+      load().then(
+        (module) => {
+          setPalette(() => module.Palette);
+          setView(next);
+        },
+        // Offline or a failed deploy: give the keys back rather than swallow them.
+        () => (typed = null),
+      );
     };
     if (/Mac|iP/.test(navigator.platform)) document.documentElement.dataset.platform = "mac";
 
@@ -72,6 +82,7 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       event.preventDefault();
       if (value === "" || value === "shortcuts") open(value);
       else if (value[0] === "/") location.assign(value);
+      else if (value === "sound") toggleSound();
       else if (value === "click") document.querySelector<HTMLElement>(`[aria-keyshortcuts="${key}"]`)?.click();
       else load().then((module) => module.run(value));
     };
@@ -97,5 +108,5 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
     };
   }, [keys, chords]);
 
-  return Palette ? <Palette view={view} onView={setView} resume={resume} seed={seed} /> : null;
+  return Palette ? <Palette view={view} onView={setView} resume={resume} take={take} /> : null;
 }

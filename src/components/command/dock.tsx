@@ -1,4 +1,4 @@
-import { pageIndex } from "@/content/site";
+import { pageIndex } from "@/content/command";
 import { sectionHref } from "@/components/command/shortcuts";
 import { SearchIcon } from "@/components/command/trigger";
 

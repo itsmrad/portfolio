@@ -325,19 +325,3 @@ export const stack = [
   { label: "AI", items: ["Agent runtimes", "Cloud sandboxes", "Speech-to-text providers"] },
   { label: "Tooling", items: ["GitHub Actions", "Playwright", "Vitest", "Nix", "Sentry"] },
 ] as const;
-
-/**
- * Page index for the command palette, the `g` then key jumps and the phone
- * dock (command branch). Ids are the section ids; `chord` is the key after `g`.
- */
-export const pageIndex = [
-  { id: "top", label: "Home", chord: "h" },
-  { id: "about", label: "About", chord: "a" },
-  { id: "experience", label: "Experience", chord: "e" },
-  { id: "work", label: "Selected work", chord: "w" },
-  { id: "building", label: "Currently building", chord: "b" },
-  { id: "activity", label: "GitHub activity", chord: "i" },
-  { id: "stack", label: "Stack", chord: "s" },
-  { id: "education", label: "Education", chord: "d" },
-  { id: "contact", label: "Contact", chord: "c" },
-] as const;

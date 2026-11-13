@@ -14,7 +14,7 @@ import {
   AtSign,
   Box,
   BriefcaseBusiness,
-  Code,
+  Calendar,
   CornerDownLeft,
   Download,
   FileText,
@@ -35,8 +35,9 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { commandCopy } from "@/content/command";
 import { site } from "@/content/site";
-import { haptic, play } from "@/lib/sound";
+import { haptic, play, toggleSound } from "@/lib/sound";
 import { CommandGroup, CommandItem, CommandLegend, CommandShortcut, kbd } from "@/components/ui/command";
 import { Dialog } from "@/components/ui/dialog";
 import { actions, type Action } from "@/components/command/shortcuts";
@@ -66,7 +67,7 @@ const icons: Record<string, React.ReactNode> = {
   contact: <AtSign />,
   project: <Box />,
   globe: <Globe />,
-  code: <Code />,
+  calendar: <Calendar />,
   file: <FileText />,
   download: <Download />,
   mail: <Mail />,
@@ -116,18 +117,20 @@ function copy(text: string, done: string) {
       haptic();
       toast(done);
     },
-    () => toast(`Could not copy: ${text}`),
+    () => toast(`${commandCopy.copyFailed} ${text}`),
   );
 }
 
 function perform(action: Action) {
-  if (action.control) {
-    // The page control owns the effect (the theme reveal, the stored mute), so press it.
+  if (action.id === "sound") {
+    toggleSound();
+  } else if (action.control) {
+    // The theme toggle owns the reveal from its own position, so press it.
     document.querySelector<HTMLElement>(`[aria-keyshortcuts="${action.key}"]`)?.click();
   } else if (action.id === "copy-link") {
-    copy(site.url + location.pathname + location.hash, "Link copied");
+    copy(site.url + location.pathname + location.hash, commandCopy.linkCopied);
   } else if (action.id === "copy-email" && site.email) {
-    copy(site.email, "Email copied");
+    copy(site.email, commandCopy.emailCopied);
   } else if (action.download && action.href) {
     Object.assign(document.createElement("a"), { href: action.href, download: action.download }).click();
   } else if (action.external) {
@@ -183,15 +186,15 @@ export function Palette({
   view,
   onView,
   resume,
-  seed,
+  take,
 }: {
   view: View;
   onView: (view: View) => void;
   resume: boolean;
-  /** What was typed while this chunk loaded. */
-  seed: string;
+  /** Hands over what was typed since the open request; typing reaches the input from here on. */
+  take: () => string;
 }) {
-  const [query, setQuery] = useState(seed);
+  const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -216,9 +219,13 @@ export function Palette({
   useEffect(() => {
     if (!open) return;
     input.current?.focus();
+    const typed = take();
+    // Text typed before the input could take it: an external buffer, read once per opening.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (typed) setQuery(typed);
     play("open");
     haptic();
-  }, [open]);
+  }, [open, take]);
 
   useEffect(() => {
     if (active === 0) list.current?.scrollTo({ top: 0 });
@@ -243,7 +250,7 @@ export function Palette({
     chosen.current = true;
     // Close first: the page is inert while the modal is open, and focus goes back before any jump.
     dialog.current?.close();
-    if (!action.control && !action.id.startsWith("copy")) {
+    if (!action.control && action.id !== "sound" && !action.id.startsWith("copy")) {
       play("tap");
       haptic();
     }
