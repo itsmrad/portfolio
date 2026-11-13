@@ -1,0 +1,272 @@
+/* A featured project, read as a short case study. Sizes follow the site's type scale. */
+.article {
+  padding: 1.5rem 1rem 2rem;
+}
+.article:last-child::after {
+  content: none;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-top: 1rem;
+}
+.status {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 0.375rem;
+  vertical-align: 0.15em;
+  background: var(--success);
+}
+
+.name {
+  margin-top: 0.75rem;
+  font: 2rem/1 var(--font-serif);
+  letter-spacing: -0.01em;
+}
+/* Inline, so the underline runs under the name only, not the mark or the arrow. */
+.name svg {
+  display: inline-block;
+  margin-right: 0.625rem;
+  vertical-align: -0.12em;
+}
+.name a > span[aria-hidden] {
+  display: inline-block;
+  margin-left: 0.5rem;
+  vertical-align: 0.35em;
+  font: 1rem/1 var(--font-mono);
+}
+/* The one-sentence pitch leads; the engineering description follows. */
+.tagline {
+  margin-top: 0.625rem;
+  font-size: 1.0625rem;
+  line-height: 1.6rem;
+  text-wrap: pretty;
+}
+.description {
+  margin-top: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+  text-wrap: pretty;
+}
+.byline {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.byline::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem;
+  margin-right: 0.5rem;
+  vertical-align: 0.3em;
+  border-top: 1px solid var(--foreground);
+}
+
+/* Stat cells: value large in the serif, label small in mono underneath. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--border);
+}
+.metrics div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  background: var(--background);
+}
+.metrics dt {
+  color: var(--muted-foreground);
+  font: 11px/1rem var(--font-mono);
+}
+/* Value first, then the label, then any condition attached to the number. */
+.metrics dd:first-of-type {
+  order: -1;
+  font: 1.625rem/1 var(--font-serif);
+  font-variant-numeric: tabular-nums;
+}
+.metrics dd + dd {
+  margin-top: -0.25rem;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 0.875rem;
+}
+.source {
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font: 0.75rem/1rem var(--font-mono);
+}
+
+/* Numbered sub-parts: 01 The product, 02 What I built, … */
+.part {
+  margin-top: 2.25rem;
+}
+.part h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font: 1.25rem/1 var(--font-serif);
+}
+.part h4 span {
+  color: var(--muted-foreground);
+  font: 0.75rem/1 var(--font-pixel);
+}
+
+.built {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+}
+.built li {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  gap: 0.25rem;
+}
+.built li::before {
+  content: "–";
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+}
+
+/* Layer, dashed leader, tools. */
+.layers {
+  display: grid;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.layers div {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.layers dt {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font: 0.75rem/1.25rem var(--font-mono);
+}
+.layers dt::after {
+  content: "";
+  flex: 1;
+  min-width: 0.75rem;
+  translate: 0 -3px;
+  border-bottom: 1px dashed var(--line);
+}
+
+/* Constraint, decision, result. */
+.decisions {
+  display: grid;
+  gap: 1.5rem;
+  counter-reset: decision;
+}
+.decisions li {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  column-gap: 0.625rem;
+  counter-increment: decision;
+}
+.decisions li::before {
+  content: counter(decision);
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  font: 11px/1 var(--font-mono);
+}
+.decisions h5 {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.decisions dl {
+  grid-column: 2;
+  display: grid;
+  margin-top: 0.625rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.decisions dt:nth-of-type(2)::before {
+  content: "→ " / "";
+}
+.decisions dt {
+  padding: 0.625rem 0.75rem 0;
+  color: var(--muted-foreground);
+  font: 11px/1rem var(--font-mono);
+  text-transform: uppercase;
+}
+.decisions dt:not(:first-child) {
+  border-top: 1px solid var(--border);
+}
+.decisions dd {
+  padding: 0.25rem 0.75rem 0.625rem;
+  text-wrap: pretty;
+}
+/* The decision itself sits on the tinted surface. */
+.decisions dt:nth-of-type(2),
+.decisions dd:nth-of-type(2) {
+  background: var(--surface);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 2rem;
+  font: 0.875rem/1.25rem var(--font-mono);
+}
+
+@media (min-width: 40rem) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .layers div {
+    grid-template-columns: 10rem 1fr;
+  }
+  .decisions li {
+    grid-template-columns: 1.5rem 1fr;
+    column-gap: 0.75rem;
+  }
+  .decisions dl {
+    grid-template-columns: 6.5rem 1fr;
+  }
+  .decisions dt {
+    padding: 0.625rem 0 0.625rem 0.75rem;
+    font-size: 10.5px;
+    line-height: 1.4rem;
+  }
+  .decisions dd {
+    padding: 0.625rem 0.75rem 0.625rem 0;
+  }
+  .decisions dd:not(:nth-of-type(1)) {
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media print {
+  .name a::after {
+    content: none !important;
+  }
+}
