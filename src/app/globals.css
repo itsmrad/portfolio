@@ -1,0 +1,363 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Design tokens and the Blueprint layout utilities.
+ * Foundation-owned: feature branches use these tokens and utilities and keep
+ * their own CSS in co-located CSS modules, so this file never conflicts.
+ */
+
+/* `dark:` follows an explicit .dark/.light class, otherwise the system. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not(.light, .light *)) {
+      @slot;
+    }
+  }
+}
+
+/* Wide screens, where the margins outside the column exist. */
+@custom-variant gutter {
+  @media (min-width: 64rem) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-line: var(--line);
+  --color-cross: var(--cross);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-surface: var(--surface);
+  --color-dimension: var(--dimension);
+  --color-dimension-foreground: var(--dimension-foreground);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, Menlo, "Courier New", monospace;
+  --font-pixel: var(--font-geist-pixel), var(--font-geist-mono), ui-monospace, Menlo, monospace;
+  /* Slashed zero and tabular figures wherever mono is used. */
+  --font-mono--font-feature-settings: "zero", "tnum";
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* Layout */
+  --frame-width: 40rem; /* the single column, 640px */
+  --frame-gutter: 0.5rem; /* viewport edge to column on small screens */
+  --header-height: 3.5rem; /* 56px */
+  --separator-height: 2rem; /* 32px hatch band */
+
+  /* Colour: zinc greys in OKLCH, written once as light-dark(light, dark). */
+  --background: light-dark(oklch(1 0 0), oklch(0.141 0.005 285.823));
+  --foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --primary: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.141 0.005 285.823));
+  --secondary: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --secondary-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --muted: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --muted-foreground: light-dark(oklch(0.552 0.016 285.938), oklch(0.705 0.015 286.067));
+  --card: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.885));
+  --card-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --popover: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.885));
+  --popover-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  /* `accent` keeps its usual meaning: the neutral hover surface. */
+  --accent: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --accent-foreground: light-dark(oklch(0.21 0.006 285.885), oklch(0.985 0 0));
+  --border: light-dark(oklch(0.92 0.004 286.32), oklch(0.274 0.006 286.033));
+  --input: light-dark(oklch(0.92 0.004 286.32), oklch(1 0 0 / 0.15));
+  --ring: light-dark(oklch(0.705 0.015 286.067), oklch(0.552 0.016 285.938));
+  --surface: light-dark(oklch(0.985 0 0), oklch(0.21 0.006 285.885));
+  --success: oklch(0.723 0.219 149.579);
+  --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.505 0.213 27.518));
+
+  /* The one colour: state only (active, hover, live, selected). */
+  --signal: light-dark(oklch(0.488 0.243 264.376), oklch(0.623 0.214 259.815));
+  --signal-foreground: oklch(0.985 0 0);
+
+  /* Drawing lines */
+  --line: color-mix(in oklab, var(--border) 64%, var(--background));
+  --cross: light-dark(oklch(0.705 0.015 286.067), oklch(0.442 0.017 285.786));
+  --dimension-foreground: light-dark(oklch(0.705 0.015 286.067), oklch(0.37 0.013 285.805));
+  --dimension: light-dark(
+    color-mix(in oklab, oklch(0.705 0.015 286.067) 60%, oklch(1 0 0)),
+    color-mix(in oklab, oklch(0.37 0.013 285.805) 80%, oklch(0.141 0.005 285.823))
+  );
+}
+
+/* A stored choice (set before paint by the inline script) beats the system. */
+:root.light {
+  color-scheme: light;
+}
+:root.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + 1rem);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  time,
+  kbd,
+  data {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}
+
+/* --- Blueprint utilities ------------------------------------------------ */
+
+/* Full-bleed hairlines: 200vw wide so they always reach both viewport edges.
+   The header, the main wrapper and the footer clip the overflow (overflow-x-clip). */
+@utility screen-line-top {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100vw;
+    width: 200vw;
+    height: 1px;
+    background: var(--line);
+    pointer-events: none;
+  }
+}
+
+@utility screen-line-bottom {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -100vw;
+    width: 200vw;
+    height: 1px;
+    background: var(--line);
+    pointer-events: none;
+  }
+}
+
+/* Section rule: dashed full-bleed line (4px dash, 5px gap) with a 9px "+"
+   registration mark where it crosses each column edge. Use on a direct,
+   unpadded child of the frame so the marks sit on the side hairlines. */
+@utility rule {
+  position: relative;
+  height: 0;
+  pointer-events: none;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 200vw;
+    height: 1px;
+    translate: -50% 0;
+    background: repeating-linear-gradient(to right, var(--border) 0 4px, transparent 4px 9px);
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    inset-inline: -5px;
+    height: 9px;
+    background:
+      linear-gradient(var(--cross), var(--cross)) left center / 9px 1px,
+      linear-gradient(var(--cross), var(--cross)) 4px center / 1px 9px,
+      linear-gradient(var(--cross), var(--cross)) right center / 9px 1px,
+      linear-gradient(var(--cross), var(--cross)) calc(100% - 4px) center / 1px 9px;
+    background-repeat: no-repeat;
+  }
+}
+
+/* 315deg hairline hatching on a 10px grid, at 56% of the line colour. */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    315deg,
+    color-mix(in oklab, var(--line) 56%, transparent) 0,
+    color-mix(in oklab, var(--line) 56%, transparent) 1px,
+    transparent 0,
+    transparent 50%
+  );
+  background-size: 10px 10px;
+}
+
+/* Full-bleed hatch band between major sections. */
+@utility hatch-band {
+  position: relative;
+  height: var(--separator-height);
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: -100vw;
+    width: 200vw;
+    pointer-events: none;
+    @apply hatch;
+  }
+}
+
+/* 8px dot grid, the alternative fill. */
+@utility dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0);
+  background-size: 8px 8px;
+}
+
+/* Uppercase micro-label in the pixel face: eyebrows and counters only. */
+@utility eyebrow {
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Dotted leader between a label and its value: `flex-1 leader`. */
+@utility leader {
+  height: 1px;
+  align-self: center;
+  background: linear-gradient(to right, var(--border) 1px, transparent 1px) 0 0 / 4px 1px repeat-x;
+}
+
+@utility link-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 30%, transparent);
+  transition: text-decoration-color 150ms;
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Invisible 8px halo so small controls meet touch-target size on phones. */
+@utility touch-target {
+  @media (pointer: coarse) {
+    position: relative;
+    touch-action: manipulation;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -0.5rem;
+    }
+  }
+}
+
+/* --- Print: the page doubles as a paper resume --------------------------- */
+@media print {
+  :root {
+    color-scheme: light !important;
+  }
+  @page {
+    margin: 14mm;
+  }
+  [data-print="hide"],
+  .rule,
+  .hatch-band {
+    display: none !important;
+  }
+  [data-slot="frame"] {
+    max-width: none !important;
+    border: 0 !important;
+  }
+  .screen-line-top::before,
+  .screen-line-bottom::after {
+    content: none !important;
+  }
+  section {
+    break-inside: avoid;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+  }
+}
