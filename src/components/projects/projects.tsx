@@ -17,7 +17,7 @@ import { Section, SectionHeader } from "@/components/layout/section";
 import s from "./article.module.css";
 import { Benchmarks } from "./benchmarks";
 import styles from "./projects.module.css";
-import { ProjectFigure, ProjectLogo, ProjectWindow } from "./window";
+import { ProjectClip, ProjectFigure, ProjectLogo, ProjectWindow } from "./window";
 
 export function Projects() {
   const featured = projects.filter((project) => project.featured);
@@ -32,12 +32,20 @@ export function Projects() {
 }
 
 function ProjectArticle({ project }: { project: Project }) {
+  // The printed page keeps the summary, ownership, numbers and links (5 sheets in all); parts are screen-only.
   const parts: [string, React.ReactNode][] = [];
-  if (project.figure) parts.push(["The product", <ProjectFigure key="f" figure={project.figure} />]);
+  if (project.clip || project.figure)
+    parts.push([
+      "The product",
+      <>
+        {project.clip && <ProjectClip clip={project.clip} />}
+        {project.figure && <ProjectFigure figure={project.figure} />}
+      </>,
+    ]);
   if (project.benchmarks) parts.push(["Benchmarks", <Benchmarks key="b" data={project.benchmarks} />]);
   parts.push(["What I built", <Built key="w" items={project.built ?? project.highlights} />]);
-  if (project.layers) parts.push(["Stack by layer", <Layers key="l" layers={project.layers} />]);
   if (project.decisions) parts.push(["Engineering decisions", <Decisions key="d" decisions={project.decisions} />]);
+  if (project.layers) parts.push(["Stack by layer", <Layers key="l" layers={project.layers} />]);
 
   return (
     <article id={project.slug} aria-labelledby={`${project.slug}-title`} className={`${s.article} screen-line-bottom`}>
@@ -51,35 +59,37 @@ function ProjectArticle({ project }: { project: Project }) {
         </p>
       </div>
 
+      {/* The heading's name is the product's name alone; the card and links announce the new tab. */}
       <h3 id={`${project.slug}-title`} className={s.name}>
-        <a href={project.url ?? project.repo} target="_blank" rel="noopener noreferrer">
+        <a href={project.url ?? project.repo} target="_blank" rel="noopener noreferrer" className="link-underline">
           <ProjectLogo slug={project.slug} />
           {project.name}
           <span aria-hidden className={styles.arrow}>
             ↗
           </span>
-          <span className="sr-only"> (opens in a new tab)</span>
         </a>
       </h3>
       <p className={s.tagline}>{project.tagline}</p>
       <p className={s.description}>{project.description}</p>
+      {project.authorship && <p className={s.byline}>{project.authorship}</p>}
 
       <dl className={s.metrics}>
         {project.metrics.map((metric) => (
           <div key={metric.label}>
             <dt>{metric.label}</dt>
             <dd>{metric.value}</dd>
+            {metric.note && <dd>{metric.note}</dd>}
           </div>
         ))}
       </dl>
-      {project.metricsSource && !project.benchmarks && (
+      {project.metricsSource && (
         <p className={s.source}>
           <ExternalLink href={project.metricsSource.href}>{project.metricsSource.label}</ExternalLink>
         </p>
       )}
 
       {parts.map(([title, body], i) => (
-        <div key={title} className={s.part}>
+        <div key={title} className={s.part} data-print="hide">
           <h4>
             <span aria-hidden>{String(i + 1).padStart(2, "0")}</span>
             {title}
@@ -91,7 +101,9 @@ function ProjectArticle({ project }: { project: Project }) {
       <ul className={s.links}>
         {project.links.map((item) => (
           <li key={item.href}>
-            <ExternalLink href={item.href}>{item.label}</ExternalLink>
+            <ExternalLink href={item.href} className="touch-target">
+              {item.label}
+            </ExternalLink>
           </li>
         ))}
       </ul>
@@ -133,7 +145,7 @@ function Decisions({ decisions }: { decisions: NonNullable<Project["decisions"]>
           <dl>
             <dt>Constraint</dt>
             <dd>{entry.constraint}</dd>
-            <dt>→ Decision</dt>
+            <dt>Decision</dt>
             <dd>{entry.decision}</dd>
             <dt>Result</dt>
             <dd>{entry.result}</dd>

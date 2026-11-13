@@ -6,13 +6,15 @@ import s from "./benchmarks.module.css";
 /**
  * The published benchmark numbers drawn as two small bar plates, like sheets
  * in a drawing set. Plain HTML and CSS: the numbers are text; each bar is one
- * empty element whose p50 and p95 stops are custom properties.
+ * empty element whose p50 and p95 stops are custom properties. A plate draws
+ * its bars once, on a timer, when it scrolls into view, so a bar at rest is
+ * always its true length.
  */
 export function Benchmarks({ data }: { data: Data }) {
   const { memory, latency } = data;
   return (
     <figure className={s.figure}>
-      <Plate title="Fig. 1  Memory" aside={memory.unit} max={memory.max} step={5}>
+      <Plate title={memory.title} aside={memory.unit} max={memory.max} step={memory.step}>
         {memory.rows.map((row) => (
           <Row key={row.label} label={row.label} note={row.note} a={+row.value / memory.max}>
             <Value value={row.value} unit={memory.unit} />
@@ -20,14 +22,14 @@ export function Benchmarks({ data }: { data: Data }) {
         ))}
       </Plate>
       <Plate
-        title="Fig. 2  Latency"
+        title={latency.title}
         aside={
           <>
             <i /> p50 <i className={s.p95} /> p95
           </>
         }
         max={latency.max}
-        step={100}
+        step={latency.step}
       >
         {latency.rows.map((row) => (
           <Row
@@ -74,7 +76,7 @@ function Plate({
       </p>
       <ul>{children}</ul>
       <p aria-hidden className={s.ticks}>
-        {Array.from({ length: max / step + 1 }, (_, i) => (
+        {Array.from({ length: Math.floor(max / step) + 1 }, (_, i) => (
           <span key={i} style={{ left: `${(i * step * 100) / max}%` }}>
             {i * step}
           </span>

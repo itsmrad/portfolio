@@ -79,6 +79,8 @@
   overflow: hidden;
   border: 1px solid var(--win-edge);
   background: var(--win-bg);
+  /* Alt text of a capture that fails to load stays readable on the chrome. */
+  color: var(--win-dot);
   box-shadow: 0 12px 25px var(--win-shadow);
 }
 
@@ -164,4 +166,41 @@ a:is(:hover, :focus-visible) > .arrow {
   margin-top: 0.5rem;
   color: var(--muted-foreground);
   font: 0.75rem/1.25rem var(--font-mono);
+}
+
+/* Recording-pill states, two by two on a dotted surface like the card frame. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--border);
+}
+.gallery li {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem 0.625rem;
+  background-color: var(--surface);
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0);
+  background-size: 8px 8px;
+}
+.gallery img {
+  width: min(100%, 172px);
+  height: auto;
+}
+.gallery span {
+  color: var(--muted-foreground);
+  font: 11px/1rem var(--font-mono);
+}
+
+.clip {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
 }

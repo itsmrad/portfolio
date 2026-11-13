@@ -86,7 +86,12 @@
   transform: translate(2px, -2px);
 }
 
-/* 2x2 block loader: the cells light in turn. Static under reduced motion. */
+/*
+ * 2x2 block loader: the cells light in turn. Each cell's colour is fixed and a
+ * signal-coloured layer above it animates opacity only, which the compositor
+ * runs without touching the main thread. Where scroll triggers exist it runs
+ * only while the list is on screen; it is static under reduced motion.
+ */
 .loader {
   display: inline-grid;
   grid-template-columns: repeat(2, 3px);
@@ -94,36 +99,55 @@
   flex-shrink: 0;
 }
 .loader i {
+  position: relative;
   width: 3px;
   height: 3px;
-  background: var(--muted-foreground);
-  opacity: 0.35;
-  animation: cell 1.6s linear infinite;
+  background: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
 }
-.loader i:nth-child(2) {
+.loader i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  opacity: 0;
+  animation: cell 1.6s steps(1, end) infinite;
+}
+.loader i:nth-child(2)::after {
   animation-delay: 0.4s;
 }
-.loader i:nth-child(4) {
+.loader i:nth-child(4)::after {
   animation-delay: 0.8s;
 }
-.loader i:nth-child(3) {
+.loader i:nth-child(3)::after {
   animation-delay: 1.2s;
 }
 @keyframes cell {
-  0%,
-  24% {
+  0% {
     opacity: 1;
-    background: var(--signal);
   }
-  26%,
-  100% {
-    opacity: 0.35;
-    background: var(--muted-foreground);
+  25% {
+    opacity: 0;
+  }
+}
+@supports (timeline-trigger: --t view()) {
+  .list {
+    timeline-trigger: --rows view() cover 0% cover 100%;
+  }
+  .loader i::after {
+    animation-trigger: --rows play pause;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .loader i {
+  .loader i::after {
     animation: none;
+  }
+  .loader i:first-child::after {
     opacity: 1;
   }
+}
+
+/* The description sits above the row-sized link overlay so its text can be selected. */
+.row p {
+  position: relative;
+  z-index: 1;
 }

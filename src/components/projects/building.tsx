@@ -14,7 +14,7 @@ export function Building() {
   return (
     <Section id="building">
       <SectionHeader id="building" index={4} label="building" title="Currently building" count={building.length}>
-        <p className="eyebrow mb-0.5">In progress</p>
+        <p className="eyebrow mb-0.5 whitespace-nowrap">In progress</p>
       </SectionHeader>
       <ol className={styles.list}>
         {building.map((item, i) => (
@@ -22,11 +22,11 @@ export function Building() {
             <span aria-hidden>{String(i + 1).padStart(2, "0")}</span>
             <div>
               <h3>
-                <a href={item.repo} target="_blank" rel="noopener noreferrer">
+                <a href={item.repo} target="_blank" rel="noopener noreferrer" className="link-underline">
                   {item.name}
-                  <span className="sr-only">, in progress. Source on GitHub (opens in a new tab)</span>
                 </a>
               </h3>
+              <span className="sr-only">In progress.</span>
               <span aria-hidden className={styles.leader} />
               <Loader />
               <time dateTime={item.updated}>

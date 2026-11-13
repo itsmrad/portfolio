@@ -1,4 +1,4 @@
-import type { Project } from "@/content/site";
+import type { Clip, Project } from "@/content/site";
 import { Img } from "@/components/ui/img";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ export function ProjectWindow({ project }: { project: Project }) {
   const pair = project.screenshots.filter((shot) => shot.theme);
   const shots = pair.length === 2 ? pair : [first];
   return (
-    <div className={styles.frame}>
+    <div className={styles.frame} data-print="hide">
       {project.url && (
         <a href={project.url} target="_blank" rel="noopener noreferrer" className={styles.link}>
           <span aria-hidden className={styles.label}>
@@ -48,7 +48,7 @@ export function ProjectWindow({ project }: { project: Project }) {
       )}
       {project.repo && (
         <div className={styles.icons}>
-          <a href={project.repo} target="_blank" rel="noopener noreferrer" className="touch-target" title="Source on GitHub">
+          <a href={project.repo} target="_blank" rel="noopener noreferrer" className="touch-target" data-slot="button" title="Source on GitHub">
             <GitHubIcon />
             <span className="sr-only">{project.name} source on GitHub (opens in a new tab)</span>
           </a>
@@ -58,19 +58,42 @@ export function ProjectWindow({ project }: { project: Project }) {
   );
 }
 
-/** A second product image in the same window chrome, not offset. */
+/** Real product images in a grid of dotted cells, each with its state label. */
 export function ProjectFigure({ figure }: { figure: NonNullable<Project["figure"]> }) {
   return (
     <figure>
-      <div className={cn(styles.window, "rounded-[5px]")}>
-        <span aria-hidden className={styles.bar}>
-          <i />
-          <i />
-          <i />
-        </span>
-        <Img src={figure.src} alt={figure.alt} width={WIDTH} className="block" />
-      </div>
+      <ul className={styles.gallery}>
+        {figure.items.map((item) => (
+          <li key={item.label}>
+            <Img src={item.src} alt={item.alt} width={item.src.width / 2} />
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
       <figcaption className={styles.caption}>{figure.caption}</figcaption>
+    </figure>
+  );
+}
+
+/**
+ * The owner's recorded clip. Nothing loads until the reader presses play
+ * (`preload="none"`), and the poster's size reserves the box, so it never shifts.
+ */
+export function ProjectClip({ clip }: { clip: Clip }) {
+  return (
+    <figure>
+      <video
+        className={styles.clip}
+        src={clip.src}
+        poster={clip.poster.src}
+        width={clip.poster.width}
+        height={clip.poster.height}
+        controls
+        preload="none"
+        playsInline
+        muted
+      />
+      <figcaption className={styles.caption}>{clip.caption}</figcaption>
     </figure>
   );
 }

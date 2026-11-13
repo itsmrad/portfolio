@@ -28,21 +28,45 @@
   font: 2rem/1 var(--font-serif);
   letter-spacing: -0.01em;
 }
-.name a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
+/* Inline, so the underline runs under the name only, not the mark or the arrow. */
+.name svg {
+  display: inline-block;
+  margin-right: 0.625rem;
+  vertical-align: -0.12em;
 }
 .name a > span[aria-hidden] {
-  font: 1rem var(--font-mono);
+  display: inline-block;
+  margin-left: 0.5rem;
+  vertical-align: 0.35em;
+  font: 1rem/1 var(--font-mono);
 }
+/* The one-sentence pitch leads; the engineering description follows. */
 .tagline {
-  margin-top: 0.5rem;
-  color: var(--muted-foreground);
+  margin-top: 0.625rem;
+  font-size: 1.0625rem;
+  line-height: 1.6rem;
+  text-wrap: pretty;
 }
 .description {
-  margin-top: 0.75rem;
+  margin-top: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
   text-wrap: pretty;
+}
+.byline {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+.byline::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem;
+  margin-right: 0.5rem;
+  vertical-align: 0.3em;
+  border-top: 1px solid var(--foreground);
 }
 
 /* Stat cells: value large in the serif, label small in mono underneath. */
@@ -58,8 +82,7 @@
 }
 .metrics div {
   display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
+  flex-direction: column;
   gap: 0.375rem;
   padding: 0.75rem;
   background: var(--background);
@@ -68,9 +91,17 @@
   color: var(--muted-foreground);
   font: 11px/1rem var(--font-mono);
 }
-.metrics dd {
+/* Value first, then the label, then any condition attached to the number. */
+.metrics dd:first-of-type {
+  order: -1;
   font: 1.625rem/1 var(--font-serif);
   font-variant-numeric: tabular-nums;
+}
+.metrics dd + dd {
+  margin-top: -0.25rem;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 0.875rem;
 }
 .source {
   margin-top: 0.5rem;
@@ -177,6 +208,9 @@
   font-size: 0.875rem;
   line-height: 1.6;
 }
+.decisions dt:nth-of-type(2)::before {
+  content: "→ " / "";
+}
 .decisions dt {
   padding: 0.625rem 0.75rem 0;
   color: var(--muted-foreground);
@@ -228,5 +262,11 @@
   }
   .decisions dd:not(:nth-of-type(1)) {
     border-top: 1px solid var(--border);
+  }
+}
+
+@media print {
+  .name a::after {
+    content: none !important;
   }
 }

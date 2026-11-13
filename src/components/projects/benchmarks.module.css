@@ -151,23 +151,33 @@
   line-height: 1.25rem;
 }
 
-/* Bars draw themselves as they scroll into view, where supported. */
-@supports (animation-timeline: view()) {
+/*
+ * Bars draw once, over 0.9 s, when their plate scrolls into view (a
+ * scroll-triggered time animation, no script). The scroll position never
+ * scrubs them, so a bar at rest is always its true length. Without trigger
+ * support, under reduced motion and in print they are simply drawn.
+ */
+@supports (timeline-trigger: --t view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .plate li > i::after {
-      animation: draw linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 35%;
+    .plate {
+      timeline-trigger: --plate view() entry 10% exit 100%;
     }
-  }
-}
-@media print {
-  .plate li > i::after {
-    animation: none !important;
+    .plate li > i::after {
+      animation: draw 0.9s var(--ease-out-expo) both;
+      animation-trigger: --plate play-forwards;
+    }
   }
 }
 @keyframes draw {
   from {
     transform: scaleX(0);
   }
+}
+
+/* Keep the bars where the browser would drop backgrounds. */
+.plate li > i,
+.plate li > i::after,
+.head i {
+  print-color-adjust: exact;
+  forced-color-adjust: none;
 }
