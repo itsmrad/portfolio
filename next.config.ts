@@ -1,8 +1,12 @@
+import { execSync } from "node:child_process";
+import { readdirSync } from "node:fs";
+
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
-// Vercel injects its preview toolbar from vercel.live on preview deployments only.
-const live = process.env.VERCEL_ENV === "preview" ? " https://vercel.live" : "";
+// Vercel injects its toolbar on preview deployments only; these are its sources.
+const preview = process.env.VERCEL_ENV === "preview";
+const live = preview ? " https://vercel.live" : "";
 
 // Static pages cannot carry nonces, so inline scripts and styles are allowed;
 // the policy's job is to keep every fetched script, font and frame first-party.
@@ -10,18 +14,34 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${live}`,
   `style-src 'self' 'unsafe-inline'${live}`,
-  `img-src 'self' data: blob:${live}`,
-  `font-src 'self'${live}`,
-  `connect-src 'self'${isDev ? " ws:" : ""}${live}`,
-  `frame-src 'none'${live}`,
+  `img-src 'self' data: blob:${live}${preview ? " https://vercel.com" : ""}`,
+  `font-src 'self'${live}${preview ? " https://assets.vercel.com" : ""}`,
+  `connect-src 'self'${isDev ? " ws:" : ""}${live}${preview ? " wss://ws-us3.pusher.com" : ""}`,
+  `frame-src ${preview ? "https://vercel.live" : "'none'"}`,
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
 
+function commit() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA;
+  try {
+    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return ""; // not a git checkout: the footer shows "unavailable"
+  }
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Facts about this build, inlined when it is compiled, so they stay true
+  // when a page is re-rendered on the server later.
+  env: {
+    BUILD_SHA: commit(),
+    BUILD_DATE: new Date().toISOString().slice(0, 10),
+    PUBLIC_FILES: readdirSync("public").join("\n"),
+  },
   poweredByHeader: false,
   typedRoutes: true,
   images: { formats: ["image/avif", "image/webp"] },

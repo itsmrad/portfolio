@@ -80,7 +80,7 @@ export function llmsTxt() {
 ${resume ? `- [Resume (PDF)](${site.url}${resume})\n` : ""}
 ## Projects
 
-${list(projects.map((project) => `[${project.name}](${project.url}): ${project.tagline}`))}
+${list(projects.map((project) => `[${project.name}](${project.url ?? project.repo}): ${project.tagline}`))}
 
 ## Profiles
 
