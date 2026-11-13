@@ -16,6 +16,8 @@ export const metadata: Metadata = baseMetadata;
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
+  // Lets env(safe-area-inset-*) report the home indicator, so the phone dock sits above it.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: THEME_COLOR.light },
     { media: "(prefers-color-scheme: dark)", color: THEME_COLOR.dark },
