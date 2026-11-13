@@ -134,7 +134,8 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       resume={resume}
       take={take}
       onView={(view) => setState((current) => ({ ...current, view }))}
-      onClose={() => setState((current) => ({ ...current, open: false }))}
+      // A close belongs to the request that opened it; a newer request queued in the same moment wins.
+      onClose={(closed) => setState((current) => (current.request === closed ? { ...current, open: false } : current))}
     />
   ) : null;
 }

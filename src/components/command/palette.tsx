@@ -57,7 +57,8 @@ export type PaletteProps = {
   /** Hands over what was typed since the open request; typing reaches the input from then on. */
   take: () => string;
   onView: (view: View) => void;
-  onClose: () => void;
+  /** Called with the request this palette was opened for. */
+  onClose: (request: number) => void;
 };
 
 function Brand({ d }: { d: string }) {
@@ -311,7 +312,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
       onClose={() => {
         if (!chosen.current) play("close");
         chosen.current = false;
-        onClose();
+        onClose(request);
       }}
       data-palette=""
       aria-label="Command palette"

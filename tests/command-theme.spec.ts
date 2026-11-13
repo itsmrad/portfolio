@@ -179,7 +179,8 @@ test.describe("desktop", () => {
     await page.getByRole("banner").getByRole("button", { name: "Search" }).hover();
     await page.mouse.move(700, 600);
     await page.keyboard.press("/");
-    await page.waitForTimeout(500);
+    // A failed load gives the keys back at once; one that hangs, after at most 3 s.
+    await page.waitForTimeout(3200);
     await expectKeysLive(page);
     // The browser logs the refused request itself; no uncaught error from our code.
     expect(errors.filter((error) => !/Failed to load resource/.test(error))).toEqual([]);
