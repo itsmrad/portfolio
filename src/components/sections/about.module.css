@@ -1,0 +1,96 @@
+/* A project name inside the prose: a small chip that jumps to the project. */
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--surface);
+  font-weight: 500;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.chip span {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  color: var(--muted-foreground);
+  transition: translate 0.2s var(--ease-out-expo);
+}
+
+.chip:hover {
+  border-color: var(--signal);
+}
+
+.chip:hover span {
+  color: var(--signal);
+  translate: 1px 1px;
+}
+
+/* Question chips in a row; the open one takes a row of its own for its answer. */
+.questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.questions details[open] {
+  flex-basis: 100%;
+}
+
+.questions summary {
+  display: inline-block;
+  padding: 6px 11px;
+  border: 1px dashed var(--border);
+  border-radius: 99px;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition:
+    transform 0.4s var(--ease-spring),
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.questions summary::-webkit-details-marker {
+  display: none;
+}
+
+.questions summary:hover {
+  color: var(--foreground);
+}
+
+.questions summary:active {
+  transform: scale(0.96);
+}
+
+.questions [open] summary {
+  border-style: solid;
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.questions p {
+  max-width: 34rem;
+  margin-top: 0.625rem;
+  font-size: 0.9375rem;
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .questions [open] p {
+    animation: answer-in 0.5s var(--ease-out-expo);
+  }
+}
+
+@keyframes answer-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
