@@ -10,13 +10,19 @@ import { buttonVariants } from "@/components/ui/button";
 
 import styles from "./toggle.module.css";
 
-// Runs right after the button is parsed: mute-state classes and aria-pressed before first paint.
-const paint = `try{if(localStorage.getItem("sound")==="off"){document.documentElement.dataset.sound="off";document.currentScript.previousElementSibling.setAttribute("aria-pressed","false")}}catch{}`;
+/** Runs right after a sound control is parsed: the stored "off" on <html> and on the control before first paint. */
+export const paintMuted = (attribute: "aria-pressed" | "aria-checked") =>
+  `try{if(localStorage.getItem("sound")==="off"){document.documentElement.dataset.sound="off";document.currentScript.previousElementSibling.setAttribute("${attribute}","false")}}catch{}`;
+
+/** Without JavaScript a sound control would do nothing, so it is not shown. */
+export const hideWithoutScript = <noscript><style>{"[data-sound-control]{display:none!important}"}</style></noscript>;
 
 export function SoundToggle() {
   return (
     <>
       <SoundToggleButton
+        data-slot="button"
+        data-sound-control=""
         aria-label="Sound"
         aria-keyshortcuts="m"
         title="Sound (M)"
@@ -38,7 +44,8 @@ export function SoundToggle() {
           <path className={styles.mute} d="m16 9 6 6m0-6-6 6" />
         </svg>
       </SoundToggleButton>
-      <script dangerouslySetInnerHTML={{ __html: paint }} />
+      <script dangerouslySetInnerHTML={{ __html: paintMuted("aria-pressed") }} />
+      {hideWithoutScript}
     </>
   );
 }

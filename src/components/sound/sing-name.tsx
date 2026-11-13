@@ -35,6 +35,7 @@ export function SingName({ children }: { children: string }) {
 export function SingButton({ className }: { className?: string }) {
   return (
     <SingButtonClient
+      data-slot="button"
       aria-label={soundCopy.singName}
       title={soundCopy.singName}
       className={buttonVariants({ variant: "ghost", size: "icon-sm", className })}

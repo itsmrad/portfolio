@@ -31,3 +31,13 @@
   scale: 1;
   transition-delay: 80ms;
 }
+
+/* The footer switch shows the word for the current state. */
+.whenOff,
+:global(html[data-sound="off"]) .whenOn {
+  display: none;
+}
+
+:global(html[data-sound="off"]) .whenOff {
+  display: inline;
+}
