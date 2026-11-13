@@ -65,7 +65,10 @@ export function Menu({ mark, x, y, labels, toast, onClose }: MenuProps) {
           play("copy");
           toast(labels.copied);
         },
-        () => toast(labels.failed),
+        () => {
+          play("error");
+          toast(labels.failed);
+        },
       );
     leave();
   };

@@ -73,7 +73,7 @@ export function Eggs({ data }: { data: Data }) {
       if (egg === "explode") explode(!exploded());
       if (egg === "cat") cat(!document.querySelector("[data-cat]"));
       if (egg === "reload") {
-        play("open");
+        play("success");
         toast(data.hotReload);
         dispatchEvent(new Event("playful:reload"));
       }

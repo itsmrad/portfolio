@@ -183,7 +183,7 @@ export function Stickers({ data }: { data: { terminal: string; key: string; stam
       <Sticker name="spark" voice="pop" tilt={-9} order={2}>
         <Spark />
       </Sticker>
-      <Sticker name="gear" voice="toggle" tilt={7} order={3}>
+      <Sticker name="gear" voice="detent" tilt={7} order={3}>
         <Gear />
       </Sticker>
       <Sticker name="stamp" voice="tap" tilt={-5} order={4}>
