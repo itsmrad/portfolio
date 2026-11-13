@@ -167,6 +167,8 @@ test.describe("desktop", () => {
     // Back to the system's theme clears the override, from the palette this time.
     await page.keyboard.press("Control+k");
     await page.keyboard.type("theme");
+    // Typed before the chunk arrived, the text still lands in the search, never on the shortcuts.
+    await expect(search(page)).toHaveValue("theme");
     await page.keyboard.press("Enter");
     await page.waitForTimeout(700);
     expect(await page.evaluate(() => [document.documentElement.className.includes("dark"), localStorage.getItem("theme")])).toEqual([false, null]);
