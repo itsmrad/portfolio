@@ -40,9 +40,20 @@ test.describe("phone", () => {
     const errors = collectErrors(page);
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
+    // Count media-query checks: on a phone the loader must not run one per touch.
+    await page.addInitScript(() => {
+      const state = window as unknown as { __queries: number };
+      const real = window.matchMedia.bind(window);
+      state.__queries = 0;
+      window.matchMedia = (query) => (state.__queries++, real(query));
+    });
     await page.goto("/");
     await expect(page.locator("[data-sticker]:visible")).toHaveCount(3);
-    await page.locator('[data-sticker="keycap"] > div').tap();
+    await settle(page);
+    const queries = () => page.evaluate(() => (window as unknown as { __queries: number }).__queries);
+    const before = await queries();
+    for (let tap = 0; tap < 5; tap++) await page.locator('[data-sticker="keycap"] > div').tap();
+    expect(await queries()).toBe(before);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await settle(page);
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -120,7 +131,8 @@ test.describe("wide", () => {
 
   test("the dots light under the pointer and the ruler follows the page", async ({ page }) => {
     await openWide(page);
-    const lit = () => page.locator('[data-margin="right"] [data-lit]').evaluate((layer) => getComputedStyle(layer).opacity);
+    // The state the code writes, not a value partway through its fade.
+    const lit = () => page.locator('[data-margin="right"] [data-lit]').evaluate((layer: HTMLElement) => layer.style.getPropertyValue("--on"));
     await page.mouse.move(1150, 600);
     await expect.poll(lit).toBe("1");
     await page.mouse.move(720, 600);
@@ -151,6 +163,8 @@ test.describe("wide", () => {
 
   test("hand-drawn hovers attach to the shared hooks", async ({ page }) => {
     await openWide(page);
+    // End states only: with transitions off, a hover style is either applied or not.
+    await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; }" });
     const link = page.locator("main a.link-underline").first();
     await link.scrollIntoViewIfNeeded();
     await link.hover();
@@ -160,7 +174,40 @@ test.describe("wide", () => {
     const size = () => page.locator("#probe").evaluate((element) => getComputedStyle(element, "::before").backgroundSize);
     expect(await size()).toBe("0px 1.25px, 0px 1.25px");
     await page.locator("#probe").hover();
-    await expect.poll(size).toBe("100% 1.25px, 100% 1.25px");
+    expect(await size()).toBe("100% 1.25px, 100% 1.25px");
+    // Same four lines around an icon-only 32px control (R10 puts the hook on those too).
+    await page.evaluate(() =>
+      document.querySelector("#probe")!.insertAdjacentHTML("afterend", '<button data-slot="button" id="icon" style="width:32px;height:32px"></button>'),
+    );
+    await page.locator("#icon").hover();
+    const box = await page.locator("#icon").evaluate((element) => {
+      const style = getComputedStyle(element, "::after");
+      return [style.backgroundSize, style.width, style.height];
+    });
+    expect(box).toEqual(["1.25px 100%, 1.25px 100%", "40px", "40px"]);
+  });
+
+  test("an egg whose chunk fails does nothing, and works on the next try", async ({ page }) => {
+    const thrown: string[] = [];
+    await openWide(page);
+    page.on("pageerror", (error) => thrown.push(String(error)));
+    await page.route("**/_next/static/chunks/**", (route) => route.abort());
+
+    for (const key of KONAMI) await page.keyboard.press(key);
+    await page.keyboard.type("kitty");
+    await page.locator('header a[href="/"]').click({ button: "right" });
+    await page.waitForTimeout(1000);
+    // Nothing happened, nothing claims it did, and nothing was thrown.
+    await expect(page.locator("html")).not.toHaveAttribute("data-exploded");
+    await expect(page.locator("[data-cat], [role='menu']")).toHaveCount(0);
+    await expect(toast(page)).toHaveText("");
+    expect(thrown).toEqual([]);
+
+    await page.unroute("**/_next/static/chunks/**");
+    for (const key of KONAMI) await page.keyboard.press(key);
+    await expect(page.locator("html")).toHaveAttribute("data-exploded", "on");
+    await expect(toast(page)).toHaveText(/Exploded view/);
+    expect(thrown).toEqual([]);
   });
 
   test("easter eggs: summoned by keys, announced politely, dismissed with Escape", async ({ page, context }) => {

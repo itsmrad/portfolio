@@ -264,16 +264,31 @@ function Timer({ label }: { label: string }) {
   const element = useRef<HTMLParagraphElement>(null);
   const [text, setText] = useState("");
   useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
     const tick = () => {
-      if (document.hidden || !element.current!.hasAttribute("data-live")) return;
       const seconds = Math.floor(performance.now() / 1000);
       setText(`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`);
     };
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
+    // The clock runs only while the readout is on screen in a visible tab.
+    let seen = false;
+    const sync = () => {
+      clearInterval(timer);
+      timer = seen && !document.hidden ? setInterval(tick, 1000) : undefined;
+    };
+    const observer = new IntersectionObserver((entries) => {
+      seen = entries.some((entry) => entry.isIntersecting);
+      sync();
+    });
+    observer.observe(element.current!);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      clearInterval(timer);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+    };
   }, []);
   return (
-    <p ref={element} data-loop data-timer className="eyebrow absolute bottom-4 left-11 whitespace-nowrap tabular-nums">
+    <p ref={element} data-timer className="eyebrow absolute bottom-4 left-11 whitespace-nowrap tabular-nums">
       {text && `${label} ${text}`}
     </p>
   );
@@ -285,11 +300,14 @@ function useMargin(notes: readonly Note[]) {
   const boxes = useBoxes(root, notes);
   const run = useReplay();
   useOnScreen(root, boxes, run);
+  // The handwriting face is asked for only where a note has somewhere to sit (not on the 404).
+  const written = notes.some((note) => boxes[note.at]);
   useEffect(() => {
-    // Notes stay unwritten until the handwriting face is in (or has failed), so they never restyle.
+    if (!written) return;
+    // Notes stay unwritten until the face is in (or has failed), so they never restyle.
     const inked = () => root.current?.setAttribute("data-inked", "");
     document.fonts.load("20px Caveat").then(inked, inked);
-  }, []);
+  }, [written]);
   return { root, boxes, run };
 }
 

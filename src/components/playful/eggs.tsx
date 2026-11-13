@@ -41,6 +41,7 @@ function toast(text: string) {
   region.dataset.timer = String(setTimeout(() => region.removeAttribute("data-show"), 2200));
 }
 
+const quiet = () => {};
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 
@@ -57,16 +58,20 @@ export function Eggs({ data }: { data: Data }) {
     let typed = "";
 
     const exploded = () => root.getAttribute("data-exploded") === "on";
+    // An egg whose chunk fails to load (offline, a deploy mid-visit) does nothing at all:
+    // no sound, no toast, no error. Nothing is remembered, so the next try fetches again.
     const explode = (on: boolean) => {
       if (on === exploded()) return;
       // The stylesheet is the whole effect; it arrives with the first use.
-      import("./exploded.module.css").then(() => root.setAttribute("data-exploded", on ? "on" : "off"));
-      play(on ? "open" : "close");
-      toast(on ? data.explodedOn : data.explodedOff);
+      import("./exploded.module.css").then(() => {
+        root.setAttribute("data-exploded", on ? "on" : "off");
+        play(on ? "open" : "close");
+        toast(on ? data.explodedOn : data.explodedOff);
+      }, quiet);
     };
     const cat = (on: boolean) => {
       if (on && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      if (on) import("./cat").then((module) => setCat(() => module.Cat));
+      if (on) import("./cat").then((module) => setCat(() => module.Cat), quiet);
       else setCat(null);
     };
     const summon = (egg: unknown) => {
@@ -94,8 +99,10 @@ export function Eggs({ data }: { data: Data }) {
         summon("reload");
         return;
       }
-      // A third "up" keeps the first two.
-      progress = key === KONAMI[progress] ? progress + 1 : key === "ArrowUp" ? (progress === 2 ? 2 : 1) : 0;
+      if (key === KONAMI[progress]) progress += 1;
+      // A third "up" keeps the first two; any other "up" starts again.
+      else if (key === "ArrowUp") progress = progress === 2 ? 2 : 1;
+      else progress = 0;
       // Past the arrows, the letters belong to the code, not to a shortcut.
       if (progress > 8) event.stopPropagation();
       if (progress === KONAMI.length) {
@@ -114,7 +121,7 @@ export function Eggs({ data }: { data: Data }) {
       // From the keyboard there is no pointer position: open under the mark.
       const rect = mark.getBoundingClientRect();
       const [x, y] = event.clientX || event.clientY ? [event.clientX, event.clientY] : [rect.left, rect.bottom + 4];
-      import("./menu").then(({ Menu }) => setMenu({ Menu, mark, x, y }));
+      import("./menu").then(({ Menu }) => setMenu({ Menu, mark, x, y }), quiet);
     };
 
     addEventListener("keydown", onKey, true);

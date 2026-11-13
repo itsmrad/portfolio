@@ -26,18 +26,23 @@ export function Menu({ mark, x, y, labels, toast, onClose }: MenuProps) {
   useEffect(() => {
     const element = menu.current!;
     element.querySelector<HTMLElement>('[role="menuitem"]')!.focus();
+    // A press elsewhere takes focus with it; a scroll or resize hands it back to the mark.
     const outside = (event: Event) => element.contains(event.target as Node) || onClose();
+    const away = () => {
+      onClose();
+      mark.focus({ preventScroll: true });
+    };
     addEventListener("pointerdown", outside);
-    addEventListener("scroll", onClose, { passive: true });
-    addEventListener("resize", onClose);
+    addEventListener("scroll", away, { passive: true });
+    addEventListener("resize", away);
     addEventListener("blur", onClose);
     return () => {
       removeEventListener("pointerdown", outside);
-      removeEventListener("scroll", onClose);
-      removeEventListener("resize", onClose);
+      removeEventListener("scroll", away);
+      removeEventListener("resize", away);
       removeEventListener("blur", onClose);
     };
-  }, [onClose]);
+  }, [mark, onClose]);
 
   const leave = () => {
     onClose();

@@ -24,17 +24,27 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data }: { piece: K; 
   const [Piece, setPiece] = useState<ComponentType<{ data: Data<K> }> | null>(null);
 
   useEffect(() => {
+    const media = matchMedia(when);
     let cancelled = false;
-    const stop = () => INPUTS.forEach((type) => removeEventListener(type, load, true));
+    const unlisten = () => INPUTS.forEach((type) => removeEventListener(type, load, true));
+    // Inputs are heard only while the piece could show: a phone listens to nothing.
+    const arm = () => {
+      unlisten();
+      if (media.matches) INPUTS.forEach((type) => addEventListener(type, load, { capture: true, passive: true }));
+    };
+    const stop = () => {
+      unlisten();
+      media.removeEventListener("change", arm);
+    };
     const load = () => {
-      if (!matchMedia(when).matches) return;
       stop();
       (pieces[piece]() as Promise<ComponentType<{ data: Data<K> }>>).then(
         (loaded) => cancelled || setPiece(() => loaded),
         () => {}, // Decoration: a failed fetch leaves the page as it was.
       );
     };
-    INPUTS.forEach((type) => addEventListener(type, load, { capture: true, passive: true }));
+    media.addEventListener("change", arm);
+    arm();
     return () => {
       cancelled = true;
       stop();

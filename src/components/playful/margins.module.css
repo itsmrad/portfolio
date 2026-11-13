@@ -153,6 +153,10 @@
 [data-margin="right"] .hand {
   rotate: 3deg;
 }
+/* Until the face has arrived the words are not laid out for the eye at all, so its swap moves nothing. */
+.root:not([data-inked]) .hand {
+  visibility: hidden;
+}
 /* Written once seen, and once the face has arrived. */
 .root[data-inked] [data-seen] > .hand {
   opacity: 1;

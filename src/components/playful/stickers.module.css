@@ -31,9 +31,17 @@
 .spark {
   right: 130px;
   --rest: -4deg;
-}.terminal,
+}
+.terminal,
 .stamp {
   display: none;
+}
+/* At 44px the legends are specks: the small ones go without. */
+@media not (min-width: 64rem) {
+  .keycap text,
+  .gear text {
+    display: none;
+  }
 }
 
 @media (min-width: 64rem) {
@@ -58,16 +66,17 @@
     width: 128px;
     --rest: 4deg;
   }
+  /* The narrowest margin is 192px: the gear and the stamp step down it, apart. */
   .gear {
     top: 112px;
     right: auto;
-    left: calc(100% + 36px);
-    width: 76px;
+    left: calc(100% + 34px);
+    width: 64px;
   }
   .stamp {
-    top: 120px;
+    top: 150px;
     left: calc(100% + 104px);
-    width: 84px;
+    width: 68px;
     --rest: -12deg;
   }
 }
@@ -206,15 +215,20 @@ text > .dim {
 .cog > path {
   fill: var(--card);
 }
-.sticker:hover .cog {
-  rotate: 45deg;
-}
 .cursor {
   fill: var(--foreground);
-  animation: blink 1.06s steps(1) infinite;
 }
-.root[data-idle] .cursor {
-  animation-play-state: paused;
+/* Only where there is a mouse: lean.tsx, which pauses the blink off screen, loads only there. */
+@media (hover: hover) {
+  .sticker:hover .cog {
+    rotate: 45deg;
+  }
+  .cursor {
+    animation: blink 1.06s steps(1) infinite;
+  }
+  .root[data-idle] .cursor {
+    animation-play-state: paused;
+  }
 }
 @keyframes blink {
   50% {
