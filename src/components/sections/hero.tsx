@@ -27,11 +27,25 @@ import styles from "./hero.module.css";
 
 const PORTRAIT = 96;
 
-/** Each line is shown for 3s; it blurs in from above over 0.35s and out below over 0.2s. */
-function taglineKeyframes(count: number) {
+/** "GMT+5:30": what the local-time fact says where no script runs. */
+const zoneOffset = new Intl.DateTimeFormat("en-US", { timeZone: site.location.timeZone, timeZoneName: "shortOffset" })
+  .formatToParts(new Date())
+  .find((part) => part.type === "timeZoneName")!.value;
+
+/**
+ * The rotation, as one inline rule. Each line is shown for 3s; it blurs in
+ * from above over 0.35s and out below over 0.2s. The keyframes depend on how
+ * many lines there are, so they cannot live in the stylesheet, and the rule
+ * that names them has to sit beside them: a CSS module would rename one and
+ * not the other.
+ */
+function taglineRotation(count: number) {
   const percent = (seconds: number) => `${((seconds / (count * 3)) * 100).toFixed(2)}%`;
   const away = (y: string) => `{opacity:0;transform:translateY(${y});filter:blur(2px)}`;
-  return `@keyframes hero-tagline{0%${away("-.25em")}${percent(0.35)},${percent(3)}{opacity:1;transform:none;filter:none}${percent(3.2)},to${away(".25em")}}`;
+  return (
+    `@keyframes hero-tagline{0%${away("-.25em")}${percent(0.35)},${percent(3)}{opacity:1;transform:none;filter:none}${percent(3.2)},to${away(".25em")}}` +
+    `@media (prefers-reduced-motion:no-preference){.${styles.taglines} li{animation:hero-tagline ${count * 3}s calc(var(--index)*3s) infinite backwards}}`
+  );
 }
 
 /** The claim, with the marked phrases wrapped for the hand-drawn underline. */
@@ -65,6 +79,8 @@ function Fact({ icon, label, children }: { icon: React.ReactNode; label: string;
 
 export function Hero() {
   const current = experience.find((job) => job.kind === "work" && !job.end);
+  // The role is stated in the facts below, so the rotation opens on the next line and comes to it last.
+  const taglines = [...site.taglines.slice(1), site.taglines[0]];
   return (
     <Section id="top" rule={false} aria-labelledby="top-title">
       <div className={styles.cover}>
@@ -104,15 +120,14 @@ export function Hero() {
             </h1>
             <ul
               className={`${styles.taglines} screen-line-top h-9 items-center px-4 font-mono text-[0.8125rem] text-muted-foreground sm:text-sm`}
-              style={{ "--count": site.taglines.length } as React.CSSProperties}
             >
-              {site.taglines.map((line, index) => (
+              {taglines.map((line, index) => (
                 <li key={line} style={{ "--index": index } as React.CSSProperties}>
                   {line}
                 </li>
               ))}
             </ul>
-            <style>{taglineKeyframes(site.taglines.length)}</style>
+            <style>{taglineRotation(taglines.length)}</style>
           </div>
         </div>
       </div>
@@ -130,22 +145,20 @@ export function Hero() {
         <div className="flex flex-wrap items-center gap-x-2 *:mt-4" data-print="hide">
           <ResumeDownload />
           <BookCall href={site.calUrl} />
+          {/* Opened by the command palette's own listener, which also knows the platform. No keyboard, no button. */}
           <button
             type="button"
-            data-palette
+            data-slot="button"
+            data-command-open
+            aria-haspopup="dialog"
             aria-keyshortcuts="Control+K Meta+K"
-            className={`${buttonVariants({ variant: "ghost" })} hidden gap-1 pointer-fine:inline-flex`}
+            className={`${buttonVariants({ variant: "ghost" })} gap-1 first:-ml-3 not-pointer-fine:hidden`}
           >
             Press
-            <Kbd>
-              <span suppressHydrationWarning>Ctrl</span>
+            <Kbd className={styles.modifier}>
+              <span>Ctrl</span>
+              <span>⌘</span>
             </Kbd>
-            {/* Apple keyboards say Command; set before first paint, so nothing flashes. */}
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `/Mac|iP(hone|ad)/.test(navigator.platform)&&(document.currentScript.previousElementSibling.firstChild.textContent="⌘")`,
-              }}
-            />
             <Kbd>K</Kbd>
             to start
             <span aria-hidden className="font-mono">
@@ -162,9 +175,9 @@ export function Hero() {
           </Fact>
         )}
         <Fact icon={<ClockIcon />} label="Local time">
-          {/* Placeholders from the server; the script fills them before first paint and ./effects keeps time. */}
+          {/* From the server, the zone's offset; the script puts the time there before first paint and ./effects keeps it. */}
           <span data-clock={site.location.timeZone}>
-            <span suppressHydrationWarning>--:-- --</span>
+            <span suppressHydrationWarning>{zoneOffset}</span>
             <span suppressHydrationWarning className="text-muted-foreground">
               {" "}
             </span>

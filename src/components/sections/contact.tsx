@@ -25,7 +25,11 @@ export function Contact() {
               <a className="link-underline font-serif text-2xl break-all sm:text-3xl" href={`mailto:${site.email}`}>
                 {site.email}
               </a>
-              <CopyButton value={site.email} className={`${buttonVariants({ variant: "outline", size: "sm" })} font-mono`}>
+              <CopyButton
+                value={site.email}
+                data-slot="button"
+                className={`${buttonVariants({ variant: "outline", size: "sm" })} font-mono`}
+              >
                 copy
               </CopyButton>
             </p>

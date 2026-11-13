@@ -167,4 +167,9 @@
   .legend {
     print-color-adjust: exact;
   }
+  /* A calendar still waiting for its wave prints whole. */
+  .days[data-wave] g {
+    visibility: visible;
+    animation: none;
+  }
 }

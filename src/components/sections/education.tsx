@@ -16,17 +16,15 @@ export function Education() {
             <span className={styles.tile} aria-hidden>
               {entry.short[0]}
             </span>
-            <div className="min-w-0">
-              <h3 className="font-medium text-balance">
-                {entry.school} <span className="font-normal text-muted-foreground">({entry.short})</span>
-              </h3>
-              <p className="text-sm text-pretty text-muted-foreground">
-                {entry.degree}
-                <span aria-hidden> · </span>
-                <span className="sr-only">, </span>
-                {entry.location}
-              </p>
-            </div>
+            <h3 className={`${styles.org} text-balance`}>
+              {entry.school} <span className="font-normal text-muted-foreground">({entry.short})</span>
+            </h3>
+            <p className={`${styles.sub} text-sm text-pretty text-muted-foreground`}>
+              {entry.degree}
+              <span aria-hidden> · </span>
+              <span className="sr-only">, </span>
+              {entry.location}
+            </p>
             <p className={`${styles.dates} font-mono text-xs text-muted-foreground`}>
               <time dateTime={entry.start}>{formatMonth(entry.start)}</time>
               {" – "}

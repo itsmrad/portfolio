@@ -10,10 +10,13 @@ import { paintTime } from "./hero-time";
 
 /* --- Local time ---------------------------------------------------------- */
 
+// Nothing is painted while the tab is hidden; the next tick after it returns is at most 15 s away.
 const tick = () =>
+  document.hidden ||
   document.querySelectorAll<HTMLElement>("[data-clock]").forEach((clock) => paintTime(clock, clock.dataset.clock!));
 tick();
 setInterval(tick, 15_000);
+document.addEventListener("visibilitychange", tick);
 
 /* --- Clicks, handed over by the loader ----------------------------------- */
 
@@ -37,9 +40,6 @@ export function click(event: MouseEvent) {
   const target = event.target as Element;
   const button = target.closest<HTMLElement>("[data-copy]");
   if (button) void copy(button);
-  // The palette opens on its shortcut, so sending the shortcut needs no reference to its code.
-  else if (target.closest("[data-palette]"))
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, metaKey: true, bubbles: true }));
   else if (target.closest("main summary")) play("detent");
 }
 
@@ -97,6 +97,11 @@ function pointed(event: PointerEvent) {
 }
 addEventListener("pointermove", pointed, { passive: true });
 addEventListener("pointerdown", pointed, { passive: true });
+
+/** The input that fetched this chunk, replayed by the loader: a hover or tap on the calendar still reads its day. */
+export function wake(event: Event) {
+  if (event instanceof PointerEvent) pointed(event);
+}
 
 const KEYS: Record<string, (from: number, last: number) => number> = {
   ArrowLeft: (from) => from - 7,

@@ -19,7 +19,10 @@ const DAY = 86_400_000;
 const PITCH = 12; // a 10px cell and its 2px gap
 const LEVELS = [0, 1, 2, 3, 4];
 const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const month = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" });
+// US short names are all three letters ("Sep", not "Sept"), which is what keeps the labels apart on a phone.
+const month = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+/** Weeks a label needs to itself: three 6px letters and a gap, at the 5.9px week of a 360px phone. */
+const LABEL_WEEKS = 4;
 
 function Calendar({ data, label }: { data: Contributions; label: string }) {
   const first = Date.parse(data.start);
@@ -29,7 +32,8 @@ function Calendar({ data, label }: { data: Contributions; label: string }) {
 
   // Each day is a zero-length stroke with square caps: a 10px square for six characters of path.
   const paths = LEVELS.map(() => "");
-  // A label on the week that holds the 1st of each month; the opening month only if it has room.
+  // A label on the week that holds the 1st of each month. One that would run into the next gives way,
+  // and so does one too close to the right edge to fit.
   const months: { week: number; name: string }[] = [];
   [...data.levels].forEach((level, index) => {
     const position = index + offset;
@@ -37,15 +41,15 @@ function Calendar({ data, label }: { data: Contributions; label: string }) {
     paths[Number(level)] += `M${week * PITCH + 5} ${(position % 7) * PITCH + 5}h0`;
     const day = new Date(first + index * DAY);
     if (index === 0 || day.getUTCDate() === 1) {
-      if (months.length === 1 && week - months[0]!.week < 3) months.pop();
-      months.push({ week, name: month.format(day) });
+      if (months.length > 0 && week - months.at(-1)!.week < LABEL_WEEKS) months.pop();
+      if (weeks - week >= LABEL_WEEKS - 1) months.push({ week, name: month.format(day) });
     }
   });
 
   return (
     <div className={styles.calendar}>
       <div
-        role="img"
+        role="group"
         aria-label={label}
         tabIndex={0}
         data-calendar={data.start}
@@ -92,7 +96,7 @@ export async function Activity() {
           <p className="pb-1 text-right text-sm text-muted-foreground">
             <data value={data.total} className="mr-1.5 font-pixel text-xl/none text-foreground">
               {total}
-            </data>
+            </data>{" "}
             in the last year
           </p>
         )}

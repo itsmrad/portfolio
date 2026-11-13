@@ -38,25 +38,23 @@ function Role({ job, current }: { job: Job; current: boolean }) {
   return (
     <details className={styles.role} open={current}>
       <summary>
+        {/* Only phrasing content and a heading may sit in a summary, so the grid places these directly. */}
         <Tile job={job} />
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="font-medium">{job.org}</h3>
-            {current && <Current />}
-          </div>
-          <div className="text-sm text-pretty text-muted-foreground">
-            {job.role}
-            {job.location && (
-              <>
-                <span aria-hidden> · </span>
-                <span className="sr-only">, </span>
-                {job.location}
-              </>
-            )}
-          </div>
-        </div>
+        <h3 className={styles.org}>
+          {job.org} {current && <Current />}
+        </h3>
+        <span className={`${styles.sub} text-sm text-pretty text-muted-foreground`}>
+          {job.role}
+          {job.location && (
+            <>
+              <span aria-hidden> · </span>
+              <span className="sr-only">, </span>
+              {job.location}
+            </>
+          )}
+        </span>
         {job.start && (
-          <div className={`${styles.dates} font-mono text-xs text-muted-foreground`}>
+          <span className={`${styles.dates} font-mono text-xs text-muted-foreground`}>
             <time dateTime={job.start}>{formatMonth(job.start)}</time>
             {" – "}
             {job.end ? (
@@ -69,7 +67,7 @@ function Role({ job, current }: { job: Job; current: boolean }) {
                 <span className="sr-only">present</span>
               </>
             )}
-          </div>
+          </span>
         )}
         <ChevronIcon className={styles.chevron} />
       </summary>

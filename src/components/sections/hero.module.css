@@ -90,8 +90,9 @@
   transform: translateX(120%);
 }
 
-/* Rotating tagline: every line shares one cell and takes its turn. Without
-   motion the first one stays. */
+/* Rotating tagline: every line shares one cell, so the widest reserves the
+   width, and takes its turn (the rotation itself is an inline rule in
+   hero.tsx). Without motion the first one stays. */
 .taglines {
   display: grid;
 }
@@ -106,10 +107,15 @@
   opacity: 1;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .taglines li {
-    animation: hero-tagline calc(var(--count) * 3s) calc(var(--index) * 3s) infinite backwards;
-  }
+/* The key cap for the palette shortcut: Ctrl, or the Command sign where the
+   command palette has marked the page as running on an Apple device. */
+.modifier span:last-child,
+:global(html[data-platform="mac"]) .modifier span:first-child {
+  display: none;
+}
+
+:global(html[data-platform="mac"]) .modifier span:last-child {
+  display: inline;
 }
 
 /* Key phrases of the claim get an underline that draws itself once. */

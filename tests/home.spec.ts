@@ -29,13 +29,51 @@ test.describe("hero", () => {
     const portrait = page.locator("#top img");
     await expect(portrait).toHaveAttribute("alt", /Anupam Das/);
     expect((await portrait.locator("xpath=ancestor::div[3]").boundingBox())?.width).toBe(96);
+    // Every line is in the page; the role, which the facts below already state, comes last.
     await expect(page.locator("#top h1 + ul li")).toHaveText([
-      "AI/LLM Intern at PlanCover",
       "Building Codenaya",
       "Building xflow in Rust",
       "Final-year B.Tech at BPIT",
+      "AI/LLM Intern at PlanCover",
     ]);
     expect(errors).toEqual([]);
+  });
+
+  test("the tagline rotates: the second line takes over from the first, in the same box", async ({ page }) => {
+    await page.goto("/");
+    const lines = page.locator("#top h1 + ul li");
+    const opacity = (index: number) => lines.nth(index).evaluate((line) => Number(getComputedStyle(line).opacity));
+    const box = await page.locator("#top h1 + ul").boundingBox();
+    await expect.poll(() => opacity(0)).toBeGreaterThan(0.9);
+    expect(await opacity(1)).toBeLessThan(0.1);
+    // Each line holds for three seconds.
+    await expect.poll(() => opacity(1), { timeout: 6000 }).toBeGreaterThan(0.9);
+    expect(await opacity(0)).toBeLessThan(0.1);
+    expect(await page.locator("#top h1 + ul").boundingBox()).toEqual(box);
+  });
+
+  test("the palette button uses the palette's own opener and marks itself as a button", async ({ page }) => {
+    await page.goto("/");
+    const button = page.locator("#top [data-command-open]");
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute("aria-haspopup", "dialog");
+    await expect(button).toHaveAttribute("data-slot", "button");
+    await expect(button).toContainText("Ctrl");
+    // Where the palette has marked an Apple device, the cap shows the Command sign instead.
+    await page.evaluate(() => (document.documentElement.dataset.platform = "mac"));
+    await expect(button.locator("kbd").first()).toHaveText("⌘", { useInnerText: true });
+    await expect(page.locator("#contact [data-copy]")).toHaveAttribute("data-slot", "button");
+  });
+
+  test.describe("on a touch phone", () => {
+    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+    test("there is no keyboard, so no palette button", async ({ page }) => {
+      await page.goto("/");
+      expect(await page.evaluate(() => matchMedia("(pointer: fine)").matches)).toBe(false);
+      await expect(page.locator("#top [data-command-open]")).toBeHidden();
+      await expect(page.locator('#top a[href="/Anupam-Das-Resume.pdf"]')).toBeVisible();
+    });
   });
 
   test("the monogram sinks 16 units while held and springs back, by pointer and by keyboard", async ({ page }) => {
@@ -119,15 +157,32 @@ test.describe("hero", () => {
           }
         }).observe({ type: "layout-shift", buffered: true });
       });
+      // The fonts are held until the page has been measured in its fallback faces.
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => (release = resolve));
       await page.route("**/*.woff2", async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        await held;
         await route.continue();
       });
-      await page.goto("/");
-      const top = () => page.locator("#about").evaluate((about) => about.getBoundingClientRect().top + scrollY);
-      const early = await top();
+      // `load` would wait for the fonts, so stop at the parsed document.
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => document.fonts.status === "loading");
+      const measure = () =>
+        page.evaluate(() => ({
+          about: document.querySelector("#about")!.getBoundingClientRect().top + scrollY,
+          parts: [...document.querySelectorAll("#top h1, #top h1 + ul, #top p, #top ul")].map((part) => part.getBoundingClientRect().height),
+          loaded: [...document.fonts].filter((font) => font.status === "loaded").length,
+        }));
+      const early = await measure();
+      expect(await page.evaluate(() => document.fonts.status), "measured before the fonts arrived").toBe("loading");
+
+      release();
+      await page.evaluate(() => document.fonts.ready);
       await settle(page);
-      expect(await top(), "the hero keeps its height").toBe(early);
+      const late = await measure();
+      expect(late.loaded, "the web fonts arrived afterwards").toBeGreaterThan(early.loaded);
+      expect(late.about, "the hero keeps its height").toBe(early.about);
+      expect(late.parts, "every text block keeps its height").toEqual(early.parts);
       expect(await page.evaluate(() => (window as unknown as { __cls: number }).__cls)).toBeLessThanOrEqual(0.02);
     });
   }
@@ -176,7 +231,9 @@ test.describe("experience", () => {
     const errors = collectErrors(page);
     await page.goto("/");
     const roles = page.locator("#experience ol > li");
-    await expect(roles.locator("h3")).toHaveText(["PlanCover", "Dasgupta Maiti & Associates", "Syuniqe"]);
+    await expect(roles.locator("h3")).toHaveText(["PlanCover Current", "Dasgupta Maiti & Associates", "Syuniqe"]);
+    // A summary may hold only phrasing content and a heading.
+    await expect(roles.locator("summary div")).toHaveCount(0);
     expect(await roles.locator("details").evaluateAll((all) => all.map((details) => (details as HTMLDetailsElement).open))).toEqual([true, false, false]);
 
     const plancover = roles.first();
@@ -226,9 +283,7 @@ test.describe("activity", () => {
     await calendar.scrollIntoViewIfNeeded();
     const box = (await calendar.locator("svg").boundingBox())!;
     const day = /^(No|\d+) contributions? on [A-Z][a-z]{2} \d{1,2}, \d{4}$/;
-    // The first movement on the page fetches the chunk that reads days out.
-    await page.mouse.move(box.x + box.width / 2, box.y - 40);
-    await page.waitForLoadState("networkidle");
+    // This is the first input on the page: it fetches the chunk that reads days out, and is replayed to it.
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect(status).toHaveText(day);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height + 80);
@@ -248,6 +303,24 @@ test.describe("activity", () => {
     await expect(status).toBeHidden();
     expect(errors).toEqual([]);
   });
+});
+
+test.describe("activity on a phone", () => {
+  for (const width of [360, 390, 430]) {
+    test(`month labels never touch at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto("/");
+      const labels = page.locator("[data-calendar] > div span");
+      if ((await labels.count()) === 0) return; // the fallback link: no calendar was built
+      const boxes = await labels.evaluateAll((all) => all.map((label) => label.getBoundingClientRect()).map(({ left, right }) => ({ left, right })));
+      expect(boxes.length).toBeGreaterThanOrEqual(10);
+      boxes.slice(1).forEach((box, index) => expect(box.left - boxes[index]!.right, `gap before label ${index + 1}`).toBeGreaterThanOrEqual(3));
+      // The last label ends inside the calendar.
+      const calendar = (await page.locator("[data-calendar]").boundingBox())!;
+      expect(boxes.at(-1)!.right).toBeLessThanOrEqual(calendar.x + calendar.width + 1);
+      for (const label of await labels.allTextContents()) expect(label).toMatch(/^[A-Z][a-z]{2}$/);
+    });
+  }
 });
 
 test.describe("stack, education, contact", () => {
