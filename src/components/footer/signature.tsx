@@ -2,6 +2,7 @@ import { footer } from "@/content/footer";
 import { site } from "@/content/site";
 import { TitleBlockField } from "@/components/layout/title-block";
 
+import { counterStore } from "./counter-store";
 import { SignButton } from "./signature-client";
 import styles from "./signature.module.css";
 
@@ -16,7 +17,8 @@ const INK =
  */
 export function Signature() {
   return (
-    <TitleBlockField label="Approved by" className="col-span-2">
+    // Beside Stack when the visitor cell is absent; on its own full row when the counter takes that place.
+    <TitleBlockField label="Approved by" className={counterStore() ? "col-span-2 sm:col-span-4" : "col-span-2"}>
       <div className="flex h-full flex-col justify-end gap-2">
         <SignButton
           aria-label={footer.signAgain}
