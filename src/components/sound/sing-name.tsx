@@ -9,7 +9,7 @@
  */
 import { SingButtonClient } from "@/components/sound/sing-button";
 import { buttonVariants } from "@/components/ui/button";
-import { soundCopy } from "@/content/site";
+import { soundCopy } from "@/content/sound";
 
 import styles from "./sing.module.css";
 

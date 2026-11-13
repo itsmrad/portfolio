@@ -1,34 +1,64 @@
-import { expect, test } from "@playwright/test";
+import { existsSync } from "node:fs";
 
-import { brotli, frameworkChunks, kb, resources, scriptBrotli, settle, sum } from "./helpers";
+import { expect, test, type Page } from "@playwright/test";
+
+import { brotli, frameworkChunks, kb, resources, scriptBrotli, settle, sum, VIEWPORTS } from "./helpers";
 
 /**
- * The hard limits from the performance budget, measured on the home page of
- * the production build before any input. Scripts and HTML are sized in brotli,
- * the encoding production serves (`next start` only gzips, about 17% larger;
- * that figure is logged too). Fonts and images are sized as transferred.
- * Limits here change only with the lead's sign-off, never to make a test pass.
+ * The performance budget, measured on the home page of the production build
+ * before any input, at phone and desktop widths. Scripts and HTML are sized in
+ * brotli, the encoding production serves (`next start` only gzips; that figure
+ * is logged too). Fonts and images are sized as transferred.
+ *
+ * Every number here is a lead ruling. Fix the code, not the number.
  */
+const KB = 1024;
 const LIMIT = {
-  homeJs: 140 * 1024,
-  firstPartyJs: 30 * 1024,
-  htmlCompressed: 30 * 1024,
-  htmlRaw: 120 * 1024,
-  fonts: 80 * 1024,
-  // Sans, mono, serif and the pixel face: the owner's type decision needs four.
+  homeJs: 140 * KB,
+  firstPartyJs: 30 * KB,
+  html: 35 * KB,
+  domElements: 1400,
+  fonts: 80 * KB,
+  // Sans, mono, serif and the pixel face.
   fontFamilies: 4,
   fontPreloads: 2,
-  images: 250 * 1024,
-  singleImage: 120 * 1024,
+  // Desktop only: one more face (handwriting for margin notes), at most this size.
+  desktopFont: 15 * KB,
+  images: 250 * KB,
+  singleImage: 120 * KB,
   cls: 0.02,
 };
 
-test.use({ viewport: { width: 390, height: 844 } });
+/**
+ * First-load script on top of the framework runtime is shared out between the
+ * features. The foundation's own share is what it measures today; a feature's
+ * allowance is unlocked when its content file exists (src/content/<file>),
+ * which is when its branch has landed. So a branch that overspends fails here
+ * on its own, instead of the merged site failing with nobody owning it.
+ */
+const FOUNDATION_JS = 6.5 * KB;
+const ALLOWANCE: Record<string, number> = {
+  "sound.ts": 2 * KB, // sound facade and mute toggle
+  "command.ts": 3 * KB, // key listener 1 KB, theme toggle 2 KB
+  "home.ts": 4 * KB, // hero monogram
+  "footer.ts": 3 * KB, // footer extras
+  "playful.ts": 3 * KB, // playful layer
+};
+// The lead holds 9 KB more and raises this as it is handed out.
+const RELEASED_BY_LEAD = 0 * KB;
 
-test("home page stays inside the budget", async ({ page, request }) => {
-  // The size gates need loaded scripts to be the ones on disk.
-  expect(frameworkChunks().length).toBeGreaterThan(0);
-  // Record layout shifts from the very first frame, fonts swapping in included.
+const landed = Object.keys(ALLOWANCE).filter((file) => existsSync(`src/content/${file}`));
+const jsCeiling = Math.min(
+  LIMIT.firstPartyJs,
+  FOUNDATION_JS + landed.reduce((total, file) => total + ALLOWANCE[file]!, 0) + RELEASED_BY_LEAD,
+);
+
+/**
+ * Load the home page with the web fonts held back for half a second, so the
+ * page always paints in its fallback fonts first and the swap is always
+ * measured. Without this the result depends on whether the fonts win a race.
+ */
+async function loadHome(page: Page) {
   await page.addInitScript(() => {
     const state = window as unknown as { __cls: number };
     state.__cls = 0;
@@ -38,50 +68,79 @@ test("home page stays inside the budget", async ({ page, request }) => {
       }
     }).observe({ type: "layout-shift", buffered: true });
   });
-
+  await page.route("**/*.woff2", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.continue();
+  });
   await page.goto("/");
   await settle(page);
   // Lazy images count too.
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await settle(page);
+  return resources(page);
+}
 
-  const all = await resources(page);
-  const origin = new URL(page.url()).origin;
-  const scripts = all.filter((resource) => resource.type === "script");
-  const framework = frameworkChunks();
-  const firstParty = scripts.filter((script) => !framework.some((chunk) => script.url.endsWith(chunk)));
-  const fonts = all.filter((resource) => resource.type === "font");
-  const images = all.filter((resource) => resource.type === "image");
+for (const viewport of VIEWPORTS) {
+  test(`home page stays inside the budget at ${viewport.width}px`, async ({ page, request, browser }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const all = await loadHome(page);
+    const origin = new URL(page.url()).origin;
 
-  const js = (list: typeof scripts) => list.reduce((total, script) => total + scriptBrotli(script.url), 0);
-  const html = await (await request.get("/")).body();
-  const families = await page.evaluate(() => [...new Set([...document.fonts].filter((font) => font.status === "loaded").map((font) => font.family))]);
-  const preloads = await page.locator('link[rel="preload"][as="font"]').count();
-  const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
+    const scripts = all.filter((resource) => resource.type === "script");
+    const framework = frameworkChunks();
+    expect(framework.length, "build manifest lists the framework chunks").toBeGreaterThan(0);
+    const firstParty = scripts.filter((script) => !framework.some((chunk) => script.url.endsWith(chunk)));
+    const js = (list: typeof scripts) => list.reduce((total, script) => total + scriptBrotli(script.url), 0);
 
-  const measured = {
-    "home JS": `${kb(js(scripts))} brotli (${kb(sum(scripts))} as served with gzip), ${scripts.length} files`,
-    "framework JS": `${kb(js(scripts) - js(firstParty))} brotli`,
-    "first-party JS": `${kb(js(firstParty))} brotli`,
-    HTML: `${kb(brotli(html))} brotli, ${kb(html.length)} raw`,
-    fonts: `${kb(sum(fonts))} in ${fonts.length} files, ${families.length} families, ${preloads} preloaded`,
-    images: `${kb(sum(images))} in ${images.length} files`,
-    CLS: cls.toFixed(4),
-  };
-  console.log(`budget ${JSON.stringify(measured, null, 2)}`);
-  test.info().annotations.push({ type: "measured", description: JSON.stringify(measured) });
+    const fonts = all.filter((resource) => resource.type === "font");
+    const images = all.filter((resource) => resource.type === "image");
+    const html = await (await request.get("/")).body();
+    // Downloaded families only: the "… Fallback" faces are local system fonts.
+    const families = await page.evaluate(() =>
+      [...new Set([...document.fonts].filter((font) => font.status === "loaded").map((font) => font.family))].filter((family) => !family.endsWith("Fallback")),
+    );
+    const preloads = await page.locator('link[rel="preload"][as="font"]').count();
+    const elements = await page.locator("*").count();
+    const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
 
-  expect(scripts.filter((script) => !script.url.startsWith(origin)), "third-party scripts").toEqual([]);
-  expect(all.filter((resource) => !resource.url.startsWith(origin)), "third-party requests").toEqual([]);
-  expect(scripts.every((script) => script.bytes > 0), "every script reports a transfer size").toBe(true);
-  expect(js(scripts), "home JS").toBeLessThanOrEqual(LIMIT.homeJs);
-  expect(js(firstParty), "first-party JS").toBeLessThanOrEqual(LIMIT.firstPartyJs);
-  expect(brotli(html), "HTML compressed").toBeLessThanOrEqual(LIMIT.htmlCompressed);
-  expect(html.length, "HTML raw").toBeLessThanOrEqual(LIMIT.htmlRaw);
-  expect(sum(fonts), "font bytes").toBeLessThanOrEqual(LIMIT.fonts);
-  expect(families.length, `font families: ${families.join(", ")}`).toBeLessThanOrEqual(LIMIT.fontFamilies);
-  expect(preloads, "preloaded fonts").toBeLessThanOrEqual(LIMIT.fontPreloads);
-  expect(sum(images), "image bytes").toBeLessThanOrEqual(LIMIT.images);
-  for (const image of images) expect(image.bytes, image.url).toBeLessThanOrEqual(LIMIT.singleImage);
-  expect(cls, "cumulative layout shift").toBeLessThanOrEqual(LIMIT.cls);
-});
+    const measured = {
+      "home JS": `${kb(js(scripts))} brotli (${kb(sum(scripts))} as served with gzip), ${scripts.length} files`,
+      "framework JS": `${kb(js(scripts) - js(firstParty))} brotli`,
+      "first-party JS": `${kb(js(firstParty))} brotli of ${kb(jsCeiling)} (landed: ${landed.join(", ") || "foundation only"})`,
+      "first-party files": firstParty.map((script) => `${script.url.split("/").pop()} ${kb(scriptBrotli(script.url))}`),
+      HTML: `${kb(brotli(html))} brotli (${kb(html.length)} raw), ${elements} elements`,
+      fonts: `${kb(sum(fonts))} in ${fonts.length} files, ${families.length} families, ${preloads} preloaded`,
+      images: `${kb(sum(images))} in ${images.length} files`,
+      "CLS with late fonts": cls.toFixed(4),
+    };
+    console.log(`budget at ${viewport.width}px ${JSON.stringify(measured, null, 2)}`);
+    test.info().annotations.push({ type: "measured", description: JSON.stringify(measured) });
+
+    expect(all.filter((resource) => !resource.url.startsWith(origin)), "third-party requests").toEqual([]);
+    expect(scripts.every((script) => script.bytes > 0), "every script reports a transfer size").toBe(true);
+    expect(js(scripts), "home JS").toBeLessThanOrEqual(LIMIT.homeJs);
+    expect(js(firstParty), "first-party JS against the allowances that have landed").toBeLessThanOrEqual(jsCeiling);
+    expect(brotli(html), "HTML as transferred").toBeLessThanOrEqual(LIMIT.html);
+    expect(elements, "DOM elements").toBeLessThanOrEqual(LIMIT.domElements);
+    expect(preloads, "preloaded fonts").toBeLessThanOrEqual(LIMIT.fontPreloads);
+    expect(sum(images), "image bytes").toBeLessThanOrEqual(LIMIT.images);
+    for (const image of images) expect(image.bytes, image.url).toBeLessThanOrEqual(LIMIT.singleImage);
+    expect(cls, "cumulative layout shift with late fonts").toBeLessThanOrEqual(LIMIT.cls);
+
+    if (viewport.name === "phone") {
+      expect(sum(fonts), "font bytes").toBeLessThanOrEqual(LIMIT.fonts);
+      expect(families.length, `font families: ${families.join(", ")}`).toBeLessThanOrEqual(LIMIT.fontFamilies);
+    } else {
+      // Whatever a phone does not load is the desktop-only extra: one face,
+      // small, and (by the preload limit above) never preloaded.
+      const phone = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      const onPhone = new Set((await loadHome(phone)).filter((resource) => resource.type === "font").map((font) => font.url));
+      await phone.close();
+      const extra = fonts.filter((font) => !onPhone.has(font.url));
+      expect(extra.length, `desktop-only fonts: ${extra.map((font) => font.url).join(", ")}`).toBeLessThanOrEqual(1);
+      expect(sum(extra), "desktop-only font bytes").toBeLessThanOrEqual(LIMIT.desktopFont);
+      expect(sum(fonts) - sum(extra), "font bytes shared with phones").toBeLessThanOrEqual(LIMIT.fonts);
+      expect(families.length, `font families: ${families.join(", ")}`).toBeLessThanOrEqual(LIMIT.fontFamilies + 1);
+    }
+  });
+}

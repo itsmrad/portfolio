@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Game } from "@/components/game/game";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { notFound } from "@/content/site";
+import { notFound } from "@/content/sound";
 
 import styles from "./not-found.module.css";
 

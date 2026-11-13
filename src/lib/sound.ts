@@ -7,11 +7,19 @@
  * visitor's first pointer or key press, and makes every sound from oscillators
  * and filtered noise. There are no audio files.
  *
+ * Owned and edited by the sound + 404 branch only. Its exports are the
+ * contract every branch builds against: play(name, options?), haptic(pattern?),
+ * soundOn(), setSound(next), toggleSound(), subscribeSound(listener).
+ * A missing voice is requested in a handoff, not added here.
+ *
  * Rules for every caller:
  * - Play a voice only from a deliberate action: a click, a key, a drag.
  *   Never on hover, scroll, page load or a timer the visitor did not start.
  * - Sound is on by default; `m` and the header button mute it. Muting also
  *   silences haptics. Reduced motion does not mute sound.
+ * - The `m` shortcut and any mute control call `toggleSound()`; read the state
+ *   with `soundOn()` and `subscribeSound()`. Never click the header button
+ *   through the DOM.
  * - The voice pans with the pointer's horizontal position (or the focused
  *   element's, after a key press) and its pitch varies slightly per play.
  * - On phones each voice vibrates with its pair from lib/haptics.ts.

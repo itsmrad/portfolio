@@ -1,21 +1,24 @@
 import { site, socials, xHandle } from "@/content/site";
 import { buildInfo } from "@/lib/build";
 import { FinaleToy, Signature, StatusStrip, VisitorCounter, Wordmark } from "@/components/footer/extras";
+import { ExternalLink } from "@/components/layout/external-link";
 import { Frame } from "@/components/layout/frame";
 import { TitleBlock, TitleBlockField } from "@/components/layout/title-block";
 
-const link = "link-underline";
-
-/** Footer laid out as the title block of a drawing, with real provenance. */
+/**
+ * Footer laid out as the title block of a drawing, with real provenance.
+ * The revision is plain text: the site's repository is deliberately not
+ * linked from the page. Hidden in print, where the page is a paper resume.
+ */
 export function Footer() {
   const build = buildInfo();
   const x = socials.find((social) => social.label === "X");
 
   return (
-    <footer className="overflow-x-clip px-(--frame-gutter) pb-[env(safe-area-inset-bottom,0)]">
+    <footer data-print="hide" className="overflow-x-clip px-(--frame-gutter) pb-[env(safe-area-inset-bottom,0)]">
       <Frame>
         <div className="rule" aria-hidden />
-        <div className="hatch-band h-12" aria-hidden data-print="hide" />
+        <div className="hatch-band h-12" aria-hidden />
         <StatusStrip />
 
         <div className="screen-line-top screen-line-bottom flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm">
@@ -27,44 +30,35 @@ export function Footer() {
 
         <TitleBlock>
           <TitleBlockField label="Drawn by">
-            {x ? (
-              <a className={link} href={x.href} target="_blank" rel="noopener noreferrer">
-                {xHandle}
-              </a>
-            ) : (
-              site.name
-            )}
+            {x ? <ExternalLink href={x.href}>{xHandle}</ExternalLink> : site.name}
           </TitleBlockField>
           <TitleBlockField label="Rev">
-            {build.sha ? (
-              <a className={link} href={`${site.repo}/commit/${build.sha}`} target="_blank" rel="noopener noreferrer">
-                {build.shortSha}
-              </a>
-            ) : (
-              <span className="text-muted-foreground">unavailable</span>
-            )}
+            {build.shortSha || <span className="text-muted-foreground">unavailable</span>}
           </TitleBlockField>
           <TitleBlockField label="Date">
             <time dateTime={build.date}>{build.date}</time>
           </TitleBlockField>
           <TitleBlockField label="Sheet">1 / 1</TitleBlockField>
 
-          <TitleBlockField label="Source">
-            <a className={link} href={site.repo} target="_blank" rel="noopener noreferrer">
-              GitHub
-            </a>
-          </TitleBlockField>
-          <TitleBlockField label="License">
-            <a className={link} href={site.license.href} target="_blank" rel="noopener noreferrer">
-              {site.license.name}
-            </a>
-          </TitleBlockField>
+          <TitleBlockField label="License">{site.license}</TitleBlockField>
           <TitleBlockField label="Typeface">Geist, Instrument Serif</TitleBlockField>
           <TitleBlockField label="Deployed on">
             <span className="font-sans" aria-hidden>
               ▲
             </span>
             <span className="sr-only">Vercel</span>
+          </TitleBlockField>
+          <TitleBlockField label="For agents">
+            {/* Stacked links: 24px tall each, so they meet the touch-target size. */}
+            <ul className="-my-0.5 flex flex-col">
+              {["llms.txt", "index.md"].map((file) => (
+                <li key={file}>
+                  <a className="link-underline inline-block py-0.5" href={`/${file}`}>
+                    {file}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </TitleBlockField>
 
           <TitleBlockField label="Stack" className="col-span-2">
@@ -76,20 +70,6 @@ export function Footer() {
               ))}
             </ul>
           </TitleBlockField>
-          <TitleBlockField label="For agents">
-            <ul className="flex flex-col gap-1">
-              <li>
-                <a className={link} href="/llms.txt">
-                  llms.txt
-                </a>
-              </li>
-              <li>
-                <a className={link} href="/index.md">
-                  index.md
-                </a>
-              </li>
-            </ul>
-          </TitleBlockField>
           <VisitorCounter />
           <Signature />
         </TitleBlock>
@@ -99,15 +79,9 @@ export function Footer() {
         <ul className="screen-line-top screen-line-bottom flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 font-mono text-sm text-muted-foreground">
           {socials.map((social) => (
             <li key={social.label}>
-              <a
-                className="transition-colors hover:text-foreground"
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer me"
-              >
+              <ExternalLink className="inline-block py-0.5" href={social.href} rel="noopener noreferrer me">
                 {social.label}
-                <span aria-hidden> ↗</span>
-              </a>
+              </ExternalLink>
             </li>
           ))}
           <li className="ml-auto">
