@@ -1,0 +1,129 @@
+/* Index rows: number, name, leader, date, arrow; the line underneath. */
+.list {
+  padding: 0.75rem 1rem;
+}
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  padding: 0.75rem 0;
+}
+.row > span {
+  grid-row: span 2;
+  color: var(--muted-foreground);
+  font: 0.75rem/1.25rem var(--font-mono);
+}
+.row > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.row h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+/* The whole row is the link's hit area; its focus ring outlines the row. */
+.row a {
+  outline: none;
+}
+.row a::after {
+  content: "";
+  position: absolute;
+  inset: 0 -0.5rem;
+  border-radius: 4px;
+}
+.row a:focus-visible::after {
+  outline: 2px solid var(--signal);
+}
+.row time {
+  color: var(--muted-foreground);
+  font: 0.75rem/1rem var(--font-mono);
+}
+.row p {
+  grid-column: 2;
+  margin-top: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* Dotted leader that inks across from the left on hover or keyboard focus. */
+.leader {
+  position: relative;
+  flex: 1;
+  min-width: 1.5rem;
+  height: 1px;
+  background-image: radial-gradient(circle, var(--muted-foreground) 0.6px, transparent 0.8px);
+  background-size: 4px 1px;
+  background-repeat: repeat-x;
+  opacity: 0.7;
+}
+.leader::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  transform-origin: 0;
+  transform: scaleX(0);
+  transition: transform 0.6s cubic-bezier(0.6, 0.1, 0.3, 1);
+}
+.row:is(:hover, :focus-within) .leader::after {
+  transform: scaleX(1);
+}
+
+.arrow {
+  color: var(--muted-foreground);
+  font: 0.75rem/1 var(--font-mono);
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+.row:is(:hover, :focus-within) .arrow {
+  color: var(--signal);
+  transform: translate(2px, -2px);
+}
+
+/* 2x2 block loader: the cells light in turn. Static under reduced motion. */
+.loader {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 3px);
+  gap: 1px;
+  flex-shrink: 0;
+}
+.loader i {
+  width: 3px;
+  height: 3px;
+  background: var(--muted-foreground);
+  opacity: 0.35;
+  animation: cell 1.6s linear infinite;
+}
+.loader i:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.loader i:nth-child(4) {
+  animation-delay: 0.8s;
+}
+.loader i:nth-child(3) {
+  animation-delay: 1.2s;
+}
+@keyframes cell {
+  0%,
+  24% {
+    opacity: 1;
+    background: var(--signal);
+  }
+  26%,
+  100% {
+    opacity: 0.35;
+    background: var(--muted-foreground);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader i {
+    animation: none;
+    opacity: 1;
+  }
+}
