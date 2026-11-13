@@ -16,9 +16,13 @@ export function FinaleStage(props: React.ComponentProps<"div">) {
     const unwatch = whenNear(
       stage,
       () =>
-        void import("./globe").then(({ mountGlobe }) => {
-          if (!gone) stop = mountGlobe(stage);
-        }),
+        void import("./globe").then(
+          ({ mountGlobe }) => {
+            if (!gone) stop = mountGlobe(stage);
+          },
+          // A chunk that cannot load leaves the hatched silhouette in place.
+          () => {},
+        ),
       "0px 0px 400px 0px",
     );
     return () => {

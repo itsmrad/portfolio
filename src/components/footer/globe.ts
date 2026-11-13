@@ -29,6 +29,20 @@ function decodeLand() {
   return bits;
 }
 
+/** Land at a point, 0 to 1, interpolated between cell centres so coasts are smooth curves, not 1° steps. */
+function landAt(land: Uint8Array, latitude: number, longitude: number) {
+  const y = Math.min(178.999, Math.max(0, 89.5 - latitude));
+  const x = longitude + 179.5;
+  const row = Math.floor(y);
+  const column = Math.floor(x);
+  const fy = y - row;
+  const fx = x - column;
+  const at = (r: number, c: number) => land[r * 360 + (((c % 360) + 360) % 360)]!;
+  const top = at(row, column) * (1 - fx) + at(row, column + 1) * fx;
+  const bottom = at(row + 1, column) * (1 - fx) + at(row + 1, column + 1) * fx;
+  return top * (1 - fy) + bottom * fy;
+}
+
 /** A CSS colour (any syntax, tokens included) as [r, g, b]. */
 function rgb(probe: HTMLElement, value: string): [number, number, number] {
   probe.style.color = value;
@@ -147,7 +161,7 @@ export function mountGlobe(stage: HTMLElement) {
         const latitude = lat[i]! / DEG;
         const longitude = ((((lon[i]! + angle) / DEG + 180) % 360) + 360) % 360 - 180;
         const threshold = (DITHER[(row % 4) * 4 + (column % 4)]! + 0.5) / 16;
-        const isLand = land[Math.min(179, Math.floor(90 - latitude)) * 360 + Math.floor(longitude + 180)] === 1;
+        const isLand = landAt(land, latitude, longitude) > 0.5;
         const north = latitude - HOME.lat;
         const east = (longitude - HOME.lon) * Math.cos(lat[i]!);
         const away = north * north + east * east;

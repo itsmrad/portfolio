@@ -2,6 +2,7 @@ import { building, projects, site } from "@/content/site";
 
 export type LatestWork = { name: string; date: string };
 
+const WORK = new Set(["PushEvent", "PullRequestEvent", "CreateEvent", "ReleaseEvent"]);
 const EVENTS = `https://api.github.com/users/${site.handle}/events/public?per_page=100`;
 
 /**
@@ -21,7 +22,7 @@ function fromContent(): LatestWork {
     ...projects.map((project) => ({ name: project.name, date: project.updated })),
     ...building.map((entry) => ({ name: entry.name, date: entry.updated })),
   ];
-  return dated.reduce((latest, entry) => (entry.date > latest.date ? entry : latest));
+  return dated.reduce((latest, entry) => (entry.date > latest.date ? entry : latest), { name: site.domain, date: site.updated });
 }
 
 /**
@@ -36,9 +37,11 @@ export async function latestWork(): Promise<LatestWork> {
       signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) return fromContent();
-    const events = (await response.json()) as { repo?: { name?: string }; created_at?: string }[];
+    const events = (await response.json()) as { type?: string; repo?: { name?: string }; created_at?: string }[];
     let latest: LatestWork | undefined;
     for (const event of events) {
+      // Work only: a star or a comment is not "building".
+      if (!WORK.has(event.type ?? "")) continue;
       const repo = known.find((entry) => entry.href === `https://github.com/${event.repo?.name}`);
       const date = event.created_at?.slice(0, 10);
       if (repo && date && (!latest || date > latest.date)) latest = { name: repo.name, date };
