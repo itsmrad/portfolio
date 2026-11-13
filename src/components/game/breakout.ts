@@ -5,19 +5,22 @@
  * The board spells the AD monogram, then "404". Drawn as a blueprint: hatched,
  * outlined bricks on the page's own colours, re-read when the theme changes.
  *
- * Deviations, for play: the paddle steers the ball by where it is hit, the
- * launch angle stays within 45 degrees of vertical, and the simulation runs at
- * a fixed 60 steps a second whatever the display's refresh rate.
+ * Deviations, for play: the ball is served upward (within 30 degrees of
+ * vertical), so the player has time to reach it; the paddle steers the ball by
+ * where it is hit; the simulation runs at a fixed 60 steps a second whatever
+ * the display's refresh rate; the canvas is only redrawn when something moved.
  */
 import { play, type SoundName } from "@/lib/sound";
 
 export type GameCopy = {
   label: string;
-  figure: string;
   start: string;
   paused: string;
   cleared: string;
-  over: string;
+  /** Announced when a board is cleared. */
+  clearedNote: string;
+  /** Announced when the ball is lost, followed by the score. */
+  lost: string;
 };
 
 const W = 800;
@@ -76,8 +79,9 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
   };
 
   const resetBall = () => {
-    const angle = (Math.random() * 2 - 1) * (Math.PI / 4);
-    Object.assign(ball, { x: W / 2, y: H * 0.6, vx: speed() * Math.sin(angle), vy: speed() * Math.cos(angle) });
+    const angle = (Math.random() * 2 - 1) * (Math.PI / 6);
+    Object.assign(ball, { x: W / 2, y: H * 0.6, vx: speed() * Math.sin(angle), vy: -speed() * Math.cos(angle) });
+    dirty = true;
   };
 
   const sound = (name: SoundName) => {
@@ -103,6 +107,7 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     };
     canvas.style.color = "";
     font = getComputedStyle(canvas).fontFamily;
+    dirty = true;
     const tile = document.createElement("canvas");
     tile.width = tile.height = 8;
     const t = tile.getContext("2d")!;
@@ -121,12 +126,26 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
   };
 
   let scale = 1;
+  let dirty = true;
   const resize = () => {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const { width } = canvas.getBoundingClientRect();
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(((width * H) / W) * dpr);
     scale = canvas.width / W;
+    // Setting the size clears the canvas: paint again now, not on the next change.
+    draw();
+  };
+  // Zoom, or a move to a screen with another pixel ratio, changes no CSS size: watch the ratio itself.
+  let ratio: MediaQueryList | undefined;
+  const watchRatio = () => {
+    ratio?.removeEventListener("change", onRatio);
+    ratio = matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
+    ratio.addEventListener("change", onRatio);
+  };
+  const onRatio = () => {
+    resize();
+    watchRatio();
   };
 
   const text = (value: string, x: number, y: number, size: number, color: string, align: CanvasTextAlign) => {
@@ -136,12 +155,13 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     g.fillText(value, x, y);
   };
 
+  // Field units are 0.8 CSS px in the 640px column: 20 units is the column's 16px inset.
   const draw = () => {
+    dirty = false;
     g.setTransform(scale, 0, 0, scale, 0, 0);
     g.clearRect(0, 0, W, H);
     g.textBaseline = "top";
-    text(String(score).padStart(3, "0"), 6, 6, 16, colors.ink, "left");
-    text(copy.figure, W - 6, 6, 12, colors.muted, "right");
+    text(String(score).padStart(3, "0"), 20, 20, 20, colors.ink, "left");
 
     if (!bricks.length) {
       g.textBaseline = "middle";
@@ -178,16 +198,20 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
 
     if (!running) {
       g.textBaseline = "middle";
-      text(paused ? copy.paused : copy.start, W / 2, H * 0.6 + 40, 14, colors.muted, "center");
+      text(paused ? copy.paused : copy.start, W / 2, H * 0.6 + 40, 15, colors.muted, "center");
     }
   };
 
   const step = (now: number) => {
+    const before = paddle;
     if (keys.left) paddle -= PADDLE_SPEED;
     if (keys.right) paddle += PADDLE_SPEED;
-    paddle = Math.min(W - PADDLE_W - PADDLE_H / 2, Math.max(PADDLE_H / 2, paddle));
-    bricks = bricks.filter((brick) => brick.hit === undefined || now - brick.hit < 120);
+    paddle = Math.min(W - PADDLE_W, Math.max(0, paddle));
+    const flashing = bricks.some((brick) => brick.hit !== undefined);
+    if (flashing) bricks = bricks.filter((brick) => brick.hit === undefined || now - brick.hit < 120);
+    if (paddle !== before || flashing) dirty = true;
     if (!running) return;
+    dirty = true;
 
     ball.x += ball.vx;
     ball.y += ball.vy;
@@ -205,15 +229,15 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     if (ball.y > H) {
       running = false;
       sound("gameOver");
-      announce(`${copy.over}. ${score}`);
+      announce(`${copy.lost} ${score}.`);
       resetBall();
       return;
     }
 
     const top = H - PADDLE_H;
-    if (ball.vy > 0 && ball.y + R > top && ball.y < top + PADDLE_H && ball.x > paddle && ball.x < paddle + PADDLE_W) {
+    if (ball.vy > 0 && ball.y + R > top && ball.y < top + PADDLE_H && ball.x + R > paddle && ball.x - R < paddle + PADDLE_W) {
       // Where the ball lands on the paddle steers it, up to 60 degrees off vertical.
-      const offset = (ball.x - (paddle + PADDLE_W / 2)) / (PADDLE_W / 2);
+      const offset = Math.max(-1, Math.min(1, (ball.x - (paddle + PADDLE_W / 2)) / (PADDLE_W / 2)));
       const angle = offset * (Math.PI / 3);
       ball.vx = speed() * Math.sin(angle);
       ball.vy = -speed() * Math.cos(angle);
@@ -237,12 +261,13 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     if (!bricks.some((brick) => brick.hit === undefined)) {
       bricks = [];
       running = false;
-      announce(copy.cleared);
+      announce(copy.clearedNote);
     }
   };
 
   // Launch, resume, or move on to the next board.
   const action = () => {
+    dirty = true;
     if (!bricks.length) {
       layout();
       resetBall();
@@ -258,6 +283,7 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     if (running) {
       running = false;
       paused = true;
+      dirty = true;
     }
   };
 
@@ -273,7 +299,7 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
       step(now);
       lag -= 1000 / 60;
     }
-    draw();
+    if (dirty) draw();
   };
   const loop = (on: boolean) => {
     cancelAnimationFrame(raf);
@@ -283,7 +309,8 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
 
   const onPointerMove = (event: PointerEvent) => {
     const box = canvas.getBoundingClientRect();
-    paddle = ((event.clientX - box.left) / box.width) * W - PADDLE_W / 2;
+    paddle = Math.min(W - PADDLE_W, Math.max(0, ((event.clientX - box.left) / box.width) * W - PADDLE_W / 2));
+    dirty = true;
   };
   const onKey = (event: KeyboardEvent) => {
     const down = event.type === "keydown";
@@ -311,9 +338,10 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
   const sizer = new ResizeObserver(resize);
 
   readColors();
-  resize();
   layout();
   resetBall();
+  resize();
+  watchRatio();
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("click", action);
   canvas.addEventListener("keydown", onKey);
@@ -322,7 +350,12 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
   document.addEventListener("visibilitychange", onVisibility);
   theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
   scheme.addEventListener("change", readColors);
-  sizer.observe(canvas);
+  try {
+    // Fires on pixel-ratio changes too (zoom, another screen), where supported.
+    sizer.observe(canvas, { box: "device-pixel-content-box" });
+  } catch {
+    sizer.observe(canvas);
+  }
   observer.observe(canvas);
   // Pixel face for the score: draw again once it has loaded.
   document.fonts.load(`16px ${font}`).then(draw, () => {});
@@ -339,5 +372,6 @@ export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (mess
     scheme.removeEventListener("change", readColors);
     sizer.disconnect();
     observer.disconnect();
+    ratio?.removeEventListener("change", onRatio);
   };
 }

@@ -2,9 +2,11 @@
 
 /**
  * The playable 404's loader. The server page reserves the figure (4:3, shown
- * from 64rem only), so nothing shifts. On a desktop-width screen, once the
- * figure scrolls into view, the game module (breakout.ts, its own chunk) is
- * imported and attached to the canvas. Phones never download it.
+ * from 64rem only), so nothing shifts. The game module (breakout.ts, its own
+ * chunk) is imported when the canvas first intersects the viewport. A hidden
+ * figure (below 64rem) never intersects, so phones never download it, and a
+ * window widened later starts it then. If the chunk fails, the figure is
+ * removed and the page reads as the plain 404.
  */
 import { useEffect, useRef } from "react";
 
@@ -16,7 +18,7 @@ export function Game({ copy }: { copy: GameCopy }) {
 
   useEffect(() => {
     const element = canvas.current;
-    if (!element || !matchMedia("(min-width: 64rem)").matches) return;
+    if (!element) return;
     let stop: (() => void) | undefined;
     let cancelled = false;
     const observer = new IntersectionObserver(([entry]) => {
@@ -24,12 +26,16 @@ export function Game({ copy }: { copy: GameCopy }) {
       observer.disconnect();
       import("@/components/game/breakout").then(
         (game) => {
-          if (!cancelled)
-            stop = game.start(element, copy, (message) => {
-              if (status.current) status.current.textContent = message;
-            });
+          if (cancelled) return;
+          stop = game.start(element, copy, (message) => {
+            if (status.current) status.current.textContent = message;
+          });
         },
-        () => {}, // the page reads fine without the game
+        () => {
+          // Never leave play instructions over an empty canvas.
+          const figure = element.closest("figure");
+          if (figure) figure.hidden = true;
+        },
       );
     });
     observer.observe(element);
@@ -48,7 +54,7 @@ export function Game({ copy }: { copy: GameCopy }) {
         role="application"
         aria-label={copy.label}
         aria-describedby="game-caption"
-        className="block size-full font-pixel focus-visible:outline-offset-[-2px]"
+        className="block size-full touch-pan-y font-pixel focus-visible:outline-offset-[-2px]"
       />
       <p ref={status} role="status" className="sr-only" />
     </>
