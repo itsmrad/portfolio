@@ -17,12 +17,12 @@ export function Dock() {
     <>
       <div aria-hidden data-print="hide" className={styles.fade} />
       <div data-print="hide" className={styles.dock}>
-        <button type="button" data-command-open aria-haspopup="dialog" className={`${styles.search} touch-target`}>
+        <button type="button" data-slot="button" data-command-open aria-haspopup="dialog" className={`${styles.search} touch-target`}>
           <SearchIcon className="size-4" />
           Search…
         </button>
         <span aria-hidden className={styles.rule} />
-        <button type="button" popoverTarget="dock-menu" aria-label="Sections" className={`${styles.toggle} touch-target`}>
+        <button type="button" data-slot="button" popoverTarget="dock-menu" aria-label="Sections" className={`${styles.toggle} touch-target`}>
           <span aria-hidden />
           <span aria-hidden />
         </button>
@@ -34,7 +34,7 @@ export function Dock() {
           ))}
         </nav>
       </div>
-      <div aria-hidden className={styles.spacer} />
+      <div aria-hidden data-print="hide" className={styles.spacer} />
     </>
   );
 }

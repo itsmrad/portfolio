@@ -14,7 +14,10 @@
    where the full-height box would be centred, so filtering shrinks it
    downwards instead of moving it. */
 .dialog {
-  top: max(4rem, calc(50dvh - 13.5rem));
+  --top: max(4rem, calc(50dvh - 13.5rem));
+  top: var(--top);
+  /* --visible-height is the visual viewport, set while open: it shrinks under an on-screen keyboard. */
+  max-height: min(27rem, 56dvh, calc(var(--visible-height, 100dvh) - var(--top) - 1rem));
   opacity: 0;
   scale: 0.98;
   translate: 0 2px;
@@ -103,6 +106,20 @@
   }
 }
 
+/* Phones and touch screens: near the top, clear of the on-screen keyboard. */
+@media (max-width: 39.999rem), (pointer: coarse) {
+  .dialog {
+    --top: calc(4rem + env(safe-area-inset-top, 0px));
+    max-height: min(27rem, calc(var(--visible-height, 100dvh) - var(--top) - 1rem));
+  }
+}
+
+/* The page stays put behind the open palette; the gutter keeps a classic scrollbar's width, so nothing shifts. */
+:global(html):has(.dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
 /* Phone dock, below `sm`: a 96px fade, a floating pill 8px above the safe area,
    and a spacer as tall as the fade at the end of the page. */
 .fade,
@@ -136,11 +153,23 @@
     0 4px 6px -1px rgb(0 0 0 / 0.1),
     0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
+/* The spacer continues the frame's side rules, so the page ends inside the drawing. */
+.spacer {
+  width: min(var(--frame-width), calc(100% - 2 * var(--frame-gutter)));
+  margin-inline: auto;
+  border-inline: 1px solid var(--line);
+}
 @media (min-width: 40rem) {
   .fade,
   .spacer,
   .dock {
     display: none;
+  }
+}
+/* Focus moved by the keyboard never ends under the dock. */
+@media (max-width: 39.999rem) {
+  :global(html):has(.dock) {
+    scroll-padding-bottom: 6rem;
   }
 }
 .search {
@@ -201,6 +230,9 @@
 .menu {
   inset: auto auto calc(3.75rem + env(safe-area-inset-bottom, 0px)) 50%;
   width: 12rem;
+  /* A short landscape screen scrolls the menu instead of cutting off its top. */
+  max-height: calc(100dvh - 5rem - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
   margin: 0;
   padding: 0.25rem;
   flex-direction: column;
@@ -265,6 +297,12 @@
 .toast[data-show] {
   opacity: 1;
   translate: -50% 0;
+}
+/* A failed copy stays up, wraps and can be selected by hand. */
+.toast[data-show="hold"] {
+  white-space: normal;
+  user-select: text;
+  pointer-events: auto;
 }
 @media (min-width: 40rem) {
   .toast {

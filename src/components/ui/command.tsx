@@ -35,12 +35,13 @@ export function CommandItem({ selected, ...props }: React.ComponentProps<"div"> 
   );
 }
 
-/** The keys that run an item: one cap per key, `g` chords as two. */
-export function CommandShortcut({ keys }: { keys: string[] }) {
+/** The keys that run an item: one cap per key, `g` chords as two, and `spoken` for screen readers in their place. */
+export function CommandShortcut({ keys, spoken }: { keys: string[]; spoken: string }) {
   return (
-    <span className="flex shrink-0 items-center gap-1" aria-hidden>
+    <span className="flex shrink-0 items-center gap-1">
+      <span className="sr-only">{spoken}</span>
       {keys.map((key, index) => (
-        <kbd key={index} className={kbd}>
+        <kbd key={index} aria-hidden className={kbd}>
           {key}
         </kbd>
       ))}

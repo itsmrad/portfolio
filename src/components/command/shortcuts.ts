@@ -9,6 +9,7 @@
  * Reserved keys: a/e/w (header nav, from content), d theme, m mute (calls
  * toggleSound from lib/sound), r resume,
  * c copy email, g chord prefix, ? shortcut list, / and Ctrl/Cmd+K palette.
+ * Every key but Ctrl/Cmd+K can be switched off with the "keys" action.
  * Shift+R is left free for the hot-reload easter egg.
  */
 import { commandCopy as copy, pageIndex } from "@/content/command";
@@ -87,7 +88,8 @@ export const actions: Action[] = [
     href: social.href,
     external: true,
   })),
-  { id: "llms", label: copy.llms, group: "Links", icon: "file", keywords: "agents ai plain text markdown", href: "/llms.txt", external: true },
+  { id: "llms", label: copy.llms, group: "Links", icon: "file", keywords: "agents ai plain text", href: "/llms.txt", external: true },
+  { id: "markdown", label: copy.markdown, group: "Links", icon: "file", keywords: "agents ai plain text md", href: "/index.md", external: true },
   {
     id: "resume",
     label: copy.resume,
@@ -108,4 +110,6 @@ export const actions: Action[] = [
   { id: "shortcuts", label: copy.shortcuts, group: "General", icon: "keyboard", key: "?", keywords: "keys hotkeys help" },
   { id: "theme", label: copy.theme, group: "Preferences", icon: "theme", key: "d", keywords: "dark light mode appearance", control: true },
   { id: "sound", label: copy.sound, group: "Preferences", icon: "sound", key: "m", keywords: "mute audio volume" },
+  // Labelled off or on by the palette from the current state (WCAG 2.1.4).
+  { id: "keys", label: copy.keysOff, group: "Preferences", icon: "keyboard", keywords: "keyboard shortcuts hotkeys single key disable enable accessibility" },
 ];

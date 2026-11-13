@@ -20,6 +20,7 @@ export const pageIndex = [
 /** Palette rows and confirmations. */
 export const commandCopy = {
   llms: "llms.txt",
+  markdown: "Markdown copy",
   resume: "Download resume",
   call: "Book a call",
   copyEmail: "Copy email",
@@ -29,5 +30,13 @@ export const commandCopy = {
   sound: "Toggle sound",
   linkCopied: "Link copied",
   emailCopied: "Email copied",
-  copyFailed: "Could not copy:",
+  copyFailed: "Could not copy. Select it here:",
+  keysOff: "Turn keyboard shortcuts off",
+  keysOn: "Turn keyboard shortcuts on",
+  keysNowOff: "Keyboard shortcuts off. Ctrl K still opens this menu.",
+  keysNowOn: "Keyboard shortcuts on.",
+  keysOffNote: "Single-key shortcuts are off. Turn them on from the palette.",
+  /** Read by screen readers in place of the key caps: "shortcut g then a". */
+  spokenShortcut: "shortcut",
+  spokenThen: "then",
 } as const;
