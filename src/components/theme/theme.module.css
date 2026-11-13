@@ -1,0 +1,21 @@
+/* The circular reveal: only while the toggle runs, so other view transitions keep their own look.
+   520ms, cubic-bezier(.24, .7, .26, 1): quick to leave the button, slow to reach the far corner. */
+.switching::view-transition-group(root),
+.switching::view-transition-old(root) {
+  animation: none;
+}
+.switching::view-transition-old(root),
+.switching::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+.switching::view-transition-new(root) {
+  animation: reveal 0.52s cubic-bezier(0.24, 0.7, 0.26, 1) both;
+}
+@keyframes reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x) var(--theme-y));
+  }
+  to {
+    clip-path: circle(var(--theme-r) at var(--theme-x) var(--theme-y));
+  }
+}
