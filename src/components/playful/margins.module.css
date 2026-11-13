@@ -1,0 +1,334 @@
+/*
+ * The handwriting face: Caveat 400, subset to a-z and . , ' - ! ? (14 KB). The
+ * browser fetches it only when a note renders, so never below the gutter
+ * breakpoint. To change the subset: Google Fonts css2 with
+ * family=Caveat&text=<the characters>, save the woff2 over fonts/caveat.woff2.
+ */
+@font-face {
+  font-family: "Caveat";
+  src: url("./fonts/caveat.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+.root {
+  position: absolute;
+  inset: 0;
+  /* One easing for every reveal; durations are 180, 220 and 280ms. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* A spring of stiffness 260, damping 30, mass 0.8, sampled. */
+  --spring: linear(0, 0.073, 0.22, 0.378, 0.519, 0.636, 0.729, 0.8, 0.854, 0.894, 0.923, 0.944, 0.96, 0.971, 0.979, 0.985, 0.989, 0.992, 0.995, 0.996, 0.997, 0.998, 0.999, 0.999, 1);
+}
+
+/* --- Dot field: a 12rem band off each edge of the column. It stays with the
+       viewport (the table) while the notes scroll past (the sheet). --------- */
+.band {
+  position: sticky;
+  top: 0;
+  width: 12rem;
+  height: 100vh;
+  mask-image: linear-gradient(to bottom, transparent, black 6rem, black calc(100% - 6rem), transparent);
+}
+[data-margin="left"] > .band {
+  margin-left: auto;
+}
+.field,
+.dots,
+.lit {
+  position: absolute;
+  inset: 0;
+}
+.field {
+  mask-image: linear-gradient(to right, black, transparent 78%);
+}
+[data-margin="left"] .field {
+  mask-image: linear-gradient(to left, black, transparent 78%);
+}
+.dots,
+.lit {
+  background-size: 14px 14px;
+}
+.dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--muted-foreground) 24%, transparent) 1px, transparent 1px);
+}
+/* Origin and size match .dots exactly, or the lit dots drift off the muted ones. */
+.lit {
+  background-image: radial-gradient(color-mix(in oklab, var(--signal) 75%, transparent) 1px, transparent 1px);
+  opacity: var(--on, 0);
+  mask-image: radial-gradient(circle 7.5rem at var(--x, -50%) var(--y, -50%), black, transparent 70%);
+  transition: opacity 280ms var(--ease);
+}
+
+/* --- Dimensions: a 1px line between two hollow arrowheads, the number in a
+       gap at the middle. They open out from the middle, once. -------------- */
+.dim {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dimension);
+  /* The line stops where the arrowheads begin. */
+  background: linear-gradient(currentColor, currentColor) center / 1px calc(100% - 20px) no-repeat;
+  opacity: 0;
+  clip-path: inset(50% -1rem);
+  transition:
+    opacity 280ms var(--ease),
+    clip-path 280ms var(--ease);
+}
+.dim[data-axis="x"] {
+  clip-path: inset(0 50%);
+}
+.dim[data-seen] {
+  opacity: 1;
+  clip-path: inset(0 -1rem);
+}
+.dim > span {
+  position: relative;
+}
+.dim::before,
+.dim::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: -3px;
+  width: 7px;
+  height: 9px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 9' fill='none' stroke='%23000' stroke-linejoin='round'%3E%3Cpath d='M3.5.5 6.5 8.5h-6Z'/%3E%3C/svg%3E");
+  background: currentColor;
+}
+.dim::after {
+  top: auto;
+  bottom: 1px;
+  scale: 1 -1;
+}
+.dim[data-axis="x"] {
+  background-size: calc(100% - 20px) 1px;
+}
+.dim[data-axis="x"]::before,
+.dim[data-axis="x"]::after {
+  top: calc(50% - 3.5px);
+  left: 1px;
+  width: 9px;
+  height: 7px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7' fill='none' stroke='%23000' stroke-linejoin='round'%3E%3Cpath d='M.5 3.5 8.5.5v6Z'/%3E%3C/svg%3E");
+}
+.dim[data-axis="x"]::after {
+  right: 1px;
+  bottom: auto;
+  left: auto;
+  scale: -1 1;
+}
+
+/* --- Handwritten notes ----------------------------------------------------- */
+.note,
+.bed {
+  position: absolute;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+  color: var(--muted-foreground);
+}
+[data-margin="right"] > * > .note {
+  right: auto;
+  left: 2.75rem;
+  align-items: flex-start;
+}
+.hand {
+  font-family: "Caveat", cursive;
+  font-size: 1.25rem;
+  line-height: 1;
+  white-space: pre-line;
+  rotate: -3deg;
+  opacity: 0;
+  translate: 0 8px;
+  transition:
+    opacity 280ms var(--ease),
+    translate 280ms var(--ease);
+}
+[data-margin="left"] .hand {
+  text-align: right;
+}
+[data-margin="right"] .hand {
+  rotate: 3deg;
+}
+/* Written once seen, and once the face has arrived. */
+.root[data-inked] [data-seen] > .hand {
+  opacity: 1;
+  translate: none;
+}
+/* Drawn from the tail to the head; it points down at the column. */
+.arrow {
+  width: 2rem;
+  height: 2rem;
+}
+[data-margin="left"] .arrow {
+  scale: -1 1;
+}
+/* The first note points up and away, at the stickers. */
+[data-margin="left"] [data-arrow="up"] > .arrow {
+  order: -1;
+  align-self: center;
+  scale: 1 -1;
+}
+.arrow > path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 450ms cubic-bezier(0.6, 0.1, 0.3, 1) 220ms;
+}
+[data-seen] > .arrow > path {
+  stroke-dashoffset: 0;
+}
+
+/* --- The cat's bed --------------------------------------------------------- */
+.bed {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.5rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.bed > .hand {
+  font-size: 1.0625rem;
+}
+.root .bed:not(:hover) > .hand {
+  opacity: 0;
+  translate: 0 4px;
+}
+.bed > svg {
+  flex-shrink: 0;
+  transition: opacity 180ms var(--ease);
+}
+.bed[data-away] > svg {
+  opacity: 0.2;
+}
+.bed [data-pose="sleepA"] {
+  animation: nap-a 1.2s infinite;
+}
+.bed [data-pose="sleepB"] {
+  opacity: 0;
+  animation: nap-b 1.2s infinite;
+}
+.bed:not([data-live]) g,
+.bed[data-away] g {
+  animation-play-state: paused;
+}
+@keyframes nap-a {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes nap-b {
+  0%,
+  49.9% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* --- Section ruler: 1px ticks at a 10px pitch, three to a section, an
+       outlined 30px tracker on the current one. From 80rem only. ----------- */
+.railTrack {
+  position: absolute;
+  inset-block: 0;
+  left: 1rem;
+  display: none;
+}
+@media (min-width: 80rem) {
+  .railTrack {
+    display: block;
+  }
+}
+.rail {
+  position: sticky;
+  top: calc(50vh - var(--rows) * 15px);
+  width: 3.5rem;
+  pointer-events: auto;
+}
+/* The ruler's spine. */
+.rail::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.25rem;
+  left: 0;
+  border-left: 1px dashed color-mix(in oklab, var(--border) 60%, transparent);
+}
+.row {
+  position: relative;
+  height: 30px;
+  cursor: pointer;
+  --tick: var(--cross);
+}
+/* The three ticks: 18px (and 60% of it) at rest, twice that under the pointer. */
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 36px;
+  transform-origin: left;
+  scale: var(--wave) 1;
+  background:
+    linear-gradient(var(--tick), var(--tick)) 0 5px / 100% 1px,
+    linear-gradient(var(--tick), var(--tick)) 0 15px / 60% 1px,
+    linear-gradient(var(--tick), var(--tick)) 0 25px / 60% 1px;
+  background-repeat: no-repeat;
+  transition: scale 593ms var(--spring);
+}
+.row[data-hover] {
+  --tick: var(--foreground);
+}
+.row[data-active] {
+  --tick: var(--signal);
+}
+.rail {
+  opacity: 0;
+  transition: opacity 150ms ease-in-out 300ms;
+}
+.rail[data-seen] {
+  opacity: 1;
+}
+.tracker {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 48px;
+  height: 30px;
+  border: 1px solid var(--cross);
+  transition: translate 200ms var(--ease);
+}
+/* The section's name, written like a path, while the ruler is under the pointer. */
+.row::after {
+  content: "/ " attr(data-rail);
+  position: absolute;
+  top: 50%;
+  left: 3.5rem;
+  translate: -4px -50%;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition:
+    opacity 180ms var(--ease),
+    translate 180ms var(--ease);
+}
+.rail:hover > .row::after {
+  opacity: 1;
+  translate: 0 -50%;
+}
+.rail > .row[data-hover]::after {
+  color: var(--foreground);
+}
+.rail > .row[data-active]::after {
+  color: var(--signal);
+}
