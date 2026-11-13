@@ -74,22 +74,27 @@ async function loadHome(page: Page) {
   });
   await page.goto("/");
   await settle(page);
-  // Lazy images count too.
+  // First load: after load and idle, before any scroll or input (R11).
+  const firstLoad = await resources(page);
+  // Lazy images count too, and in-view lazy scripts get their own ceiling.
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await settle(page);
-  return resources(page);
+  return { firstLoad, all: await resources(page) };
 }
 
 for (const viewport of VIEWPORTS) {
   test(`home page stays inside the budget at ${viewport.width}px`, async ({ page, request, browser }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    const all = await loadHome(page);
+    const { firstLoad, all } = await loadHome(page);
     const origin = new URL(page.url()).origin;
 
     const scripts = all.filter((resource) => resource.type === "script");
     const framework = frameworkChunks();
     expect(framework.length, "build manifest lists the framework chunks").toBeGreaterThan(0);
-    const firstParty = scripts.filter((script) => !framework.some((chunk) => script.url.endsWith(chunk)));
+    const isFirstParty = (script: (typeof scripts)[number]) => !framework.some((chunk) => script.url.endsWith(chunk));
+    const firstParty = firstLoad.filter((resource) => resource.type === "script").filter(isFirstParty);
+    // Everything first-party requested once the whole page has been scrolled, in-view lazy chunks included.
+    const firstPartyScrolled = scripts.filter(isFirstParty);
     const js = (list: typeof scripts) => list.reduce((total, script) => total + scriptBrotli(script.url), 0);
 
     const fonts = all.filter((resource) => resource.type === "font");
@@ -108,6 +113,7 @@ for (const viewport of VIEWPORTS) {
       "framework JS": `${kb(js(scripts) - js(firstParty))} brotli`,
       "first-party JS": `${kb(js(firstParty))} brotli of ${kb(jsCeiling)} (landed: ${landed.join(", ") || "foundation only"})`,
       "first-party files": firstParty.map((script) => `${script.url.split("/").pop()} ${kb(scriptBrotli(script.url))}`),
+      "first-party JS after a full scroll": `${kb(js(firstPartyScrolled))} brotli of ${kb(LIMIT.firstPartyJs)}`,
       HTML: `${kb(brotli(html))} brotli (${kb(html.length)} raw), ${elements} elements`,
       fonts: `${kb(sum(fonts))} in ${fonts.length} files, ${families.length} families, ${preloads} preloaded`,
       images: `${kb(sum(images))} in ${images.length} files`,
@@ -120,6 +126,7 @@ for (const viewport of VIEWPORTS) {
     expect(scripts.every((script) => script.bytes > 0), "every script reports a transfer size").toBe(true);
     expect(js(scripts), "home JS").toBeLessThanOrEqual(LIMIT.homeJs);
     expect(js(firstParty), "first-party JS against the allowances that have landed").toBeLessThanOrEqual(jsCeiling);
+    expect(js(firstPartyScrolled), "first-party JS after a full-page scroll").toBeLessThanOrEqual(LIMIT.firstPartyJs);
     expect(brotli(html), "HTML as transferred").toBeLessThanOrEqual(LIMIT.html);
     expect(elements, "DOM elements").toBeLessThanOrEqual(LIMIT.domElements);
     expect(preloads, "preloaded fonts").toBeLessThanOrEqual(LIMIT.fontPreloads);
@@ -134,7 +141,7 @@ for (const viewport of VIEWPORTS) {
       // Whatever a phone does not load is the desktop-only extra: one face,
       // small, and (by the preload limit above) never preloaded.
       const phone = await browser.newPage({ viewport: { width: 390, height: 844 } });
-      const onPhone = new Set((await loadHome(phone)).filter((resource) => resource.type === "font").map((font) => font.url));
+      const onPhone = new Set((await loadHome(phone)).all.filter((resource) => resource.type === "font").map((font) => font.url));
       await phone.close();
       const extra = fonts.filter((font) => !onPhone.has(font.url));
       expect(extra.length, `desktop-only fonts: ${extra.map((font) => font.url).join(", ")}`).toBeLessThanOrEqual(1);

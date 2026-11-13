@@ -1,0 +1,59 @@
+/* The art box keeps the drawing's aspect ratio (viewBox 0 0 1762 258), so the
+   masks and the inline SVG layers line up exactly at every width. */
+.art {
+  position: relative;
+  aspect-ratio: 1762 / 258;
+}
+
+.art > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glyphs {
+  mask: url("./wordmark-fill.svg") 0 0 / 100% 100% no-repeat;
+}
+
+/* The hatch stops short of the outline, so the translucent outline reads clean. */
+.hatch {
+  mask:
+    url("./wordmark-fill.svg") 0 0 / 100% 100% no-repeat,
+    url("./wordmark-line.svg") 0 0 / 100% 100% no-repeat;
+  mask-composite: subtract;
+}
+
+.outline {
+  mask: url("./wordmark-line.svg") 0 0 / 100% 100% no-repeat;
+  background: color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+/* A faint highlight along the baseline in the dark theme. */
+.baseline {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 50%;
+  height: 1px;
+  translate: -50% 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(228 228 231 / 0.3) 50%, transparent);
+}
+
+:global(.dark) .baseline {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not(.light)) .baseline {
+    display: block;
+  }
+}
+
+/* The measured width, drawn as a pseudo-element: an annotation in the
+   dimension ink, not page text (the whole stage is aria-hidden). */
+.width::before {
+  content: attr(data-width);
+}
