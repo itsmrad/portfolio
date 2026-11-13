@@ -1,236 +1,419 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * Design tokens and the Blueprint layout utilities.
+ * Foundation-owned: feature branches use these tokens and utilities and keep
+ * their own CSS in co-located CSS modules, so this file never conflicts.
+ */
+
+/* `dark:` follows an explicit .dark/.light class, otherwise the system. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not(.light, .light *)) {
+      @slot;
+    }
+  }
+}
+
+/* Wide screens, where the margins outside the column exist. */
+@custom-variant gutter {
+  @media (min-width: 64rem) {
+    @slot;
+  }
+}
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
   --color-border: var(--border);
+  --color-line: var(--line);
+  --color-cross: var(--cross);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-surface: var(--surface);
+  --color-dimension: var(--dimension);
+  --color-dimension-foreground: var(--dimension-foreground);
+
+  --font-sans: var(--font-geist-sans), "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), "Instrument Fallback", ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, Menlo, "Courier New", monospace;
+  --font-pixel: var(--font-geist-pixel), var(--font-geist-mono), ui-monospace, Menlo, monospace;
+  /* Slashed zero and tabular figures wherever mono is used. */
+  --font-mono--font-feature-settings: "zero", "tnum";
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * Fallbacks shown until the web fonts arrive, so the swap moves as little as
+ * possible. Each is a same-width system face under every name it goes by
+ * (Arial on Windows and Apple systems, Liberation Sans or Arimo on Linux,
+ * Roboto on Android, which is within about 1% of Arial; Times New Roman,
+ * Liberation Serif, Tinos), scaled with size-adjust to the web font's width
+ * as measured on this site's own text, one face per weight in use, with the
+ * web font's ascent and descent. Recalibrate if the fonts change.
+ * The family names must not start with a generic keyword such as "serif":
+ * the minifier drops the quotes and the browser then discards the name.
+ */
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 400;
+  size-adjust: 102.43%;
+  ascent-override: 98.12%;
+  descent-override: 28.80%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 500;
+  size-adjust: 104.75%;
+  ascent-override: 95.94%;
+  descent-override: 28.16%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  font-weight: 600 700;
+  size-adjust: 107.14%;
+  ascent-override: 93.80%;
+  descent-override: 27.53%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Instrument Fallback";
+  src: local("Times New Roman"), local("Liberation Serif"), local("Tinos"), local("Times");
+  font-weight: 400;
+  size-adjust: 82.40%;
+  ascent-override: 120.15%;
+  descent-override: 37.62%;
+  line-gap-override: 0%;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  color-scheme: light dark;
+
+  /* Layout */
+  --frame-width: 640px; /* the single column; px so the "640" dimension label is always true */
+  --frame-gutter: 0.5rem; /* viewport edge to column on small screens */
+  --header-height: 3.5rem; /* 56px */
+  --separator-height: 2rem; /* 32px hatch band */
+
+  /* Colour: zinc greys in OKLCH, written once as light-dark(light, dark). */
+  --background: light-dark(oklch(1 0 0), oklch(0.141 0.005 285.823));
+  --foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --primary: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.141 0.005 285.823));
+  --secondary: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --secondary-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --muted: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --muted-foreground: light-dark(oklch(0.552 0.016 285.938), oklch(0.705 0.015 286.067));
+  --card: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.885));
+  --card-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  --popover: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.885));
+  --popover-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
+  /* `accent` keeps its usual meaning: the neutral hover surface. */
+  --accent: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
+  --accent-foreground: light-dark(oklch(0.21 0.006 285.885), oklch(0.985 0 0));
+  --border: light-dark(oklch(0.92 0.004 286.32), oklch(0.274 0.006 286.033));
+  --input: light-dark(oklch(0.92 0.004 286.32), oklch(1 0 0 / 0.15));
+  --ring: light-dark(oklch(0.705 0.015 286.067), oklch(0.552 0.016 285.938));
+  --surface: light-dark(oklch(0.985 0 0), oklch(0.21 0.006 285.885));
+  /* For dots and fills. As text on the light background it is only 2.2:1. */
+  --success: oklch(0.723 0.219 149.579);
+  --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.505 0.213 27.518));
+
+  /* The one colour: state only (active, hover, live, selected). */
+  --signal: light-dark(oklch(0.488 0.243 264.376), oklch(0.623 0.214 259.815));
+  /* Text on a signal fill: white on the light theme's blue, ink on the dark theme's. */
+  --signal-foreground: light-dark(oklch(0.985 0 0), oklch(0.141 0.005 285.823));
+
+  /* Drawing lines */
+  --line: color-mix(in oklab, var(--border) 64%, var(--background));
+  --cross: light-dark(oklch(0.705 0.015 286.067), oklch(0.442 0.017 285.786));
+  --dimension-foreground: light-dark(oklch(0.705 0.015 286.067), oklch(0.37 0.013 285.805));
+  --dimension: light-dark(
+    color-mix(in oklab, oklch(0.705 0.015 286.067) 60%, oklch(1 0 0)),
+    color-mix(in oklab, oklch(0.37 0.013 285.805) 80%, oklch(0.141 0.005 285.823))
+  );
 }
 
-.dark {
-  --background: oklch(0.18 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* A stored choice (set before paint by the inline script) beats the system. */
+:root.light {
+  color-scheme: light;
+}
+:root.dark {
+  color-scheme: dark;
 }
 
 @layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
   * {
-    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + 1rem);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Shiki dual theme support */
-  .shiki,
-  .shiki span {
-    color: var(--shiki-light);
-    background-color: transparent;
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
   }
 
-  .dark .shiki,
-  .dark .shiki span {
-    color: var(--shiki-dark);
-    background-color: transparent;
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
-.prose pre {
-    @apply leading-relaxed bg-transparent! font-mono!;
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 
-  .prose code {
-    @apply m-0! mx-1! border rounded-md! px-1.5 py-0.5 bg-muted/60 dark:bg-muted/40 text-[13px]! font-mono text-foreground/90!;
+  time,
+  kbd,
+  data {
+    font-variant-numeric: tabular-nums;
   }
 
-  .prose code::before, .prose code::after {
-    @apply content-none!;
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
   }
+}
 
-  .prose h1 {
-    @apply text-2xl! font-semibold! tracking-tight! leading-tight!;
+/* --- Blueprint utilities ------------------------------------------------ */
+
+/* Full-bleed hairlines: 200vw wide so they always reach both viewport edges.
+   The header, the main wrapper and the footer clip the overflow (overflow-x-clip). */
+@utility screen-line-top {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100vw;
+    width: 200vw;
+    height: 1px;
+    background: var(--line);
+    pointer-events: none;
   }
+}
 
-  .prose h2 {
-    @apply text-xl! font-semibold! tracking-tight! leading-tight!;
+@utility screen-line-bottom {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -100vw;
+    width: 200vw;
+    height: 1px;
+    background: var(--line);
+    pointer-events: none;
   }
+}
 
-  .prose h3 {
-    @apply text-lg! font-semibold! tracking-tight! leading-tight!;
+/* Section rule: dashed full-bleed line (4px dash, 5px gap) with a 9px "+"
+   registration mark where it crosses each column edge. Use on a direct,
+   unpadded child of the frame so the marks sit on the side hairlines. */
+@utility rule {
+  position: relative;
+  height: 0;
+  pointer-events: none;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 200vw;
+    height: 1px;
+    translate: -50% 0;
+    background: repeating-linear-gradient(to right, var(--border) 0 4px, transparent 4px 9px);
   }
-
-  .prose h4 {
-    @apply text-base! font-medium! tracking-tight! leading-tight!;
+  &::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    inset-inline: -5px;
+    height: 9px;
+    background:
+      linear-gradient(var(--cross), var(--cross)) left center / 9px 1px,
+      linear-gradient(var(--cross), var(--cross)) 4px center / 1px 9px,
+      linear-gradient(var(--cross), var(--cross)) right center / 9px 1px,
+      linear-gradient(var(--cross), var(--cross)) calc(100% - 4px) center / 1px 9px;
+    background-repeat: no-repeat;
   }
+}
 
-  .prose h5 {
-    @apply text-base! font-medium! tracking-tight! leading-tight!;
+/* 315deg hairline hatching on a 10px grid, at 56% of the line colour. */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    315deg,
+    color-mix(in oklab, var(--line) 56%, transparent) 0,
+    color-mix(in oklab, var(--line) 56%, transparent) 1px,
+    transparent 0,
+    transparent 50%
+  );
+  background-size: 10px 10px;
+}
+
+/* Full-bleed hatch band between major sections. */
+@utility hatch-band {
+  position: relative;
+  height: var(--separator-height);
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: -100vw;
+    width: 200vw;
+    pointer-events: none;
+    @apply hatch;
   }
+}
 
-  .prose h6 {
-    @apply text-base! font-medium! tracking-tight! leading-tight!;
+/* 8px dot grid, the alternative fill. */
+@utility dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0);
+  background-size: 8px 8px;
+}
+
+/* Uppercase micro-label in the pixel face: eyebrows and counters only. */
+@utility eyebrow {
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Dotted leader between a label and its value: `flex-1 leader`. */
+@utility leader {
+  height: 1px;
+  align-self: center;
+  background: linear-gradient(to right, var(--border) 1px, transparent 1px) 0 0 / 4px 1px repeat-x;
+}
+
+@utility link-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 30%, transparent);
+  transition: text-decoration-color 150ms;
+  &:hover {
+    text-decoration-color: currentColor;
   }
+}
 
-  .prose a {
-    @apply text-primary underline underline-offset-4;
+/* Invisible 8px halo so small controls meet touch-target size on phones. */
+@utility touch-target {
+  @media (pointer: coarse) {
+    position: relative;
+    touch-action: manipulation;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -0.5rem;
+    }
   }
+}
 
-  .prose blockquote {
-    @apply border-l-4 border-amber-500! pl-4 italic bg-muted/50 p-4 rounded-md rounded-l-none;
+/* --- Print: the page doubles as a paper resume --------------------------- */
+@media print {
+  :root {
+    color-scheme: light !important;
   }
-
-  .prose blockquote p {
-    @apply m-0!;
+  @page {
+    margin: 14mm;
   }
-
-  .prose blockquote p:first-child {
-    @apply mt-0!;
+  [data-print="hide"],
+  .rule,
+  .hatch-band {
+    display: none !important;
   }
-
-  /* Task lists (remark-gfm): remove bullet marker so it renders like a pure checklist */
-  .prose :where(ul.contains-task-list):not(:where([class~="not-prose"] *)) {
-    @apply list-none! pl-0!;
+  [data-slot="frame"] {
+    max-width: none !important;
+    border: 0 !important;
   }
-
-  .prose :where(li.task-list-item):not(:where([class~="not-prose"] *)) {
-    @apply pl-0!;
+  .screen-line-top::before,
+  .screen-line-bottom::after {
+    content: none !important;
   }
-
-  .prose
-    :where(li.task-list-item > input[type="checkbox"]):not(
-      :where([class~="not-prose"] *)
-    ) {
-    @apply mr-2 align-middle!;
+  /* Keep an entry whole; a whole section is often taller than the page. */
+  li,
+  article {
+    break-inside: avoid;
   }
-
-  .prose :where(table):not(:where([class~="not-prose"]) *) {
-    @apply w-full min-w-full;
-    border-collapse: separate;
-    border-spacing: 0;
+  h2,
+  h3 {
+    break-after: avoid;
   }
-
-  .prose :where(th):not(:where([class~="not-prose"] *)),
-  .prose :where(td):not(:where([class~="not-prose"] *)) {
-    @apply px-6 py-4 align-middle m-0 whitespace-nowrap;
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
   }
-
-  .prose tr{
-    @apply hover:bg-accent/50! transition-colors! cursor-pointer! h-10!;
-  }
-
-  .prose :where(th):not(:where([class~="not-prose"] *)) {
-    @apply text-left font-semibold text-foreground border-b border-border m-0! bg-muted/50 p-3! py-2!;
-  }
-
-  .prose :where(td):not(:where([class~="not-prose"] *)) {
-    @apply text-muted-foreground border-b border-border text-sm! p-2!;
-  }
-
-  .prose :where(th:not(:last-child)):not(:where([class~="not-prose"] *)),
-  .prose :where(td:not(:last-child)):not(:where([class~="not-prose"] *)) {
-    @apply border-r border-border;
-  }
-
-  .prose :where(tbody tr:last-child td):not(:where([class~="not-prose"] *)) {
-    @apply border-b-0;
-  }
-
 }
