@@ -77,8 +77,10 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       if (typed !== null && !event.metaKey && !event.ctrlKey && !event.altKey) {
         // Keep typing for the search while the chunk loads; Backspace and Escape act on it.
         if (key === "Escape") {
+          // Cancel, including an opening already handed to React but not yet shown.
           typed = null;
           pending++;
+          setState((current) => ({ ...current, open: false }));
         } else if (key === "Backspace") typed = typed.slice(0, -1);
         else if (key === "Enter") typed += "\n";
         else if (key.length !== 1) return;
