@@ -1,5 +1,11 @@
 /**
- * ALL owner copy and data lives in this file. Copy edits never touch anything else.
+ * Owner copy and data: identity, SEO strings, navigation, about, experience,
+ * education, projects and stack. This file belongs to the foundation and to
+ * the projects branch (the `projects` and `building` regions only).
+ *
+ * Every other feature keeps its copy in its own file beside this one
+ * (home.ts, command.ts, sound.ts, playful.ts, footer.ts), so branches never
+ * edit the same lines. No copy is written inside a component.
  *
  * Content rules (binding):
  * - Only owner-verified facts. No invented achievements or metrics.
@@ -42,8 +48,8 @@ export const site = {
   },
   /** The PDF is served from /public at this path. While the file is absent, nothing is rendered. */
   resume: { pdf: "/resume.pdf", fileName: "Anupam-Das-Resume.pdf", updated: "2026-11" },
-  repo: "https://github.com/itsmrad/portfolio",
-  license: { name: "MIT", href: "https://github.com/itsmrad/portfolio/blob/main/LICENSE" },
+  // The site's own repository is deliberately not linked anywhere on the page.
+  license: "MIT",
   /** Search Console meta tag; empty means not emitted (DNS verification is preferred). */
   googleVerification: "" as string,
   created: "2026-11-13",
@@ -476,7 +482,7 @@ export const building = [
   },
 ] as const;
 
-/** Numbered stack rows. Every item is in use in the projects above. */
+/** Numbered stack rows. Every item is in use in the owner's public repositories. */
 export const stack = [
   { label: "Languages", items: ["Rust", "TypeScript", "Python"] },
   { label: "Frontend", items: ["React", "Next.js", "Tailwind CSS", "CodeMirror"] },
