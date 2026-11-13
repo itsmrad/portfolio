@@ -1,21 +1,42 @@
-/** SLOT (home branch). Stub: real data, minimal styling. Keep id="stack". */
+/**
+ * Stack: numbered rows that read like a spec sheet. Each pill's logo is grey
+ * until hovered, then takes the brand's own colour and the pill lifts.
+ */
 import { stack } from "@/content/site";
 import { Section, SectionHeader } from "@/components/layout/section";
+
+import { MARKS } from "./stack-marks";
+import styles from "./stack.module.css";
 
 export function Stack() {
   return (
     <Section id="stack">
       <SectionHeader id="stack" index={6} label="stack" title="Stack" />
-      <dl>
-        {stack.map((row, i) => (
-          <div key={row.label} className="screen-line-bottom flex gap-4 px-4 py-3 last:after:content-none">
-            <dt className="w-32 shrink-0 text-sm">
+      <dl className={styles.rows}>
+        {stack.map((row, index) => (
+          <div key={row.label} className="screen-line-bottom last:after:content-none">
+            <dt>
               <span aria-hidden className="mr-2 font-pixel text-xs text-muted-foreground">
-                {String(i + 1).padStart(2, "0")}
+                {String(index + 1).padStart(2, "0")}
               </span>
               {row.label}
             </dt>
-            <dd className="font-mono text-xs/6 text-muted-foreground">{row.items.join(" · ")}</dd>
+            <dd>
+              <ul>
+                {row.items.map((item) => {
+                  const [slot, colour] = MARKS[item] ?? [];
+                  return (
+                    <li
+                      key={item}
+                      style={slot === undefined ? undefined : ({ "--slot": slot, "--brand": colour } as React.CSSProperties)}
+                    >
+                      {slot !== undefined && <i />}
+                      {item}
+                    </li>
+                  );
+                })}
+              </ul>
+            </dd>
           </div>
         ))}
       </dl>

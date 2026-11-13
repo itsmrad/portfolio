@@ -165,12 +165,17 @@ test.describe("gutters", () => {
 
 test("the resume button exists only when the PDF does", async ({ page, request }) => {
   await page.goto("/");
-  const links = page.locator('a[href="/resume.pdf"]');
-  if (existsSync("public/resume.pdf")) {
+  const RESUME = "/Anupam-Das-Resume.pdf";
+  const links = page.locator(`a[href="${RESUME}"]`);
+  if (existsSync(`public${RESUME}`)) {
     await expect(links.first()).toBeVisible();
-    expect((await request.get("/resume.pdf")).status()).toBe(200);
+    await expect(links.first()).toHaveAttribute("download", "Anupam-Das-Resume.pdf");
+    const response = await request.get(RESUME);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("application/pdf");
+    for (const path of ["/index.md", "/llms.txt"]) expect(await (await request.get(path)).text()).toContain(RESUME);
   } else {
     await expect(links).toHaveCount(0);
-    for (const path of ["/index.md", "/llms.txt"]) expect(await (await request.get(path)).text()).not.toContain("resume.pdf");
+    for (const path of ["/index.md", "/llms.txt"]) expect(await (await request.get(path)).text()).not.toContain(RESUME);
   }
 });

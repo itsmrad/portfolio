@@ -6,6 +6,9 @@ import { SITE_URL } from "./helpers";
 // international number, or any run of ten or more digits.
 const PHONE = /tel:|telephone|\+\d[\d\s-]{7,}\d|\b\d{10,13}\b/i;
 
+/** The address the owner confirmed on 2026-11-13. */
+const EMAIL = "itsmrad@gmail.com";
+
 type Node = Record<string, unknown>;
 
 async function head(request: APIRequestContext, path: string) {
@@ -81,11 +84,17 @@ test("JSON-LD is one linked graph with no dangling references", async ({ request
 
   const person = nodes.find((node) => node["@type"] === "Person")!;
   expect(person).not.toHaveProperty("telephone");
-  // Until the owner confirms an address. Setting `site.email` means the lead
-  // also updates this line and the "no email yet" loop below.
-  expect(person).not.toHaveProperty("email");
+  // The address the owner confirmed, and his booking page.
+  expect(person.email).toBe(EMAIL);
+  expect(person.contactPoint).toMatchObject({ "@type": "ContactPoint", url: "https://cal.com/itsmrad" });
   expect(JSON.stringify(person.sameAs)).not.toContain("youtube");
-  expect(person.worksFor).toEqual({ "@type": "Organization", name: "Plancover" });
+  // Named, with no link to the company or its repositories.
+  expect(person.worksFor).toEqual({ "@type": "Organization", name: "PlanCover" });
+  expect((person.alumniOf as Node[]).map((entry) => entry.name)).toEqual([
+    "Bhagwan Parshuram Institute of Technology",
+    "Dasgupta Maiti & Associates",
+    "Syuniqe",
+  ]);
   // The raw markup escapes "<" so content can never close the script tag.
   for (const [, raw] of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) expect(raw).not.toContain("<");
 });
@@ -115,7 +124,7 @@ test("manifest is valid and its icons exist", async ({ request }) => {
   for (const path of ["/favicon.ico", "/icon.svg", "/apple-icon.png"]) expect((await request.get(path)).status(), path).toBe(200);
 });
 
-test("content rules: no phone, no email yet, no YouTube, Plancover unlinked", async ({ page, request }) => {
+test("content rules: no phone, only the owner's email, no YouTube, PlanCover unlinked", async ({ page, request }) => {
   await page.goto("/");
   const visible = await page.locator("body").innerText();
   const structured = (await page.locator('script[type="application/ld+json"]').allTextContents()).join("\n");
@@ -131,7 +140,8 @@ test("content rules: no phone, no email yet, no YouTube, Plancover unlinked", as
   };
   for (const [where, text] of Object.entries(texts)) {
     expect(text.match(PHONE)?.[0], `phone number in ${where}`).toBeUndefined();
-    expect(text, `email in ${where}`).not.toMatch(/mailto:|[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+    // The one address the owner confirmed, and no other.
+    for (const address of text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi) ?? []) expect(address, `email in ${where}`).toBe(EMAIL);
     expect(text, `YouTube in ${where}`).not.toMatch(/youtu\.?be/i);
     expect(text, `tutorial in ${where}`).not.toMatch(/tutorial/i);
     expect(text, `omitted project in ${where}`).not.toMatch(/fuel[- ]?route/i);
@@ -139,5 +149,10 @@ test("content rules: no phone, no email yet, no YouTube, Plancover unlinked", as
     expect(text, `audience claim in ${where}`).not.toMatch(/\d[\d,.]*\s*[k+]*\s+(github )?(stars|downloads|installs|users)\b/i);
   }
   expect(hrefs.filter((href) => /plancover/i.test(href))).toEqual([]);
-  expect(visible).toContain("Plancover");
+  expect(visible).toContain("PlanCover");
+  // The address is on the page, in the structured data and in both agent files; the 404 needs none.
+  for (const where of ["page", "JSON-LD", "/index.md", "/llms.txt"] as const) expect(texts[where], where).toContain(EMAIL);
+  for (const where of ["links", "JSON-LD", "/index.md", "/llms.txt"] as const) expect(texts[where], where).toContain("https://cal.com/itsmrad");
+  // The resume's certificate folders stay private.
+  for (const [where, text] of Object.entries(texts)) expect(text, where).not.toMatch(/drive\.google/i);
 });

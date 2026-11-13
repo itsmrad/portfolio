@@ -1,0 +1,203 @@
+/* The cover: monogram, then the identity row. Construction lines from the
+   drawing run past it sideways (the page clips them) but stop at its edges. */
+.cover {
+  position: relative;
+  overflow-y: clip;
+}
+
+.mark {
+  padding: 1.5rem 1rem 0;
+}
+
+.identity {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .mark {
+    width: 80%;
+    margin-left: auto;
+    padding-top: 2.5rem;
+  }
+  .identity {
+    margin-top: 0;
+  }
+}
+
+/* Portrait in a frame with stepped corners: three nested notches, 1px line,
+   3px paper, then the photo. */
+.portrait {
+  --notch: 8px;
+  position: relative;
+  /* Above the full-bleed hairlines of the rows beside it. */
+  z-index: 1;
+  flex: none;
+  width: 6rem;
+  height: 6rem;
+}
+
+.frame,
+.paper,
+.paper img {
+  clip-path: polygon(
+    0 var(--notch),
+    var(--notch) var(--notch),
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%
+  );
+}
+
+.frame {
+  height: 100%;
+  padding: 1px;
+  background: light-dark(var(--foreground), color-mix(in oklab, var(--foreground) 20%, var(--background)));
+}
+
+.paper {
+  --notch: 7px;
+  position: relative;
+  height: 100%;
+  padding: 3px;
+  background: var(--background);
+}
+
+.paper img {
+  --notch: 4px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 42% 40%;
+}
+
+.paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(105deg, transparent 35%, #f6f1ff55 50%, transparent 65%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.portrait:hover .paper::after {
+  transform: translateX(120%);
+}
+
+/* Rotating tagline: every line shares one cell, so the widest reserves the
+   width, and takes its turn (the rotation itself is an inline rule in
+   hero.tsx). Without motion the first one stays. */
+.taglines {
+  display: grid;
+}
+
+.taglines li {
+  grid-area: 1 / 1;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.taglines li:first-child {
+  opacity: 1;
+}
+
+/* The key cap for the palette shortcut: Ctrl, or the Command sign where the
+   command palette has marked the page as running on an Apple device. */
+.modifier span:last-child,
+:global(html[data-platform="mac"]) .modifier span:first-child {
+  display: none;
+}
+
+:global(html[data-platform="mac"]) .modifier span:last-child {
+  display: inline;
+}
+
+/* Key phrases of the claim get an underline that draws itself once. */
+.underlined {
+  position: relative;
+  display: inline-block;
+}
+
+.underlined svg {
+  position: absolute;
+  bottom: -0.25rem;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  overflow: visible;
+}
+
+.underlined path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .underlined path {
+    stroke-dasharray: 1;
+    animation: hero-underline 0.35s cubic-bezier(0.22, 1, 0.36, 1) calc(0.22s + var(--index) * 0.14s) backwards;
+  }
+}
+
+@keyframes hero-underline {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* Dashed rule down the middle of the two-column facts grid. */
+@media (min-width: 40rem) {
+  .facts::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 50%;
+    border-left: 1px dashed var(--line);
+  }
+}
+
+.live {
+  position: relative;
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--signal);
+    animation: hero-live 2.4s ease-out infinite;
+  }
+}
+
+@keyframes hero-live {
+  from {
+    opacity: 0.6;
+  }
+  70%,
+  to {
+    opacity: 0;
+    transform: scale(2.75);
+  }
+}
+
+@media print {
+  .mark {
+    display: none;
+  }
+}
