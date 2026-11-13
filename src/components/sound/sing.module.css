@@ -1,0 +1,19 @@
+/* Inline and relatively positioned, so the letters keep the name's kerning while they hop. */
+.letter {
+  position: relative;
+  top: 0;
+  transition:
+    top 120ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 120ms;
+}
+
+.letter[data-sing] {
+  top: -5px;
+  color: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter[data-sing] {
+    top: 0;
+  }
+}
