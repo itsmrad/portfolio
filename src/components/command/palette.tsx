@@ -33,7 +33,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { commandCopy } from "@/content/command";
 import { site } from "@/content/site";
@@ -43,9 +43,22 @@ import { Dialog } from "@/components/ui/dialog";
 import { actions, type Action } from "@/components/command/shortcuts";
 
 import styles from "./command.module.css";
+import keyStyles from "./keys.module.css";
 
-/** null: closed. "": all commands. "shortcuts": the keyboard shortcut list. */
-export type View = "" | "shortcuts" | null;
+/** "": all commands. "shortcuts": the keyboard shortcut list. */
+export type View = "" | "shortcuts";
+
+export type PaletteProps = {
+  open: boolean;
+  view: View;
+  /** Changes with every open request (see ./commands). */
+  request: number;
+  resume: boolean;
+  /** Hands over what was typed since the open request; typing reaches the input from then on. */
+  take: () => string;
+  onView: (view: View) => void;
+  onClose: () => void;
+};
 
 function Brand({ d }: { d: string }) {
   return (
@@ -88,25 +101,24 @@ const icons: Record<string, React.ReactNode> = {
 
 // --- Actions -----------------------------------------------------------------
 
-let toastBox: HTMLElement | undefined;
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const keysOff = () => document.documentElement.classList.contains(keyStyles.off!);
+
+// The status line exists from the moment this chunk loads, so screen readers
+// already watch it when the first confirmation lands.
+const toastBox = document.createElement("div");
+toastBox.setAttribute("role", "status");
+toastBox.className = styles.toast!;
+toastBox.dataset.print = "hide";
+document.body.append(toastBox);
 let toastTimer = 0;
 
-/** A polite status line, created once so screen readers already watch it when the text lands. */
-function toast(text: string) {
-  if (!toastBox) {
-    toastBox = document.createElement("div");
-    toastBox.setAttribute("role", "status");
-    toastBox.className = styles.toast!;
-    toastBox.dataset.print = "hide";
-    document.body.append(toastBox);
-  }
-  const box = toastBox;
+/** A polite confirmation; `hold` keeps a failure up long enough to select the text by hand. */
+function toast(text: string, hold = false) {
   clearTimeout(toastTimer);
-  requestAnimationFrame(() => {
-    box.textContent = text;
-    box.dataset.show = "";
-  });
-  toastTimer = window.setTimeout(() => delete box.dataset.show, 2000);
+  toastBox.textContent = text;
+  toastBox.dataset.show = hold ? "hold" : "";
+  toastTimer = window.setTimeout(() => delete toastBox.dataset.show, hold ? 8000 : 2000);
 }
 
 function copy(text: string, done: string) {
@@ -117,18 +129,29 @@ function copy(text: string, done: string) {
       haptic();
       toast(done);
     },
-    () => toast(`${commandCopy.copyFailed} ${text}`),
+    () => toast(`${commandCopy.copyFailed} ${text}`, true),
   );
 }
 
 function perform(action: Action) {
   if (action.id === "sound") {
     toggleSound();
+  } else if (action.id === "keys") {
+    const off = !keysOff();
+    document.documentElement.classList.toggle(keyStyles.off!, off);
+    try {
+      if (off) localStorage.setItem("shortcuts", "off");
+      else localStorage.removeItem("shortcuts");
+    } catch {}
+    toast(off ? commandCopy.keysNowOff : commandCopy.keysNowOn);
   } else if (action.control) {
-    // The theme toggle owns the reveal from its own position, so press it.
-    document.querySelector<HTMLElement>(`[aria-keyshortcuts="${action.key}"]`)?.click();
+    // The theme toggle owns the reveal from its own position, so press it,
+    // once the palette has faded: the scrim must not be frozen into the old half.
+    const control = document.querySelector<HTMLElement>(`[aria-keyshortcuts="${action.key}"]`);
+    setTimeout(() => control?.click(), reduced() ? 0 : 160);
   } else if (action.id === "copy-link") {
-    copy(site.url + location.pathname + location.hash, commandCopy.linkCopied);
+    // One page: any address on this site is the home page plus the section.
+    copy(`${site.url}/${location.hash}`, commandCopy.linkCopied);
   } else if (action.id === "copy-email" && site.email) {
     copy(site.email, commandCopy.emailCopied);
   } else if (action.download && action.href) {
@@ -154,16 +177,19 @@ function shortcutOf(action: Action) {
   return action.key ? [action.key] : action.chord ? ["g", action.chord] : [];
 }
 
-function sectionsFor(view: View, list: Action[]) {
+function sectionsFor(view: View, list: Action[], showKeys: boolean) {
   if (view === "shortcuts") {
     return [
-      { heading: "Keys", rows: list.filter((a) => a.key).map((a) => ({ action: a, keys: [a.key!] })) },
+      {
+        heading: "Keys",
+        rows: list.filter((a) => a.key && a.id !== "shortcuts").map((a) => ({ action: a, keys: [a.key!] })),
+      },
       { heading: "Go to, after g", rows: list.filter((a) => a.chord).map((a) => ({ action: a, keys: ["g", a.chord!] })) },
     ].filter((section) => section.rows.length > 0);
   }
   const groups = new Map<string, Row[]>();
   for (const action of list) {
-    groups.set(action.group, [...(groups.get(action.group) ?? []), { action, keys: shortcutOf(action) }]);
+    groups.set(action.group, [...(groups.get(action.group) ?? []), { action, keys: showKeys ? shortcutOf(action) : [] }]);
   }
   return [...groups].map(([heading, rows]) => ({ heading, rows }));
 }
@@ -182,50 +208,42 @@ function PlatformKeys() {
   );
 }
 
-export function Palette({
-  view,
-  onView,
-  resume,
-  take,
-}: {
-  view: View;
-  onView: (view: View) => void;
-  resume: boolean;
-  /** Hands over what was typed since the open request; typing reaches the input from here on. */
-  take: () => string;
-}) {
+export function Palette({ open, view, request, resume, take, onView, onClose }: PaletteProps) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  // Each open request starts fresh, during render (not on close, so the box
+  // never changes while it fades out; not in an effect, so the first key after
+  // opening never acts on the old list).
+  const [opened, setOpened] = useState(-1);
+  if (opened !== request) {
+    setOpened(request);
+    setQuery("");
+    setActive(0);
+  }
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const chosen = useRef(false);
   const uid = useId();
-  const open = view !== null;
+  const off = keysOff();
 
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const found = actions.filter(
-    (action) =>
-      (resume || action.id !== "resume") &&
-      words.every((word) =>
-        `${action.label} ${action.group} ${action.hint ?? ""} ${action.keywords ?? ""}`.toLowerCase().includes(word),
-      ),
-  );
-  const sections = sectionsFor(view, found);
+  const labelOf = (action: Action) => (action.id === "keys" && off ? commandCopy.keysOn : action.label);
+  const sectionsMatching = (text: string) => {
+    const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+    const found = actions.filter(
+      (action) =>
+        (resume || action.id !== "resume") &&
+        words.every((word) =>
+          `${labelOf(action)} ${action.group} ${action.hint ?? ""} ${action.keywords ?? ""}`.toLowerCase().includes(word),
+        ),
+    );
+    return sectionsFor(view, found, !off);
+  };
+  const sections = sectionsMatching(query);
   const rows = sections.flatMap((section) => section.rows);
   const starts = sections.map((_, i) => sections.slice(0, i).reduce((total, section) => total + section.rows.length, 0));
   const optionId = (index: number) => `${uid}-option-${index}`;
-
-  useEffect(() => {
-    if (!open) return;
-    input.current?.focus();
-    const typed = take();
-    // Text typed before the input could take it: an external buffer, read once per opening.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (typed) setQuery(typed);
-    play("open");
-    haptic();
-  }, [open, take]);
+  const spoken = (keys: string[]) => `${commandCopy.spokenShortcut} ${keys.join(` ${commandCopy.spokenThen} `)}`;
 
   useEffect(() => {
     if (active === 0) list.current?.scrollTo({ top: 0 });
@@ -250,25 +268,54 @@ export function Palette({
     chosen.current = true;
     // Close first: the page is inert while the modal is open, and focus goes back before any jump.
     dialog.current?.close();
-    if (!action.control && action.id !== "sound" && !action.id.startsWith("copy")) {
+    if (!action.control && action.id !== "sound" && action.id !== "keys" && !action.id.startsWith("copy")) {
       play("tap");
       haptic();
     }
     perform(action);
   };
 
+  // A layout effect: focus and the typed text land in the same task as the
+  // commit, so no key can arrive in between and act on the old list.
+  useLayoutEffect(() => {
+    if (!open) return;
+    input.current?.focus();
+    // Whatever was typed while the chunk loaded goes into the search: an external buffer.
+    const typed = take();
+    const text = typed.replace(/\n$/, "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (text) setQuery(text);
+    // Enter came before the palette did: run the first match, as Enter would have.
+    const first = typed.endsWith("\n") && sectionsMatching(text)[0]?.rows[0];
+    if (first) {
+      choose(first.action);
+      return;
+    }
+    play("open");
+    haptic();
+    // Phones: keep the box above the on-screen keyboard, which shrinks only the visual viewport.
+    const viewport = window.visualViewport;
+    const fit = () => viewport && dialog.current?.style.setProperty("--visible-height", `${viewport.height}px`);
+    fit();
+    viewport?.addEventListener("resize", fit);
+    return () => viewport?.removeEventListener("resize", fit);
+    // `open` and `take` change together with `request` or never.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request]);
+
   return (
     <Dialog
       ref={dialog}
       open={open}
+      request={request}
       onClose={() => {
         if (!chosen.current) play("close");
         chosen.current = false;
-        search("");
-        onView(null);
+        onClose();
       }}
+      data-palette=""
       aria-label="Command palette"
-      className={`${styles.dialog} fixed inset-x-0 bottom-auto mx-auto my-0 max-h-[min(56dvh,27rem)] w-[calc(100%-1rem)] max-w-[27.5rem] flex-col overflow-hidden rounded-xl bg-muted p-0 text-foreground shadow-xl ring-1 ring-border ring-inset open:flex`}
+      className={`${styles.dialog} fixed inset-x-0 bottom-auto mx-auto my-0 w-[calc(100%-1rem)] max-w-[27.5rem] flex-col overflow-hidden rounded-xl bg-muted p-0 text-foreground shadow-xl ring-1 ring-border ring-inset open:flex`}
     >
       <div className="flex shrink-0 items-center gap-2 px-3.5">
         {view === "shortcuts" ? (
@@ -340,14 +387,20 @@ export function Palette({
       </div>
 
       {view === "shortcuts" && (
-        <p className="px-3.5 pb-1.5 text-xs/6 text-pretty text-muted-foreground [&_kbd]:mx-0.5">
-          Open with <kbd className={kbd}>/</kbd> or <PlatformKeys />, anywhere outside a text field.
+        <p className="px-3.5 pb-1.5 text-xs/6 text-pretty text-muted-foreground [&_kbd+kbd]:ml-0.5">
+          {off ? (
+            commandCopy.keysOffNote
+          ) : (
+            <>
+              Open with <kbd className={kbd}>/</kbd> or <PlatformKeys />, anywhere outside a text field.
+            </>
+          )}
         </p>
       )}
 
       <div
         ref={list}
-        className="mx-1.5 mt-1 mb-1.5 min-h-0 overflow-y-auto overscroll-contain rounded-lg bg-card p-1.5 ring-1 ring-border ring-inset [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mx-1.5 mt-1 mb-1.5 min-h-0 scroll-py-1.5 overflow-y-auto overscroll-contain rounded-lg bg-card p-1.5 ring-1 ring-border ring-inset [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div id={`${uid}-list`} role="listbox" aria-label={view === "shortcuts" ? "Keyboard shortcuts" : "Commands"}>
           {sections.map((section, sectionIndex) => (
@@ -363,11 +416,13 @@ export function Palette({
                     onClick={() => choose(action)}
                   >
                     {icons[action.icon] ?? icons.link}
-                    <span className="min-w-0 flex-1 truncate">{action.label}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {labelOf(action)}
+                    </span>
                     {action.hint && (
                       <span className="max-w-[40%] truncate font-mono text-xs text-muted-foreground">{action.hint}</span>
                     )}
-                    {keys.length > 0 && <CommandShortcut keys={keys} />}
+                    {keys.length > 0 && <CommandShortcut keys={keys} spoken={spoken(keys)} />}
                     {action.external && (
                       <span className="-mr-0.5 text-muted-foreground">
                         <ArrowUpRight className="size-3.5" aria-label="opens in a new tab" />

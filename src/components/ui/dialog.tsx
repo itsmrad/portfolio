@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 /**
  * A modal on the native <dialog>: the browser makes the rest of the page inert
@@ -8,17 +8,25 @@ import { useEffect, useRef } from "react";
  * This adds what it lacks everywhere: closing on a press outside the box and
  * returning focus to whatever opened it. Load it lazily; style it with
  * `open:` classes, since a closed dialog must keep `display: none`.
+ *
+ * The browser closes the dialog before React hears of it, so `request` (any
+ * value that changes per open request) reopens a dialog that is still open
+ * in React's eyes, and a late `close` event for a dialog already reopened is
+ * ignored.
  */
 export function Dialog({
   open,
+  request,
   onClose,
   ref,
   ...props
-}: Omit<React.ComponentProps<"dialog">, "open" | "onClose"> & { open: boolean; onClose: () => void }) {
+}: Omit<React.ComponentProps<"dialog">, "open" | "onClose"> & { open: boolean; request?: number; onClose: () => void }) {
   const own = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const pressedOutside = useRef(false);
 
-  useEffect(() => {
+  // A layout effect, so the dialog is open before a parent's layout effect moves focus into it.
+  useLayoutEffect(() => {
     const dialog = own.current;
     if (!dialog || open === dialog.open) return;
     if (open) {
@@ -27,7 +35,15 @@ export function Dialog({
     } else {
       dialog.close();
     }
-  }, [open]);
+  }, [open, request]);
+
+  const outside = (event: React.MouseEvent<HTMLDialogElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    return (
+      event.target === event.currentTarget &&
+      (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)
+    );
+  };
 
   return (
     <dialog
@@ -37,6 +53,7 @@ export function Dialog({
         else if (ref) ref.current = node;
       }}
       onClose={() => {
+        if (own.current?.open) return;
         const back = opener.current;
         opener.current = null;
         // Browsers differ on restoring focus; never leave it on <body> or in the closed box.
@@ -45,14 +62,12 @@ export function Dialog({
         }
         onClose();
       }}
+      // Close only for a press that starts and ends on the backdrop: a text
+      // selection dragged out of the box ends there too, and must not close it.
+      onPointerDown={(event) => (pressedOutside.current = outside(event))}
       onClick={(event) => {
-        // A click on the dialog element itself, outside its box, landed on the backdrop.
-        // (On click, not pointerdown, so the release cannot land on the page below.)
-        if (event.target !== event.currentTarget) return;
-        const box = event.currentTarget.getBoundingClientRect();
-        const inside =
-          event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
-        if (!inside) event.currentTarget.close();
+        if (pressedOutside.current && outside(event)) event.currentTarget.close();
+        pressedOutside.current = false;
       }}
       {...props}
     />

@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 
 import { toggleSound } from "@/lib/sound";
-import type { View } from "@/components/command/palette";
+import type { PaletteProps, View } from "@/components/command/palette";
 
-type PaletteProps = { view: View; onView: (view: View) => void; resume: boolean; take: () => string };
+import keyStyles from "./keys.module.css";
 
 const load = () => import("@/components/command/palette");
+const noop = () => {};
 
-// From an open request until the palette's input has focus, typed characters
-// are kept here for its search instead of reaching the shortcuts.
+// Characters typed between an open request and the palette's input taking
+// focus: kept for its search instead of reaching the shortcuts. A trailing
+// newline is an Enter pressed before the palette appeared. Armed only
+// while a request is in flight; every outcome (opened, failed, cancelled) clears it.
 let typed: string | null = null;
 const take = () => {
   const text = typed ?? "";
@@ -25,44 +28,62 @@ const take = () => {
  * a value is an in-page href, "sound" (toggleSound), "click" (press the
  * control that declares the key in `aria-keyshortcuts`: the theme toggle, so
  * `d` gets the reveal from the button) or an action id the palette chunk runs.
+ *
+ * Whether the palette is open is read from the <dialog> itself, never from
+ * React state, which lags a close by a frame or more. `request` counts open
+ * requests, so each one re-runs the palette's opening even if React state
+ * looks unchanged. Single keys can be switched off (WCAG 2.1.4); Ctrl/Cmd+K
+ * always works.
  */
 export function Commands({ keys, chords, resume }: { keys: Record<string, string>; chords: Record<string, string>; resume: boolean }) {
   const [Palette, setPalette] = useState<ComponentType<PaletteProps> | null>(null);
-  const [view, setView] = useState<View>(null);
-  const isOpen = useRef(false);
+  const [state, setState] = useState<{ open: boolean; view: View; request: number }>({ open: false, view: "", request: 0 });
 
   useEffect(() => {
-    isOpen.current = view !== null;
-  });
+    const root = document.documentElement;
+    const off = keyStyles.off!;
+    try {
+      root.classList.toggle(off, localStorage.getItem("shortcuts") === "off");
+    } catch {}
+    if (/Mac|iP/.test(navigator.platform)) root.dataset.platform = "mac";
 
-  useEffect(() => {
-    const open = (next: View) => {
+    let pending = 0;
+    const open = (view: View) => {
       typed ??= "";
-      load().then(
-        (module) => {
-          setPalette(() => module.Palette);
-          setView(next);
-        },
-        // Offline or a failed deploy: give the keys back rather than swallow them.
-        () => (typed = null),
-      );
+      const id = ++pending;
+      const release = () => id === pending && (typed = null);
+      // A load that fails, or hangs after an earlier failure, must not hold the keys.
+      setTimeout(release, 3000);
+      load().then((module) => {
+        // A later request or a cancel (Escape while loading) wins.
+        if (id !== pending) return;
+        setPalette(() => module.Palette);
+        setState(({ request }) => ({ open: true, view, request: request + 1 }));
+      }, release);
     };
-    if (/Mac|iP/.test(navigator.platform)) document.documentElement.dataset.platform = "mac";
 
     let chordUntil = 0;
     const onKey = (event: KeyboardEvent) => {
       const { key, target } = event;
       if (event.defaultPrevented || event.isComposing) return;
-      if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key.toLowerCase() === "k") {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key === "k") {
         event.preventDefault();
-        if (isOpen.current) setView(null);
+        if (event.repeat) return;
+        const dialog = document.querySelector<HTMLDialogElement>("dialog[data-palette][open]");
+        if (dialog) dialog.close();
         else open("");
         return;
       }
-      if (typed !== null && key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
-        event.preventDefault();
-        typed += key;
-        return;
+      if (typed !== null && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        // Keep typing for the search while the chunk loads; Backspace and Escape act on it.
+        if (key === "Escape") {
+          typed = null;
+          pending++;
+        } else if (key === "Backspace") typed = typed.slice(0, -1);
+        else if (key === "Enter") typed += "\n";
+        else if (key.length !== 1) return;
+        else typed += key;
+        return event.preventDefault();
       }
       const element = target as HTMLElement;
       if (
@@ -70,8 +91,10 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
         event.ctrlKey ||
         event.altKey ||
         event.repeat ||
+        root.classList.contains(off) ||
         element.isContentEditable ||
-        element.closest?.("input,textarea,select,dialog")
+        // A field in the open palette handles its own keys; focus left behind in a closed one does not count.
+        (element.closest?.("input,textarea,select,dialog") && !element.closest("dialog:not([open])"))
       ) {
         return;
       }
@@ -84,7 +107,7 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       else if (value[0] === "/") location.assign(value);
       else if (value === "sound") toggleSound();
       else if (value === "click") document.querySelector<HTMLElement>(`[aria-keyshortcuts="${key}"]`)?.click();
-      else load().then((module) => module.run(value));
+      else load().then((module) => module.run(value), noop);
     };
 
     const onClick = (event: MouseEvent) => {
@@ -94,19 +117,24 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       if (element.closest?.("#dock-menu a")) document.getElementById("dock-menu")?.hidePopover();
     };
     // Fetch the chunk as soon as the pointer or focus reaches an opener.
-    const warm = (event: Event) => (event.target as Element).closest?.("[data-command-open]") && load();
+    const warm = (event: Event) => (event.target as Element).closest?.("[data-command-open]") && load().catch(noop);
 
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("click", onClick);
-    document.addEventListener("pointerover", warm);
-    document.addEventListener("focusin", warm);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("click", onClick);
-      document.removeEventListener("pointerover", warm);
-      document.removeEventListener("focusin", warm);
-    };
+    const listening = new AbortController();
+    const options = { signal: listening.signal };
+    document.addEventListener("keydown", onKey, options);
+    document.addEventListener("click", onClick, options);
+    document.addEventListener("pointerover", warm, options);
+    document.addEventListener("focusin", warm, options);
+    return () => listening.abort();
   }, [keys, chords]);
 
-  return Palette ? <Palette view={view} onView={setView} resume={resume} take={take} /> : null;
+  return Palette ? (
+    <Palette
+      {...state}
+      resume={resume}
+      take={take}
+      onView={(view) => setState((current) => ({ ...current, view }))}
+      onClose={() => setState((current) => ({ ...current, open: false }))}
+    />
+  ) : null;
 }
