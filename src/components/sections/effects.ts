@@ -4,12 +4,9 @@
  * its elements by `data-*` attribute and listens on the document, so nothing
  * here depends on when or how often a section is rendered.
  */
-import { play, type SoundName } from "@/lib/sound";
+import { play } from "@/lib/sound";
 
 import { paintTime } from "./hero-time";
-
-// The sound branch's vocabulary; cast until its name list is on this branch.
-const voice = (name: string) => play(name as SoundName);
 
 /* --- Local time ---------------------------------------------------------- */
 
@@ -24,9 +21,9 @@ async function copy(button: HTMLElement) {
   try {
     await navigator.clipboard.writeText(button.dataset.copy!);
   } catch {
-    return voice("error"); // Blocked: the address stays selectable beside the button.
+    return play("error"); // Blocked: the address stays selectable beside the button.
   }
-  voice("copy");
+  play("copy");
   const status = button.querySelector('[role="status"]')!;
   button.dataset.copied = "";
   status.textContent = button.dataset.copiedLabel!;
@@ -43,7 +40,7 @@ export function click(event: MouseEvent) {
   // The palette opens on its shortcut, so sending the shortcut needs no reference to its code.
   else if (target.closest("[data-palette]"))
     document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, metaKey: true, bubbles: true }));
-  else if (target.closest("main summary")) voice("detent");
+  else if (target.closest("main summary")) play("detent");
 }
 
 /* --- Contribution calendar: read out a day ------------------------------- */
@@ -121,7 +118,7 @@ addEventListener("keydown", (event) => {
   event.preventDefault();
   if (next >= 0 && next <= last) {
     select(next);
-    voice("tick");
+    play("tick");
   }
 });
 // Arriving by keyboard starts on today; leaving puts the read-out away.

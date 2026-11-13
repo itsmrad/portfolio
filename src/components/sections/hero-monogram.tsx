@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { play, type SoundName } from "@/lib/sound";
+import { play } from "@/lib/sound";
 
 import styles from "./hero-monogram.module.css";
 
@@ -18,9 +18,6 @@ import styles from "./hero-monogram.module.css";
 type Point = readonly [i: number, j: number];
 
 // One lattice cell is 64 long: 55.43 across and 32 down on screen.
-// The sound branch's vocabulary; cast until its name list is on this branch.
-const voice = (name: string) => play(name as SoundName);
-
 const DX = 55.4256;
 const DY = 32;
 const DEPTH = 32;
@@ -89,7 +86,7 @@ export function Monogram({ label }: { label: string }) {
     const state = spring.current;
     if (state.target === target) return;
     state.target = target;
-    if (!quiet.current) voice(target ? "thump" : "release");
+    if (!quiet.current) play(target ? "thump" : "release");
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return draw((state.position = target));
     if (state.frame) return;
     state.time = performance.now();
@@ -166,7 +163,7 @@ export function Monogram({ label }: { label: string }) {
         if (event.key === " " || event.key === "Enter") press(PRESSED);
       }}
       onClick={() => {
-        if (quiet.current) voice("thump");
+        if (quiet.current) play("thump");
         quiet.current = false;
       }}
       onKeyUp={() => press(0)}
