@@ -11,7 +11,8 @@ const EVENTS = `https://api.github.com/users/${site.handle}/events/public?per_pa
 const known = [
   ...projects.map((project) => ({ name: project.name, href: project.repo })),
   ...building.map((entry) => ({ name: entry.name, href: entry.repo })),
-  { name: site.domain, href: site.repo },
+  // This site's own repo, named by its domain; it is matched here, never linked.
+  { name: site.domain, href: `https://github.com/${site.handle}/portfolio` },
 ].filter((repo): repo is { name: string; href: string } => Boolean(repo.href));
 
 /** Newest dated entry in the content file: true, if older than live data. */

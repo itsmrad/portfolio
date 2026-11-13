@@ -8,10 +8,7 @@ import { prefersReducedMotion, whenNear } from "./dom";
 
 type Draw = typeof import("./draw");
 
-// The sound branch's facade takes `play("scratch", { duration })` (seconds, at most 3); its pair
-// vibrates on phones. shortcut: typed loosely so this builds before that facade lands; drop the cast after.
-const playScratch = play as (name: string, options?: { duration?: number }) => void;
-// Matches draw.ts: pen landing, stroke and lift (2.29 s), or the 0.3 s fade under reduced motion.
+// The pen voice lasts as long as the drawing (its haptic pair comes with it). Matches draw.ts: pen landing, stroke and lift (2.29 s), or the 0.3 s fade under reduced motion.
 const SIGN_SECONDS = 2.29;
 const FADE_SECONDS = 0.3;
 
@@ -49,7 +46,7 @@ export function SignButton(props: React.ComponentProps<"button">) {
       {...props}
       ref={ref}
       onClick={() => {
-        playScratch("scratch", { duration: prefersReducedMotion() ? FADE_SECONDS : SIGN_SECONDS });
+        play("scratch", { duration: prefersReducedMotion() ? FADE_SECONDS : SIGN_SECONDS });
         sign();
       }}
     />
