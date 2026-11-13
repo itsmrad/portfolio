@@ -1,7 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
 // Tests run against the production build (`npm run build` first), served by `next start`.
-const PORT = 3210;
+// Each worktree sets its own GATE_PORT, so branches can run their gates at the same time.
+const PORT = Number(process.env.GATE_PORT ?? 3210);
 
 export default defineConfig({
   testDir: "tests",

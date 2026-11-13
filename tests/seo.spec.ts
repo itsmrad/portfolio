@@ -81,7 +81,9 @@ test("JSON-LD is one linked graph with no dangling references", async ({ request
 
   const person = nodes.find((node) => node["@type"] === "Person")!;
   expect(person).not.toHaveProperty("telephone");
-  expect(person).not.toHaveProperty("email"); // until the owner confirms an address
+  // Until the owner confirms an address. Setting `site.email` means the lead
+  // also updates this line and the "no email yet" loop below.
+  expect(person).not.toHaveProperty("email");
   expect(JSON.stringify(person.sameAs)).not.toContain("youtube");
   expect(person.worksFor).toEqual({ "@type": "Organization", name: "Plancover" });
   // The raw markup escapes "<" so content can never close the script tag.
@@ -131,8 +133,11 @@ test("content rules: no phone, no email yet, no YouTube, Plancover unlinked", as
     expect(text.match(PHONE)?.[0], `phone number in ${where}`).toBeUndefined();
     expect(text, `email in ${where}`).not.toMatch(/mailto:|[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
     expect(text, `YouTube in ${where}`).not.toMatch(/youtu\.?be/i);
+    expect(text, `tutorial in ${where}`).not.toMatch(/tutorial/i);
+    expect(text, `omitted project in ${where}`).not.toMatch(/fuel[- ]?route/i);
+    // No audience claims: a number followed by stars, downloads, installs or users.
+    expect(text, `audience claim in ${where}`).not.toMatch(/\d[\d,.]*\s*[k+]*\s+(github )?(stars|downloads|installs|users)\b/i);
   }
   expect(hrefs.filter((href) => /plancover/i.test(href))).toEqual([]);
   expect(visible).toContain("Plancover");
-  expect(visible).not.toMatch(/tutorial/i);
 });

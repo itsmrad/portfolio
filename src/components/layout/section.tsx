@@ -53,7 +53,8 @@ export function SectionHeader({
         <h2 id={`${id}-title`} className="mt-1 font-serif text-3xl/[1.1] tracking-[-0.01em]">
           {title}
           {count != null && (
-            <sup className="-top-[0.75em] ml-1 font-pixel text-xs tracking-normal text-muted-foreground">
+            // Decorative: kept out of the heading's and the region's accessible name.
+            <sup aria-hidden className="-top-[0.75em] ml-1 font-pixel text-xs tracking-normal text-muted-foreground">
               {String(count).padStart(2, "0")}
             </sup>
           )}
