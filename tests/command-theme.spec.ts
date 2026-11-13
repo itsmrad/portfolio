@@ -53,6 +53,13 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(palette(page)).toBeHidden();
 
+    // Book a call is listed only when the content has a booking link; none is set yet.
+    await page.keyboard.press("/");
+    await page.keyboard.type("call");
+    await expect(palette(page).getByRole("option", { name: /Book a call/ })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+
     // Ctrl+K toggles closed too.
     await page.keyboard.press("Control+k");
     await expect(palette(page)).toBeVisible();
@@ -147,15 +154,25 @@ test.describe("desktop", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    await page.keyboard.press("d");
-    const reveal = await page.evaluate(() =>
-      document
-        .getAnimations()
-        .map((animation) => (animation.effect as KeyframeEffect).pseudoElement)
-        .filter(Boolean),
+    // Watch every frame for a second, since a loaded machine can start the transition late.
+    const seen = page.evaluate(
+      () =>
+        new Promise<string[]>((resolve) => {
+          const found = new Set<string>();
+          const end = performance.now() + 1000;
+          const tick = () => {
+            for (const animation of document.getAnimations()) {
+              const pseudo = (animation.effect as KeyframeEffect).pseudoElement;
+              if (pseudo) found.add(pseudo);
+            }
+            if (performance.now() < end) requestAnimationFrame(tick);
+            else resolve([...found]);
+          };
+          tick();
+        }),
     );
-    expect(reveal).toContain("::view-transition-new(root)");
-    await page.waitForTimeout(700);
+    await page.keyboard.press("d");
+    expect(await seen).toContain("::view-transition-new(root)");
     expect(await page.evaluate(() => [document.documentElement.classList.contains("dark"), localStorage.getItem("theme")])).toEqual([true, "dark"]);
     expect(await page.evaluate(() => document.documentElement.style.cssText)).toBe("");
 
