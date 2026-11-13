@@ -1,0 +1,173 @@
+/* Two bar plates in one bordered figure; numbers in mono, bars from custom properties. */
+.figure {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.plate + .plate {
+  border-top: 1px solid var(--border);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px dashed var(--border);
+  color: var(--muted-foreground);
+  font: 11px/1rem var(--font-mono);
+  white-space: pre;
+}
+.head i {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 0.25rem 0 0.5rem;
+  background: var(--foreground);
+}
+.head i.p95,
+.plate i::after {
+  --p95: color-mix(in oklab, var(--foreground) 25%, transparent);
+}
+.head i.p95 {
+  background: var(--p95);
+}
+
+.plate ul {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0;
+}
+
+.plate li {
+  display: grid;
+  grid-template: "l v" "b b" "n n" / 1fr auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.value {
+  grid-area: v;
+  text-align: right;
+  font: 0.75rem/1.25rem var(--font-mono);
+  font-feature-settings: "zero", "tnum";
+  color: var(--muted-foreground);
+}
+.value data {
+  color: var(--foreground);
+}
+.value data span {
+  color: var(--muted-foreground);
+}
+
+.plate li > i {
+  grid-area: b;
+  position: relative;
+  height: 0.5rem;
+  margin-top: 0.25rem;
+  background: var(--muted);
+}
+.plate li > i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--foreground) var(--a),
+    var(--p95) var(--a) var(--b),
+    transparent var(--b)
+  );
+  transform-origin: left;
+}
+
+.plate small {
+  grid-area: n;
+  margin-top: 0.125rem;
+  color: var(--muted-foreground);
+  font: 11px/1rem var(--font-mono);
+}
+
+/* The scale under each plate, aligned with the bar column. */
+.ticks {
+  position: relative;
+  height: 1rem;
+  margin: 0.375rem 0.75rem 0.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font: 10px/1 var(--font-mono);
+}
+.ticks span {
+  position: absolute;
+  top: 0;
+  padding-top: 0.25rem;
+  translate: -50% 0;
+}
+.ticks span::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 1px;
+  height: 3px;
+  background: var(--border);
+}
+.ticks span:first-child {
+  translate: 0 0;
+}
+.ticks span:first-child::before {
+  left: 0;
+}
+.ticks span:last-child {
+  translate: -100% 0;
+}
+.ticks span:last-child::before {
+  left: auto;
+  right: 0;
+}
+
+@media (min-width: 40rem) {
+  .plate li {
+    grid-template: "l b v" ". n n" / 9.5rem 1fr 6.5rem;
+  }
+  .plate li > i {
+    margin-top: 0;
+  }
+  .ticks {
+    margin-left: calc(0.75rem + 9.5rem + 0.75rem);
+    margin-right: calc(0.75rem + 6.5rem + 0.75rem);
+  }
+}
+
+.figure figcaption {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+/* Bars draw themselves as they scroll into view, where supported. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .plate li > i::after {
+      animation: draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+}
+@media print {
+  .plate li > i::after {
+    animation: none !important;
+  }
+}
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+}

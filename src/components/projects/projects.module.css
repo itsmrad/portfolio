@@ -1,0 +1,167 @@
+/* Screenshot in a mini browser window, offset inside a dotted frame. */
+.frame {
+  position: relative;
+}
+
+.link {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1.58;
+  isolation: isolate;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background-color: var(--surface);
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 0);
+  background-size: 8px 8px;
+}
+
+.label {
+  position: absolute;
+  z-index: 2;
+  top: 7px;
+  left: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--muted-foreground);
+  font: 10px/1 var(--font-mono);
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.link:is(:hover, :focus-visible) .label {
+  color: var(--foreground);
+  border-color: var(--muted-foreground);
+}
+
+.icons {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.icons a {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--muted-foreground);
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.icons a:is(:hover, :focus-visible) {
+  color: var(--foreground);
+  border-color: var(--muted-foreground);
+}
+
+/* Window chrome is dark by default (Codenaya's site is dark only). */
+.window {
+  --win-bg: #121212;
+  --win-edge: #ffffff50;
+  --win-bar: #222;
+  --win-bar-edge: #ffffff26;
+  --win-dot: #8b8b8b;
+  --win-shadow: #0006;
+  overflow: hidden;
+  border: 1px solid var(--win-edge);
+  background: var(--win-bg);
+  box-shadow: 0 12px 25px var(--win-shadow);
+}
+
+/* A window whose screenshot follows the page theme follows it too. */
+:global(.light) .adaptive {
+  --win-bg: #fafafa;
+  --win-edge: #00000026;
+  --win-bar: #f1f1f1;
+  --win-bar-edge: #0000001a;
+  --win-dot: #a1a1a1;
+  --win-shadow: #0000001f;
+}
+@media (prefers-color-scheme: light) {
+  :global(:root:not(.dark)) .adaptive {
+    --win-bg: #fafafa;
+    --win-edge: #00000026;
+    --win-bar: #f1f1f1;
+    --win-bar-edge: #0000001a;
+    --win-dot: #a1a1a1;
+    --win-shadow: #0000001f;
+  }
+}
+
+.offset {
+  position: absolute;
+  top: max(44px, 23%);
+  left: 9%;
+  width: 104%;
+  border-radius: 8px 8px 0 0;
+  transition: transform 0.23s cubic-bezier(0.22, 0.8, 0.32, 1);
+}
+
+@media (hover: hover) {
+  .link:hover .offset {
+    transform: translate(-12px, -8px);
+  }
+}
+.link:focus-visible .offset {
+  transform: translate(-12px, -8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .link:is(:hover, :focus-visible) .offset {
+    transform: none;
+  }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 15px;
+  padding-left: 7px;
+  border-bottom: 1px solid var(--win-bar-edge);
+  background: var(--win-bar);
+}
+
+.bar i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--win-dot);
+}
+
+/* Display comes from the element's classes: a theme pair hides one of the two. */
+.window img {
+  width: 100%;
+  height: auto;
+}
+
+/* Name link: the arrow lifts toward where it points. */
+.arrow {
+  color: var(--muted-foreground);
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+a:is(:hover, :focus-visible) > .arrow {
+  color: var(--foreground);
+  transform: translate(2px, -2px);
+}
+
+.caption {
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font: 0.75rem/1.25rem var(--font-mono);
+}
