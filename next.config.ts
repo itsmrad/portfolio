@@ -1,0 +1,50 @@
+import type { NextConfig } from "next";
+
+const isDev = process.env.NODE_ENV !== "production";
+// Vercel injects its preview toolbar from vercel.live on preview deployments only.
+const live = process.env.VERCEL_ENV === "preview" ? " https://vercel.live" : "";
+
+// Static pages cannot carry nonces, so inline scripts and styles are allowed;
+// the policy's job is to keep every fetched script, font and frame first-party.
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${live}`,
+  `style-src 'self' 'unsafe-inline'${live}`,
+  `img-src 'self' data: blob:${live}`,
+  `font-src 'self'${live}`,
+  `connect-src 'self'${isDev ? " ws:" : ""}${live}`,
+  `frame-src 'none'${live}`,
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  typedRoutes: true,
+  images: { formats: ["image/avif", "image/webp"] },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: csp },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: "/blog", destination: "/", permanent: true },
+      { source: "/blog/:path*", destination: "/", permanent: true },
+    ];
+  },
+};
+
+export default nextConfig;
