@@ -1,0 +1,126 @@
+/* Ctrl, or the Command key once ./commands marks <html> on Apple devices. */
+.cmd {
+  display: none;
+}
+:global(html[data-platform="mac"]) .ctrl {
+  display: none;
+}
+:global(html[data-platform="mac"]) .cmd {
+  display: inline-flex;
+}
+
+/* Palette: the box opens from 98% with a 4px lift and fades out the same way
+   (150ms, ease-out-quint); the blurred scrim fades in 120ms. Its top edge sits
+   where the full-height box would be centred, so filtering shrinks it
+   downwards instead of moving it. */
+.dialog {
+  top: max(4rem, calc(50dvh - 13.5rem));
+  opacity: 0;
+  scale: 0.98;
+  translate: 0 2px;
+  transition:
+    opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
+}
+.dialog[open] {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+}
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    scale: 0.98;
+    translate: 0 4px;
+  }
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.1);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition:
+    opacity 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.12s allow-discrete,
+    overlay 0.12s allow-discrete;
+}
+.dialog[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Phone dock: the menu grows from the dock, the two bars cross while it is open. */
+.menu {
+  opacity: 0;
+  scale: 0.96;
+  transform-origin: bottom center;
+  transition:
+    opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
+}
+.menu:popover-open {
+  opacity: 1;
+  scale: 1;
+}
+@starting-style {
+  .menu:popover-open {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+.bar {
+  transition:
+    translate 0.2s ease,
+    rotate 0.2s ease;
+}
+.dock:has(:popover-open) .bar:first-child {
+  translate: 0 3px;
+  rotate: 45deg;
+}
+.dock:has(:popover-open) .bar:last-child {
+  translate: 0 -3px;
+  rotate: -45deg;
+}
+
+/* Copy confirmation: above the dock on phones, bottom centre from `sm`. */
+.toast {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100vw - 2rem);
+  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  pointer-events: none;
+  opacity: 0;
+  translate: -50% 0.5rem;
+  transition:
+    opacity 0.2s ease,
+    translate 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toast[data-show] {
+  opacity: 1;
+  translate: -50% 0;
+}
+@media (min-width: 40rem) {
+  .toast {
+    bottom: 1.5rem;
+  }
+}
