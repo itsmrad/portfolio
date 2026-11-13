@@ -1,0 +1,70 @@
+.rows > div {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+}
+
+.rows dt {
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+@media (min-width: 40rem) {
+  .rows > div {
+    grid-template-columns: 9rem 1fr;
+    gap: 0;
+    padding-block: 0;
+  }
+  .rows dt {
+    padding-block: 1rem;
+    border-right: 1px dashed var(--line);
+  }
+  .rows dd {
+    padding: 1rem 0 1rem 1rem;
+  }
+}
+
+.rows ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.rows li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 99px;
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: default;
+  transition:
+    translate 0.2s,
+    box-shadow 0.2s;
+}
+
+/* The mark: one cell of the strip, cut out of a flat colour. */
+.rows i {
+  width: 0.875rem;
+  height: 0.875rem;
+  background: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
+  mask: url("./stack-marks.svg") calc(var(--slot) * -0.875rem) 0 / auto 0.875rem no-repeat;
+  transition:
+    background-color 0.2s,
+    scale 0.2s;
+}
+
+@media (hover: hover) {
+  .rows li:hover {
+    translate: 0 -2px;
+    box-shadow: inset 0 0 0 1px var(--brand, var(--foreground));
+  }
+  .rows li:hover i {
+    background: var(--brand, var(--foreground));
+    scale: 1.08;
+  }
+}
