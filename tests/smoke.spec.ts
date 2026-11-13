@@ -20,8 +20,18 @@ for (const theme of THEMES) {
         for (const landmark of ["header", "main", "footer"]) {
           await expect(page.locator(landmark).first()).toBeVisible();
         }
-        // Phones navigate by scrolling; the links appear from 640px.
-        await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible({ visible: viewport.width >= 640 });
+        // Phones navigate by scrolling; the links appear from 640px. "Primary"
+        // is a reserved landmark name: a phone dock must call itself something else.
+        await expect(page.getByRole("navigation", { name: "Primary", exact: true })).toBeVisible({ visible: viewport.width >= 640 });
+        // Counters beside section titles stay out of the headings' names.
+        const names = await page.locator("h2").evaluateAll((headings) =>
+          headings.map((heading) => {
+            const copy = heading.cloneNode(true) as Element;
+            copy.querySelectorAll("[aria-hidden]").forEach((node) => node.remove());
+            return copy.textContent!.trim();
+          }),
+        );
+        for (const name of names) expect(name).not.toMatch(/\d$/);
         // Heading levels never skip.
         const levels = await page.locator("h1, h2, h3, h4").evaluateAll((nodes) => nodes.map((n) => Number(n.tagName[1])));
         levels.reduce((previous, level) => {
@@ -98,7 +108,8 @@ test.describe("theme", () => {
   test("a manual choice persists with no flash, and the system choice clears it", async ({ page }) => {
     await page.goto("/");
     const html = page.locator("html");
-    const toggle = page.getByRole("button", { name: /theme/i });
+    // Reserved name: no other control may be labelled exactly this.
+    const toggle = page.getByRole("banner").getByRole("button", { name: "Toggle light and dark theme", exact: true });
     const themeColor = () => page.locator('meta[name="theme-color"]').first().getAttribute("content");
 
     await toggle.click();
