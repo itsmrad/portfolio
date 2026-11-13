@@ -1,14 +1,16 @@
 /* The circular reveal: only while the toggle runs, so other view transitions keep their own look.
+   `(*)`, not `(root)`: a CSS module renames every identifier, `root` included, and the
+   renamed selector would match nothing (the page has no other named transition).
    520ms, cubic-bezier(.24, .7, .26, 1): quick to leave the button, slow to reach the far corner. */
-.switching::view-transition-group(root),
-.switching::view-transition-old(root) {
+.switching::view-transition-group(*),
+.switching::view-transition-old(*) {
   animation: none;
 }
-.switching::view-transition-old(root),
-.switching::view-transition-new(root) {
+.switching::view-transition-old(*),
+.switching::view-transition-new(*) {
   mix-blend-mode: normal;
 }
-.switching::view-transition-new(root) {
+.switching::view-transition-new(*) {
   animation: reveal 0.52s cubic-bezier(0.24, 0.7, 0.26, 1) both;
 }
 @keyframes reveal {

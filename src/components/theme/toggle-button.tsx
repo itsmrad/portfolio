@@ -33,10 +33,15 @@ export function ToggleButton(props: React.ComponentProps<"button">) {
         root.style.setProperty("--theme-y", `${y}px`);
         root.style.setProperty("--theme-r", `${Math.ceil(radius)}px`);
         root.classList.add(styles.switching!);
-        document.startViewTransition(toggleTheme).finished.finally(() => {
-          root.classList.remove(styles.switching!);
-          for (const name of ["--theme-x", "--theme-y", "--theme-r"]) root.style.removeProperty(name);
-        });
+        const transition = document.startViewTransition(toggleTheme);
+        // A skipped transition (tab hidden, window resized) still switches the theme; it only rejects `ready`.
+        transition.ready.catch(() => {});
+        transition.finished
+          .finally(() => {
+            root.classList.remove(styles.switching!);
+            for (const name of ["--theme-x", "--theme-y", "--theme-r"]) root.style.removeProperty(name);
+          })
+          .catch(() => {});
       }}
     />
   );

@@ -14,6 +14,7 @@ export function ThemeToggle() {
     <ToggleButton
       aria-label="Toggle light and dark theme"
       aria-keyshortcuts="d"
+      data-slot="button"
       className={buttonVariants({ variant: "ghost", size: "icon" })}
     >
       <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden>
