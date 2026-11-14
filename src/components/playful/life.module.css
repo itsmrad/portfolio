@@ -42,17 +42,8 @@
 }
 
 /* --- Reading over a scale: the fill is the share, ticks every tenth ------- */
-/* Registered so a scroll timeline can animate them: the fill (a share) and the count (an integer). */
-@property --fill {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 1;
-}
-@property --n {
-  syntax: "<integer>";
-  inherits: true;
-  initial-value: 0;
-}
+/* At rest the bar ends at the value's share of the scale (777 of 801: 97%), the tick on that point. While it
+   loads (life.tsx) the script writes --fill and --n from the reading's progress through the viewport. */
 .ratio {
   --fill: var(--p);
   width: 9.5rem;
@@ -61,22 +52,6 @@
     linear-gradient(var(--foreground), var(--foreground)) 0 100% / calc(var(--fill) * 100%) 2px no-repeat,
     repeating-linear-gradient(to right, var(--cross) 0 1px, transparent 1px 10%) 0 100% / 100% 6px no-repeat,
     linear-gradient(var(--cross), var(--cross)) 0 calc(100% - 0.5px) / 100% 1px no-repeat;
-}
-/* The loader: from a tenth of the way into view to four tenths (RANGE in life.tsx), the bar fills and the count runs up. */
-.ratio[data-reading] {
-  animation: reading linear both;
-  animation-timeline: view();
-  animation-range: cover 10% cover 40%;
-}
-@keyframes reading {
-  from {
-    --fill: 0;
-    --n: 0;
-  }
-  to {
-    --fill: var(--p);
-    --n: var(--v);
-  }
 }
 /* The count while loading: the real number keeps its width (and stays as text); the running counter is drawn over it. */
 .count {
