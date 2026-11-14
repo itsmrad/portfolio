@@ -434,15 +434,24 @@ test.describe("desktop", () => {
     expect(await page.evaluate(() => [document.documentElement.classList.contains("dark"), localStorage.getItem("theme")])).toEqual([true, "dark"]);
     await expect.poll(() => page.evaluate(() => document.documentElement.style.cssText)).toBe("");
 
-    // A skipped transition (the window resized mid-reveal) still switches and logs nothing.
+    // A skipped transition (the window resized mid-reveal) still switches, logs nothing and
+    // releases the toggle within a second, whatever the browser does with the transition.
+    const switching = () => page.evaluate(() => /switching/.test(document.documentElement.className));
     await page.keyboard.press("d");
     await page.setViewportSize({ width: 1200, height: 800 });
-    await page.waitForTimeout(700);
-    expect(await page.evaluate(() => localStorage.getItem("theme"))).toBeNull();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBeNull();
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
+
+    // A press during a reveal is never ignored: it finishes the reveal and switches back.
+    await page.keyboard.press("d");
+    await page.keyboard.press("d");
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBeNull();
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
 
     // No flash on reload: dark from the first frame.
     await page.keyboard.press("d");
-    await page.waitForTimeout(700);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBe("dark");
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
     await page.reload();
     expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
     await page.waitForLoadState("networkidle");
