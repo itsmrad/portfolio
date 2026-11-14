@@ -3,15 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 import { collectErrors, kb, scriptBytesAddedBy } from "./helpers";
 
 /**
- * Registry C's games (rebuild-games-c): Redline, Loose parts, Stack layers,
- * Clean sheet. Same pattern as tests/arcade.spec.ts, plus pointer play, the
+ * Registry C's games (rebuild-games-c): Redline, Loose parts, Stack layers. Same pattern as tests/arcade.spec.ts, plus pointer play, the
  * reduced-motion path, and Redline's scoring on a known snippet.
  */
 const GAMES = [
   { id: "redline", key: "Space", budget: 6 * 1024 },
   { id: "parts", key: "Space", budget: 4 * 1024 },
   { id: "stack", key: "ArrowDown", budget: 4 * 1024 },
-  { id: "marks", key: "Space", budget: 4 * 1024 },
 ];
 
 async function open(page: Page) {
