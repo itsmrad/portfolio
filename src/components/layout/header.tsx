@@ -26,7 +26,7 @@ export function Header() {
       className="sticky top-0 z-50 h-(--header-height) overflow-x-clip bg-background/84 px-(--frame-gutter) backdrop-blur-md backdrop-saturate-[1.4]"
     >
       <div className="screen-line-bottom mx-auto flex h-full max-w-(--frame-width) items-center gap-1 border-x border-line pr-2 pl-4">
-        <Link href="/" prefetch={false} aria-label={`${site.name}, home`} className="touch-target -ml-1 rounded-sm p-1">
+        <Link href="/" prefetch={false} aria-label={`${site.givenName}, home`} className="touch-target -ml-1 rounded-sm p-1">
           <Mark className="size-6" />
         </Link>
 

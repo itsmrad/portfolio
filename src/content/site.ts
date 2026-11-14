@@ -48,7 +48,7 @@ export const site = {
   email: "itsmrad@gmail.com" as string | null,
   avatar: {
     src: avatar,
-    alt: "Anupam Das in profile, wearing glasses and a white shirt, lit by warm orange light",
+    alt: "Anupam in profile, wearing glasses and a white shirt, lit by warm orange light",
   },
   /** The PDF is served from /public at this path. While the file is absent, nothing is rendered. */
   resume: { pdf: "/Anupam-Das-Resume.pdf", fileName: "Anupam-Das-Resume.pdf", updated: "2026-09" },

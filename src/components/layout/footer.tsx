@@ -26,7 +26,7 @@ export function Footer() {
         <div className="screen-line-top screen-line-bottom flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm">
           <span className="font-mono font-medium">{site.domain}</span>
           <span className="text-muted-foreground">
-            {site.name}, {site.role.toLowerCase()}
+            {site.givenName}, {site.role.toLowerCase()}
           </span>
         </div>
 
