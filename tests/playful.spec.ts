@@ -191,6 +191,27 @@ test.describe("wide", () => {
     expect(box).toEqual(["1.25px 100%, 1.25px 100%", "40px", "40px"]);
   });
 
+  test("keys typed while the palette opens are its search, never an egg", async ({ page }) => {
+    await openWide(page);
+    // Cold: the palette chunk is held back, so "kitty" lands while it is still opening.
+    await page.route("**/_next/static/chunks/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    await page.keyboard.press("/");
+    await page.keyboard.type("kitty");
+    const search = page.getByRole("combobox", { name: "Search commands" });
+    await expect(search).toHaveValue("kitty");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(600);
+    await expect(page.locator("[data-cat]")).toHaveCount(0);
+    // Once it has closed, the egg works again.
+    await page.unroute("**/_next/static/chunks/**");
+    await page.keyboard.type("kitty");
+    await expect(page.locator("[data-cat]")).toHaveCount(1);
+  });
+
   test("an egg whose chunk fails does nothing, and works on the next try", async ({ page }) => {
     const thrown: string[] = [];
     await openWide(page);
