@@ -347,7 +347,8 @@
   .key {
     transition: none;
   }
-  .lock[data-moved] .shackle {
+  .lock[data-moved][data-open] .shackle,
+  .lock[data-moved]:not([data-open]) .shackle {
     animation: none;
   }
   .wave[data-on] > i {
