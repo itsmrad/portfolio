@@ -30,8 +30,9 @@ const section = (title: string, id: string) => `## [${title}](${site.url}/#${id}
 export function pageMarkdown() {
   const resume = resumePdf();
   const blocks = [
+    // R20: the title names him in full, then About's first sentence and the first
+    // question do, exactly as on the page; everywhere else he is Anupam.
     `# ${site.name}`,
-    faq[0]!.answer,
     `${site.role} · ${site.location.label} · ${site.availability}`,
     `> ${site.tagline}`,
     `Source: ${site.url} · Last updated: ${site.updated}`,
@@ -98,7 +99,7 @@ export function llmsTxt() {
   const current = experience.find((job) => job.kind === "work" && !job.end);
   const school = education[0];
   const facts = [
-    `Name: ${site.name} (handles: ${[...new Set(socials.map((social) => social.handle))].join(", ")})`,
+    `Handles: ${[...new Set(socials.map((social) => social.handle))].join(", ")}`,
     `Role: ${seo.jobTitle.join(" and ")}`,
     ...(current?.start ? [`Current: ${current.role} at ${current.org}, ${current.location} (${formatRange(current.start)})`] : []),
     ...(school
@@ -109,11 +110,11 @@ export function llmsTxt() {
     ...reach(),
     `Last updated: ${site.updated}`,
   ];
+  // R20: the full name in the title and the one defining sentence below it; after that he is Anupam.
+  const [who, ...questions] = faq;
   return `# ${site.name}
 
-> ${faq[0]!.answer}
-
-${seo.description}
+> ${who!.answer} More: ${site.url}/#faq-${who!.id}
 
 ## Key facts
 
@@ -150,7 +151,7 @@ ${list(
 
 ## Questions
 
-${list(faq.map((item) => `[${item.question}](${site.url}/#faq-${item.id}): ${item.answer}`))}
+${list(questions.map((item) => `[${item.question}](${site.url}/#faq-${item.id}): ${item.answer}`))}
 
 ## Profiles
 
