@@ -12,21 +12,8 @@
   pointer-events: none;
 }
 
-/*
- * The arcade palette (R18, R19), kept apart from the page's tokens: six hues,
- * each at least 3:1 against the page background in its theme, so a coloured
- * mark reads as a shape on its own. The first is the site's one accent (the
- * drafting red-orange, R19); the others are spaced round the wheel from it. Games read them
- * as ctx.colors.accent ... violet; nothing outside a game's frame uses them.
- */
-.arcade {
-  --arcade-accent: var(--accent);
-  --arcade-amber: light-dark(oklch(0.6 0.14 82), oklch(0.84 0.15 88));
-  --arcade-green: light-dark(oklch(0.55 0.15 150), oklch(0.78 0.18 150));
-  --arcade-teal: light-dark(oklch(0.55 0.1 200), oklch(0.78 0.12 200));
-  --arcade-blue: light-dark(oklch(0.52 0.2 262), oklch(0.7 0.16 258));
-  --arcade-violet: light-dark(oklch(0.52 0.22 305), oklch(0.73 0.17 305));
-}
+/* The arcade palette (--arcade-accent ... --arcade-violet) lives with the page's tokens in globals.css: the
+   banner's glyphs use it too (round 4). */
 @media (min-width: 80rem) {
   .arcade {
     display: block;
