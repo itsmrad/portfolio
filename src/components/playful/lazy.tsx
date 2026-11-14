@@ -14,6 +14,7 @@ const pieces = {
   left: () => import("./margins").then((module) => module.Left),
   right: () => import("./margins").then((module) => module.Right),
   eggs: () => import("./eggs").then((module) => module.Eggs),
+  arcade: () => import("@/components/arcade/arcade").then((module) => module.Arcade),
 };
 const INPUTS = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"];
 
@@ -29,8 +30,11 @@ const record = (keys: Keys) => (event: Event) => {
   keys.push({ key, code, shiftKey, ctrlKey, metaKey, altKey });
 };
 
-/** `replayKeys`: the keys typed while the chunk loads (the first one included) reach the piece once it has mounted. */
-export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys }: { piece: K; when: string; data: Data<K>; replayKeys?: boolean }) {
+/**
+ * `replayKeys`: the keys typed while the chunk loads (the first one included) reach the piece once it has mounted.
+ * `near`: after the input, also wait until the element with this id reaches the viewport.
+ */
+export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys, near }: { piece: K; when: string; data: Data<K>; replayKeys?: boolean; near?: string }) {
   const [Piece, setPiece] = useState<ComponentType<{ data: Data<K> }> | null>(null);
   const pending = useRef<{ keys: Keys; listener: (event: Event) => void } | null>(null);
 
@@ -53,12 +57,20 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys }: 
       unlisten();
       if (media.matches) INPUTS.forEach((type) => addEventListener(type, load, { capture: true, passive: true }));
     };
+    let watch: IntersectionObserver | undefined;
     const stop = () => {
       unlisten();
       media.removeEventListener("change", arm);
+      watch?.disconnect();
     };
     const load = (event: Event) => {
       stop();
+      const target = near && document.getElementById(near);
+      if (target) {
+        watch = new IntersectionObserver(([entry]) => entry?.isIntersecting && (watch!.disconnect(), pull()));
+        return watch.observe(target);
+      }
+      if (near) return;
       if (replayKeys) {
         const keys: Keys = [];
         const listener = record(keys);
@@ -66,6 +78,9 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys }: 
         addEventListener("keydown", listener, true);
         pending.current = { keys, listener };
       }
+      pull();
+    };
+    const pull = () => {
       const drop = () => pending.current && removeEventListener("keydown", pending.current.listener, true);
       (pieces[piece]() as Promise<ComponentType<{ data: Data<K> }>>).then(
         (loaded) => (cancelled ? drop() : setPiece(() => loaded)),
@@ -82,7 +97,7 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys }: 
       cancelled = true;
       stop();
     };
-  }, [piece, when, replayKeys]);
+  }, [piece, when, replayKeys, near]);
 
   return Piece && <Piece data={data} />;
 }

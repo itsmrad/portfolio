@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type RefObject } from "react";
 
 import { play } from "@/lib/sound";
 
 import { Sprite } from "./cat-sprite";
+import { clear, ruled } from "./lines";
 import styles from "./margins.module.css";
 
 /**
@@ -21,10 +22,11 @@ import styles from "./margins.module.css";
  */
 
 /** The page's section ids, in order (the contract of app/page.tsx). */
-const SECTIONS = ["top", "about", "experience", "work", "building", "activity", "stack", "education", "contact"];
+const SECTIONS = ["top", "about", "experience", "work", "building", "activity", "stack", "education", "faq", "contact"];
 const WIDE = "(min-width: 64rem) and (pointer: fine)";
 /** Where a note sits below the top of its section, and which way its arrow goes. */
-const PLACE: Record<string, { dy: number; arrow?: "up" }> = { top: { dy: 214, arrow: "up" } };
+// Codenaya's note points at its stat cells, below the cartridge beside the capture.
+const PLACE: Record<string, { dy: number; arrow?: "up" }> = { top: { dy: 214, arrow: "up" }, codenaya: { dy: 620 } };
 
 type Note = { at: string; side: "left" | "right"; text: string };
 type Box = { top: number; height: number };
@@ -37,6 +39,7 @@ type Boxes = Record<string, Box>;
 function useBoxes(root: RefObject<HTMLDivElement | null>, notes: readonly Note[]) {
   const [boxes, setBoxes] = useState<Boxes>({});
   const key = [...new Set([...SECTIONS, ...notes.map((note) => note.at)])].join();
+  const texts = notes.map((note) => `${note.at}:${note.text.split("\n").length}`).join();
   useEffect(() => {
     const host = root.current!;
     const measure = () => {
@@ -46,6 +49,14 @@ function useBoxes(root: RefObject<HTMLDivElement | null>, notes: readonly Note[]
         const rect = document.getElementById(id)?.getBoundingClientRect();
         if (rect) next[id] = { top: Math.round(rect.top - origin.top), height: Math.round(rect.height) };
       }
+      // Where each note's words go: beside its anchor, stepped clear of any ruled line ("note:<id>"); the cat's bed too.
+      const lines = ruled(origin.top);
+      for (const entry of texts.split(",")) {
+        const [at, rows] = entry.split(":");
+        const place = PLACE[at!] ?? { dy: 20 };
+        if (next[at!]) next[`note:${at}`] = { top: place.arrow ? next[at!]!.top + place.dy : clear(next[at!]!.top + place.dy, Number(rows) * 20 + 10 /* the 3° tilt adds about 8px */, lines), height: 0 };
+      }
+      if (next.building) next.bed = { top: clear(next.building.top + 12, 42, lines), height: 0 };
       setBoxes((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next));
     };
     // <main> changes size whenever anything inside it moves.
@@ -53,7 +64,7 @@ function useBoxes(root: RefObject<HTMLDivElement | null>, notes: readonly Note[]
     observer.observe(document.getElementById("main") ?? document.body);
     observer.observe(host);
     return () => observer.disconnect();
-  }, [root, key]);
+  }, [root, key, texts]);
   return boxes;
 }
 
@@ -153,7 +164,7 @@ function Width({ px }: { px: number }) {
 /** One link of the chain down the right margin: the real height of a section. */
 function Height({ id, box }: { id: string; box: Box }) {
   return (
-    <div data-reveal data-measures={id} className={`${styles.dim} left-5 w-px`} style={{ top: box.top, height: box.height }}>
+    <div data-reveal data-measures={id} className={`${styles.dim} left-6 w-px`} style={{ top: box.top, height: box.height }}>
       <span className={`${value} py-1`}>{box.height}</span>
     </div>
   );
@@ -162,7 +173,7 @@ function Height({ id, box }: { id: string; box: Box }) {
 function Handwritten({ note, box }: { note: Note; box: Box }) {
   const place = PLACE[note.at] ?? { dy: 20 };
   return (
-    <p data-reveal data-note={note.at} data-arrow={place.arrow} className={styles.note} style={{ top: box.top + place.dy }}>
+    <p data-reveal data-note={note.at} data-arrow={place.arrow} className={styles.note} style={{ top: box.top }}>
       <span className={styles.hand}>{note.text}</span>
       <svg className={styles.arrow} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         {/* Shaft, then head: one stroke, so it draws in that order. */}
@@ -174,7 +185,7 @@ function Handwritten({ note, box }: { note: Note; box: Box }) {
 
 function Notes({ notes, boxes }: { notes: readonly Note[]; boxes: Boxes }) {
   return notes.map((note) => {
-    const box = boxes[note.at];
+    const box = boxes[`note:${note.at}`];
     return box && <Handwritten key={note.at} note={note} box={box} />;
   });
 }
@@ -235,8 +246,11 @@ function Rail({ ids }: { ids: string[] }) {
     </div>
   );
 }
-/** The cat's bed. Clicking it wakes the cursor companion (eggs.tsx); while the cat is out the bed is empty. */
-function Bed({ hint, box }: { hint: string; box: Box }) {
+/**
+ * The cat's bed. Clicking it wakes the cursor companion (eggs.tsx). While the cat is out the bed is empty: no
+ * sprite, no arrow, and the note says so; a click calls it back, and it all returns with the cat.
+ */
+function Bed({ hint: [asleep, gone], box }: { hint: readonly [string, string]; box: Box }) {
   const [away, setAway] = useState(false);
   useEffect(() => {
     const onCat = (event: Event) => setAway((event as CustomEvent<boolean>).detail);
@@ -250,13 +264,38 @@ function Bed({ hint, box }: { hint: string; box: Box }) {
       data-cat-bed
       data-away={away || undefined}
       className={styles.bed}
-      style={{ top: box.top + 12 }}
+      style={{ top: box.top }}
       onClick={() => dispatchEvent(new CustomEvent("playful:summon", { detail: "cat" }))}
     >
-      <span className={styles.hand}>{hint}</span>
+      <span className={styles.hand}>{away ? gone : asleep}</span>
+      {/* The label's arrow lands on the cat, so it reads as something to press. */}
+      <svg className={styles.arrow} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path pathLength={1} d="M32 4c2 14-5 25-21 29M19 37l-8.5-3.5 6.5-7" />
+      </svg>
       <Sprite poses={["sleepA", "sleepB"]} />
     </div>
   );
+}
+
+/**
+ * The working notes below the hero (life.tsx): their own chunk, fetched once
+ * Experience reaches the viewport, so the first input costs no more than before.
+ */
+function Life({ side }: { side: "left" | "right" }) {
+  const [Piece, setPiece] = useState<ComponentType<{ side: "left" | "right" }> | null>(null);
+  useEffect(() => {
+    const target = document.getElementById("experience");
+    if (!target) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      observer.disconnect();
+      // Decoration: a failed fetch leaves the margin as it was.
+      import("./life").then((module) => setPiece(() => module.Life), () => {});
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+  return Piece && <Piece side={side} />;
 }
 
 /** "here for 0:42": time on the sheet, ticking only while it is on screen. */
@@ -311,7 +350,7 @@ function useMargin(notes: readonly Note[]) {
   return { root, boxes, run };
 }
 
-export function Left({ data }: { data: { notes: readonly Note[]; cat: string } }) {
+export function Left({ data }: { data: { notes: readonly Note[]; cat: readonly [asleep: string, away: string] } }) {
   const { root, boxes, run } = useMargin(data.notes);
   const present = SECTIONS.filter((id) => boxes[id]);
   return (
@@ -320,9 +359,10 @@ export function Left({ data }: { data: { notes: readonly Note[]; cat: string } }
       <div key={run} className="contents">
         {boxes.top && boxes.self && <Width px={boxes.self.height} />}
         <Notes notes={data.notes} boxes={boxes} />
-        {boxes.building && <Bed hint={data.cat} box={boxes.building} />}
+        {boxes.bed && <Bed hint={data.cat} box={boxes.bed} />}
         {present.length > 1 && <Rail ids={present} />}
       </div>
+      <Life side="left" />
     </div>
   );
 }
@@ -338,6 +378,7 @@ export function Right({ data }: { data: { notes: readonly Note[]; timer: string 
         <Notes notes={data.notes} boxes={boxes} />
         {boxes.contact && <Timer label={data.timer} />}
       </div>
+      <Life side="right" />
     </div>
   );
 }

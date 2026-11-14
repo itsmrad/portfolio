@@ -1,0 +1,226 @@
+/*
+ * The arcade layer: cartridge cards in the margins, from 80rem (R16).
+ * Resting cards are monochrome Blueprint; colour (the palette below) is used
+ * only inside a game's frame while it is played (R18).
+ */
+.arcade {
+  position: absolute;
+  inset: 0;
+  /* Above the margins' decoration, which comes later in the page. */
+  z-index: 1;
+  display: none;
+  pointer-events: none;
+}
+
+/*
+ * The arcade palette (R18, R19), kept apart from the page's tokens: six hues,
+ * each at least 3:1 against the page background in its theme, so a coloured
+ * mark reads as a shape on its own. The first is the site's one accent (the
+ * drafting red-orange, R19); the others are spaced round the wheel from it. Games read them
+ * as ctx.colors.accent ... violet; nothing outside a game's frame uses them.
+ */
+.arcade {
+  --arcade-accent: var(--accent);
+  --arcade-amber: light-dark(oklch(0.6 0.14 82), oklch(0.84 0.15 88));
+  --arcade-green: light-dark(oklch(0.55 0.15 150), oklch(0.78 0.18 150));
+  --arcade-teal: light-dark(oklch(0.55 0.1 200), oklch(0.78 0.12 200));
+  --arcade-blue: light-dark(oklch(0.52 0.2 262), oklch(0.7 0.16 258));
+  --arcade-violet: light-dark(oklch(0.52 0.22 305), oklch(0.73 0.17 305));
+}
+@media (min-width: 80rem) {
+  .arcade {
+    display: block;
+  }
+}
+
+/* --- The cartridge ------------------------------------------------------- */
+.card {
+  position: absolute;
+  animation: arrive 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid var(--line);
+  background: var(--background);
+  pointer-events: auto;
+  transition: border-color 180ms ease;
+}
+.card:hover,
+.card:focus-within {
+  border-color: var(--cross);
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
+/* Left cards sit clear of the column; right ones also clear the margin's height chain. */
+.card[data-side="left"] {
+  right: calc(50% + var(--frame-width) / 2 + 1.5rem);
+}
+.card[data-side="right"] {
+  left: calc(50% + var(--frame-width) / 2 + 2.75rem);
+}
+/* The ridged grip along the top, as on a real cartridge. */
+.grip {
+  height: 0.625rem;
+  border-bottom: 1px solid var(--line);
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem 0.75rem;
+}
+.name {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.how {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+/* The site's small button, in plain CSS so the chunk carries no class-merging code. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.75rem;
+  padding-inline: 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 150ms,
+    color 150ms,
+    scale 150ms;
+}
+/* The neutral hover surface (--muted), not --accent, which becomes the red-orange (R19). */
+.button:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.button:active {
+  scale: 0.97;
+}
+.play {
+  align-self: flex-end;
+  margin-top: 0.25rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+}
+.ghost {
+  margin-left: auto;
+  color: var(--muted-foreground);
+}
+.list {
+  display: grid;
+  /* Two columns once there is room: fourteen names stay a short card. */
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+.list button {
+  cursor: pointer;
+  text-align: left;
+}
+
+/* --- Opening and closing: the stage unfolds to its height and folds back, and
+       either motion can be reversed halfway. Reduced motion: it simply appears. */
+.stage {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease;
+}
+.stage[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.stage > div {
+  min-height: 0;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage {
+    transition: none;
+  }
+}
+
+/* --- The frame a game plays in -------------------------------------------- */
+.frame {
+  position: relative;
+  margin-top: 0.25rem;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--cross);
+}
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  outline-offset: 2px;
+}
+.overlay {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0.375rem 0.5rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in oklab, var(--background) 88%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+.overlay[data-phase="over"] {
+  color: var(--foreground);
+}
+/* A beaten best: the one accent mark in the card, with weight, never colour alone. */
+.overlay[data-beaten],
+.best[data-beaten] {
+  font-weight: 600;
+  color: var(--accent);
+}
+.best {
+  color: var(--muted-foreground);
+}
+/* The score ticks up into place on every change. */
+.tick {
+  display: inline-block;
+  animation: tick 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes tick {
+  from {
+    opacity: 0.4;
+    translate: 0 -3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tick {
+    animation: none;
+  }
+}
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
