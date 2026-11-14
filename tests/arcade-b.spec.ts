@@ -46,7 +46,7 @@ async function start(page: Page, id: string, sequence = [0]) {
   await expect(card.locator('[data-phase="loading"]')).toHaveCount(0);
   await centre(page, id);
   // The card unfolds before its game takes keys.
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(700);
   return { card, canvas };
 }
 
@@ -80,7 +80,9 @@ test.describe("arcade B at 1440", () => {
       const canvas = card.locator("canvas");
       await expect(canvas).toBeFocused();
       await expect(canvas).toHaveAttribute("aria-describedby", `arcade-${game.id}-how`);
-      await page.waitForTimeout(300);
+      // The card unfolds and scrolls into view before its game takes keys.
+      await centre(page, game.id);
+      await page.waitForTimeout(700);
 
       const scroll = await page.evaluate(() => scrollY);
       const before = await frame(page, game.id);
@@ -177,7 +179,7 @@ test.describe("arcade B, reduced motion", () => {
       await card.getByRole("button", { name: /^Play / }).click();
       await expect(card.locator("canvas")).toBeFocused();
       await centre(page, game.id);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(700);
       const before = await frame(page, game.id);
       await page.keyboard.press(game.key);
       await expect.poll(() => frame(page, game.id)).not.toBe(before);
