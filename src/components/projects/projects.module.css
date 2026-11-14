@@ -151,6 +151,10 @@
 }
 
 /* Name link: the arrow lifts toward where it points. */
+/* Drawn by CSS so the heading's text is the name alone. */
+.arrow::before {
+  content: "↗";
+}
 .arrow {
   color: var(--muted-foreground);
   transition:

@@ -41,6 +41,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
   --color-border: var(--border);
   --color-line: var(--line);
   --color-cross: var(--cross);
@@ -135,9 +136,13 @@
   --card-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
   --popover: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.885));
   --popover-foreground: light-dark(oklch(0.141 0.005 285.823), oklch(0.985 0 0));
-  /* `accent` keeps its usual meaning: the neutral hover surface. */
-  --accent: light-dark(oklch(0.967 0.001 286.375), oklch(0.274 0.006 286.033));
-  --accent-foreground: light-dark(oklch(0.21 0.006 285.885), oklch(0.985 0 0));
+  /* The accent: drafting red-orange, the red pen on the blueprint. Emphasis only, flat ink, never a glow.
+     Measured as painted: text 5.15:1 on the light page, 7.50:1 on the dark one, and the same for its
+     foreground on the fill (white, ink); tests/accent.spec.ts pins them. Neutral hover surfaces use `muted`. */
+  --accent: light-dark(oklch(0.56 0.2 33), oklch(0.72 0.18 42));
+  --accent-foreground: light-dark(oklch(1 0 0), oklch(0.141 0.005 285.823));
+  /* The marker tint behind a highlighted phrase; ink on it is 15.5:1 (light) and 11.7:1 (dark). */
+  --accent-soft: light-dark(oklch(0.93 0.06 45), oklch(0.34 0.08 40));
   --border: light-dark(oklch(0.92 0.004 286.32), oklch(0.274 0.006 286.033));
   --input: light-dark(oklch(0.92 0.004 286.32), oklch(1 0 0 / 0.15));
   --ring: light-dark(oklch(0.705 0.015 286.067), oklch(0.552 0.016 285.938));
@@ -368,6 +373,42 @@
   }
 }
 
+/* --- Highlights: the accent's whole vocabulary ---------------------------
+   (1) action-accent: the one filled primary action on the site, the resume download.
+       Everything else that is pressable stays ink, outline or ghost.
+   (2) highlight: bold text on a flat marker tint, for the one phrase of a sentence a
+       reader must not miss (what a project is, an outcome number). Display type uses the
+       hero's hand-drawn underline in the accent instead.
+   (3) accent numerals: a headline figure in the accent with an accent rule above its cell
+       (projects' stat grid), at most two per project.
+   (4) status mark: a small accent dot or mark for what is true right now (availability,
+       the current role). Generic interactive state keeps the signal blue.
+   Colour is never the only signal: (1) is the only filled button, (2) is bold, (3) has
+   its rule, (4) sits beside its words. */
+@utility action-accent {
+  border: 1px solid transparent; /* drawn as a border in forced colours */
+  background: var(--accent);
+  color: var(--accent-foreground);
+  &:hover {
+    /* Toward the ink: darker on paper, lighter at night, so its text only gains contrast. */
+    background: color-mix(in oklab, var(--accent) 86%, var(--foreground));
+  }
+}
+
+@utility highlight {
+  padding-inline: 0.125em;
+  border-radius: 2px;
+  background: var(--accent-soft);
+  color: var(--foreground);
+  font-weight: 600;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  @media (forced-colors: active) {
+    background: Mark;
+    color: MarkText;
+  }
+}
+
 /* Invisible 8px halo so small controls meet touch-target size on phones. */
 @utility touch-target {
   @media (pointer: coarse) {
@@ -410,6 +451,16 @@
   h2,
   h3 {
     break-after: avoid;
+  }
+  /* Paper may be black and white: the accent prints as ink, and its rules, underlines and weight carry
+     the emphasis; a highlight has no tint there, so it gains an underline. */
+  :root {
+    --accent: var(--foreground);
+  }
+  .highlight {
+    background: none;
+    text-decoration: underline 1.5px;
+    text-underline-offset: 2px;
   }
   a[href^="http"]::after {
     content: " (" attr(href) ")";

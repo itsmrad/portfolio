@@ -135,7 +135,8 @@
 
 .underlined path {
   fill: none;
-  stroke: currentColor;
+  /* Highlight (2), display form: the red pen under the claim's key phrases. */
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
@@ -171,7 +172,8 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: var(--signal);
+  /* Highlight (4): a status mark, open to work right now. */
+  background: var(--accent);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -180,7 +182,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: var(--signal);
+    background: var(--accent);
     animation: hero-live 2.4s ease-out infinite;
   }
 }
