@@ -618,7 +618,8 @@ export function mountGlobe(stage: HTMLElement) {
     else if (!prefersReducedMotion()) {
       const wait = Math.max(IDLE_FRAME, quietSince + RESUME - now);
       if (wait > IDLE_FRAME) last = 0;
-      timer = window.setTimeout(() => (frame = requestAnimationFrame(step)), wait);
+      // The idle spin runs on its own slow clock; frames are for the hand.
+      timer = window.setTimeout(() => step(performance.now()), wait);
     } else last = 0;
   };
 

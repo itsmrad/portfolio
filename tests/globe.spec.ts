@@ -229,8 +229,9 @@ test.describe("held still (reduced motion), so every position is exact", () => {
     expect(await globe.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe("none");
     const scrolled = await page.evaluate(() => scrollY);
     const centre = await middle(page);
-    // The view has turned to show both places.
+    // The view has turned to show both places (the turn lands on the next frame).
     await expect.poll(() => shownLabels(page)).toEqual(["home", "you"]);
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     // Home faces the middle of the great circle from London to New Delhi.
     const start = (await dot(page, "home"))!;
     await page.keyboard.press("ArrowRight");
