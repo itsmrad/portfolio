@@ -5,20 +5,21 @@
   height: 12rem;
   overflow: hidden;
   user-select: none;
-  mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  mask-image: linear-gradient(to bottom, #000 75%, transparent);
   @media (min-width: 40rem) {
     height: 13rem;
   }
 }
 
-/* 720px at least, so phones still see a curve; 59rem at most, so the cap
-   (its top at stage height - 0.2191 x width) always stays inside the stage. */
+/* The column's width (the page's 640px), never less than 590px so phones
+   still see a curve: the cap's top, at stage height - 0.3209 x width, then
+   stays inside the stage at every size. */
 .scene {
   position: relative;
   left: 50%;
   width: calc(100% + 24px);
-  min-width: 720px;
-  max-width: 59rem;
+  min-width: 590px;
+  max-width: var(--frame-width);
   height: 100%;
   translate: -50% 0;
   container-type: inline-size;
@@ -37,13 +38,13 @@
 }
 
 /* The globe's silhouette in hatch until the first frame is drawn (and for
-   good without JavaScript): the same circle the renderer uses, radius 0.68
+   good without JavaScript): the same circle the renderer uses, radius 0.55
    of the width, its centre below the stage. */
 .silhouette {
   position: absolute;
   left: 50%;
-  top: calc(100% - 21.91cqw);
-  width: 136cqw;
+  top: calc(100% - 32.09cqw);
+  width: 110cqw;
   aspect-ratio: 1;
   translate: -50% 0;
   border: 1px solid var(--line);
@@ -64,4 +65,79 @@
   /* Parked out of view until the orbit starts. */
   opacity: 0;
   pointer-events: none;
+}
+
+/* Set by the globe: the satellite fades while it passes over a pin or a label. */
+.satellite > svg {
+  opacity: var(--duck, 1);
+  transition: opacity 300ms;
+}
+
+/* The annotation layer: over the globe and the satellite, moved with the
+   globe's parallax by the script. */
+.labels {
+  position: absolute;
+  inset: 0;
+  transform-origin: bottom;
+  pointer-events: none;
+}
+
+/* A label is its tag, placed by the globe; the leader runs from the tag's
+   near corner (--lx, --ly) to the dot, --len long at --angle. */
+.tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  padding: 1px 4px;
+  background: color-mix(in oklab, var(--background) 88%, transparent);
+  border: 1px solid color-mix(in oklab, currentColor 35%, transparent);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 400ms;
+}
+
+.tag::before {
+  content: "";
+  position: absolute;
+  top: var(--ly, 0);
+  left: var(--lx, 0);
+  width: var(--len, 0);
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+  transform: rotate(var(--angle, 0));
+  transform-origin: 0 50%;
+}
+
+.tag[data-shown] {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Under the stage, in the blank band the footer already leaves after the
+   globe, so it adds no height and never meets the drawing. Aligned to the
+   page's column. */
+.caption {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: max(1rem, calc(50% - var(--frame-width) / 2 + 1rem));
+  right: max(1rem, calc(50% - var(--frame-width) / 2 + 1rem));
+  visibility: hidden;
+}
+
+.caption[data-shown] {
+  visibility: visible;
+}
+
+/* The accent dot that says what the map's dots are. */
+.caption::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
 }

@@ -57,12 +57,9 @@ export function Signature() {
 function FountainPen() {
   return (
     <g className="fill-background" strokeWidth={2.5}>
-      <path d="M9 -72V-150Q9 -158 0 -158T-9 -150V-72Z" />
+      {/* Barrel, grip, nib with its slit and breather hole: one path, as they share a style. */}
+      <path d="M9 -72V-150Q9 -158 0 -158T-9 -150V-72ZM-8 -40V-66H8V-40ZM0 0-9-28Q-10-36-6-40H6Q10-36 9-28ZM0 -3V-22M2.5 -26a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0Z" />
       <path className="fill-current" d="M-10 -66H10V-74H-10Z" />
-      <path d="M-8 -40V-66H8V-40Z" />
-      <path d="M0 0-9-28Q-10-36-6-40H6Q10-36 9-28Z" />
-      <path d="M0 -3V-22" />
-      <circle cx="0" cy="-26" r="2.5" />
     </g>
   );
 }
