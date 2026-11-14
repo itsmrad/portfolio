@@ -147,8 +147,9 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
     if (running || !down) for (const listener of keys) listener(key, down, event);
   };
 
-  const observer = new IntersectionObserver(([entry]) => {
-    onScreen = !!entry?.isIntersecting;
+  // One callback can carry several entries for the canvas (hidden, then shown as its card unfolds): the last is current.
+  const observer = new IntersectionObserver((entries) => {
+    onScreen = !!entries.at(-1)?.isIntersecting;
     sync();
   });
   const theme = new MutationObserver(readColors);
