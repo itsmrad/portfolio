@@ -44,8 +44,13 @@ async function start(page: Page, id: string, sequence = [0]) {
   const canvas = card.locator("canvas");
   await expect(canvas).toBeFocused();
   await expect(card.locator('[data-phase="loading"]')).toHaveCount(0);
+  await centre(page, id);
   return { card, canvas };
 }
+
+/** A game runs only while its canvas is on screen: bring it to the middle of the viewport. */
+const centre = (page: Page, id: string) =>
+  page.locator(`[data-arcade-card="${id}"] canvas`).evaluate((canvas) => canvas.scrollIntoView({ block: "center" }));
 
 /** Click on the canvas at logical coordinates (the field is 240 x 180). */
 async function tap(page: Page, id: string, x: number, y: number) {
@@ -169,6 +174,7 @@ test.describe("arcade B, reduced motion", () => {
       const card = page.locator(`[data-arcade-card="${game.id}"]`);
       await card.getByRole("button", { name: /^Play / }).click();
       await expect(card.locator("canvas")).toBeFocused();
+      await centre(page, game.id);
       await page.waitForTimeout(300);
       const before = await frame(page, game.id);
       await page.keyboard.press(game.key);
