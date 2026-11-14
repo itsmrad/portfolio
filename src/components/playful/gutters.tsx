@@ -28,7 +28,7 @@ const WIDE = "(min-width: 64rem) and (pointer: fine)";
 const notes = (side: "left" | "right") => playful.notes.filter((note) => note.side === side);
 
 export function GutterLeft() {
-  return <Lazy piece="left" when={WIDE} data={{ notes: notes("left"), cat: playful.cat }} />;
+  return <Lazy piece="left" when={WIDE} data={{ notes: notes("left"), cat: [playful.cat, playful.catAway] }} />;
 }
 
 export function GutterRight() {

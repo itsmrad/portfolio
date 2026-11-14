@@ -16,6 +16,7 @@ export const arcadeCopy = {
   loading: "Loading…",
   paused: "Paused. Click or press a key to go on.",
   over: "Done.",
+  newBest: "New best!",
   again: "Space or click to play again",
   failed: "Could not load. Try again.",
   started: "playing. Esc to stop.",

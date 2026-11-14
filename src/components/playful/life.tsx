@@ -4,6 +4,7 @@ import { play } from "@/lib/sound";
 import { playful } from "@/content/playful";
 
 import styles from "./life.module.css";
+import { clear, ruled } from "./lines";
 import margin from "./margins.module.css";
 
 /**
@@ -33,9 +34,15 @@ function Note({ item, top }: { item: Extract<Item, { kind: "note" }>; top: numbe
   return (
     <p data-life data-reveal className={`${margin.note} ${styles.item}`} style={{ top }}>
       <span className={margin.hand}>{item.note}</span>
-      <svg className={margin.arrow} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path pathLength={1} d="M32 4c2 14-5 25-21 29M19 37l-8.5-3.5 6.5-7" />
-      </svg>
+      {"arrow" in item ? (
+        <svg className={`${margin.arrow} ${styles.long}`} viewBox="0 0 40 72" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+          <path pathLength={1} d="M32 4c3 30-5 52-21 62M19 70l-8.5-3.5 6.5-7" />
+        </svg>
+      ) : (
+        <svg className={margin.arrow} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+          <path pathLength={1} d="M32 4c2 14-5 25-21 29M19 37l-8.5-3.5 6.5-7" />
+        </svg>
+      )}
     </p>
   );
 }
@@ -188,12 +195,15 @@ export function Life({ side }: { side: "left" | "right" }) {
     };
     const measure = () => {
       const origin = host.getBoundingClientRect().top;
+      const lines = ruled(origin);
       const y = (element: Element) => Math.round(element.getBoundingClientRect().top - origin);
+      // Beside the anchor, stepped clear of any ruled line: a note's words, a reading, a toy, each callout.
       const next = items.map((item) => {
         const element = find(item as Anchor);
         if (!element) return null;
-        if (item.kind === "balloons") return [...element.parentElement!.children].map(y);
-        return y(element) + ("dy" in item ? item.dy : 0);
+        if (item.kind === "balloons") return [...element.parentElement!.children].map((li) => clear(y(li), 20, lines));
+        const height = item.kind === "note" ? item.note.split("\n").length * 20 + 10 /* the 3° tilt adds about 8px */ : 64;
+        return clear(y(element) + ("dy" in item ? item.dy : 0), height, lines);
       });
       setTops((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next));
       requestAnimationFrame(cover);
@@ -209,8 +219,9 @@ export function Life({ side }: { side: "left" | "right" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Written in once seen, like the margin's own notes.
+  // Written in once seen, like the margin's own notes. The arcade plans its cards around them.
   useEffect(() => {
+    dispatchEvent(new Event("life:layout"));
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(({ target, isIntersecting }) => isIntersecting && target.setAttribute("data-seen", "")),
       { rootMargin: "0px 0px -12% 0px" },
