@@ -230,9 +230,10 @@ export async function live(request: Request) {
   const headers = request.headers;
   if (Number(headers.get("content-length") ?? 0) > 0) return json({}, "no-store", 413);
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  if (!/^[A-Za-z0-9_-]{22}$/.test(id) || !fromPage(headers)) return json({});
-  const now = Date.now();
   const preview = standIn();
+  // A preview served over plain HTTP gets no Sec-Fetch headers from the browser; it is local only.
+  if (!/^[A-Za-z0-9_-]{22}$/.test(id) || (!preview && !fromPage(headers))) return json({});
+  const now = Date.now();
   const cell = preview?.you ?? cellFrom(headers);
   const country = preview?.country ?? headers.get("x-vercel-ip-country");
   const you = cell ? { you: cell, distance: distanceFrom(cell, /^[A-Za-z]{2}$/.test(country ?? "") ? country : null) } : {};
