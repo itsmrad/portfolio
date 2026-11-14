@@ -58,7 +58,7 @@ export type GameContext = {
   canvas: HTMLCanvasElement;
   /** Pre-scaled 2D context: draw in logical units. */
   g: CanvasRenderingContext2D;
-  /** Logical size of the field (256 x 192 in the arcade, 4:3). */
+  /** Logical size of the field (240 x 180 in the arcade, 4:3). */
   width: number;
   height: number;
   /** Live object: re-read after `onTheme`. */
