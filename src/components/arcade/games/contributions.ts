@@ -95,7 +95,6 @@ export function toggle(button: HTMLElement) {
     exclusive: true,
     pauseOnBlur: true,
     announce: (text) => (status.textContent = text),
-    onEscape: () => close?.(),
     onRunning: (on) => {
       running = on;
       h?.repaint();
@@ -104,7 +103,15 @@ export function toggle(button: HTMLElement) {
   const ctx = h.ctx;
   const { g, colors, reduced } = ctx;
   let shades: string[] = [];
-  const readShades = () => (shades = paths.map((path) => getComputedStyle(path).stroke));
+  // With transitions off for the read: under reduced motion the global 0.01 ms transition would hand back the
+  // previous theme's colours (the same trap the host avoids for its tokens).
+  const readShades = () =>
+    (shades = paths.map((path) => {
+      path.style.setProperty("transition", "none", "important");
+      const stroke = getComputedStyle(path).stroke;
+      path.style.removeProperty("transition");
+      return stroke;
+    }));
   readShades();
   ctx.onTheme(readShades);
   let best = 0;
@@ -206,6 +213,7 @@ export function toggle(button: HTMLElement) {
     if (!running) finish();
   };
   const finish = () => {
+    document.removeEventListener("keydown", onEscape);
     h.stop();
     wrap.remove();
     if (row) row.inert = false;
@@ -539,11 +547,9 @@ export function toggle(button: HTMLElement) {
       g.fillStyle = colors.ink;
       g.font = `${24 * u}px ${ctx.fonts.pixel}`;
       g.fillText(fmt(score), W / 2, y);
-      g.font = `${12 * u}px ${ctx.fonts.mono}`;
-      g.fillText(won ? `all ${fmt(total)} contributions of the year, cleared` : `of ${fmt(total)} contributions in the last year, cleared`, W / 2, y + 24 * u);
+      fitted(won ? `all ${fmt(total)} contributions of the year, cleared` : `of ${fmt(total)} contributions in the last year, cleared`, 12, y + 24 * u);
       g.fillStyle = colors.muted;
-      g.font = `${10.5 * u}px ${ctx.fonts.mono}`;
-      g.fillText(`${won ? waves.length : wave} of ${waves.length} stretches cleared · ${record ? "new best" : `best ${fmt(best)}`}`, W / 2, y + 42 * u);
+      fitted(`${won ? waves.length : wave} of ${waves.length} stretches cleared · ${record ? "new best" : `best ${fmt(best)}`}`, 10.5, y + 42 * u);
       g.fillStyle = colors.signal;
       g.fillText(touch ? "tap to play again" : "space or click to play again", W / 2, y + 62 * u);
       g.globalAlpha = 1;
@@ -557,6 +563,16 @@ export function toggle(button: HTMLElement) {
       g.fillRect(0, edge - u, W, u);
     }
   };
+  /** A centred mono line that keeps 12 units of paper each side: the font steps down to 0.8 of its size, never below. */
+  function fitted(text: string, size: number, y: number) {
+    let px = size * u;
+    g.font = `${px}px ${ctx.fonts.mono}`;
+    const room = W - 24 * u;
+    const wide = g.measureText(text).width;
+    if (wide > room) px = Math.max(size * u * 0.8, (px * room) / wide);
+    g.font = `${px}px ${ctx.fonts.mono}`;
+    g.fillText(text, W / 2, y, room);
+  }
   function ship(cx: number, cy: number, k: number, color: string) {
     g.strokeStyle = color;
     g.fillStyle = colors.paper;
@@ -587,7 +603,16 @@ export function toggle(button: HTMLElement) {
     if (dt) update(dt);
     if (wrap.isConnected) draw();
   });
+  // Esc always exits (R16), wherever focus is, unless a dialog (the palette) owns it.
+  const onEscape = (event: KeyboardEvent) => {
+    if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
+    event.preventDefault();
+    close?.();
+  };
+  document.addEventListener("keydown", onEscape);
   ctx.play("open");
   canvas.focus({ preventScroll: true });
+  // On phones the search dock and its fade cover the bottom of the screen: keep the ship and lives above them.
+  wrap.style.scrollMarginBottom = "7rem";
   wrap.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
 }

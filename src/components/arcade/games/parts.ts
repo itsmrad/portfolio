@@ -7,7 +7,8 @@
 import type { Game } from "../contract";
 
 const SIZES = [16, 9, 5];
-const HUES = ["amber", "green", "teal", "blue", "violet"] as const;
+// No blue: the signal blue is the ship's alone, and it is the only filled shape on the field.
+const HUES = ["amber", "green", "teal", "violet"] as const;
 
 type Rock = { x: number; y: number; vx: number; vy: number; size: number; hue: number; turn: number; spin: number; edge: number[] };
 type Bolt = { x: number; y: number; vx: number; vy: number; life: number };
@@ -33,9 +34,10 @@ const parts: Game = (ctx) => {
   let bolts: Bolt[] = [];
   let rings: [number, number, number][] = [];
 
-  const rock = (rx: number, ry: number, size: number): Rock => {
-    const a = Math.random() * Math.PI * 2;
-    const speed = (14 + Math.random() * 14 + size * 9 + wave * 2) * (ctx.reduced ? 0.7 : 1);
+  // Tuned after review: parts drift about twice as fast as at first, and every other new part heads for the ship.
+  const rock = (rx: number, ry: number, size: number, toShip = false): Rock => {
+    const a = toShip ? Math.atan2(y - ry, x - rx) + (Math.random() - 0.5) * 0.7 : Math.random() * Math.PI * 2;
+    const speed = (26 + Math.random() * 18 + size * 10 + wave * 4) * (ctx.reduced ? 0.75 : 1);
     return {
       x: rx,
       y: ry,
@@ -51,7 +53,7 @@ const parts: Game = (ctx) => {
   const newWave = () => {
     wave++;
     // Spawn on the frame's edge, away from the ship.
-    rocks = Array.from({ length: 2 + wave }, (_, i) => (i % 2 ? rock(Math.random() * W, 0, 0) : rock(0, Math.random() * H, 0)));
+    rocks = Array.from({ length: 3 + wave }, (_, i) => (i % 2 ? rock(Math.random() * W, 0, 0, true) : rock(0, Math.random() * H, 0)));
   };
   newWave();
 
@@ -194,15 +196,20 @@ const parts: Game = (ctx) => {
       g.lineTo(r.x + 3, r.y);
       g.moveTo(r.x, r.y - 3);
       g.lineTo(r.x, r.y + 3);
+      // The callout leans away from the nearest edges, so it never runs off the frame.
+      const sx = r.x + size + 30 > W ? -1 : 1;
+      const sy = r.y - size - 10 < 0 ? -1 : 1;
       if (r.size < 2) {
-        g.moveTo(r.x + size * 0.6, r.y - size * 0.6);
-        g.lineTo(r.x + size + 4, r.y - size - 3);
-        g.lineTo(r.x + size + 10, r.y - size - 3);
+        g.moveTo(r.x + sx * size * 0.6, r.y - sy * size * 0.6);
+        g.lineTo(r.x + sx * (size + 4), r.y - sy * (size + 3));
+        g.lineTo(r.x + sx * (size + 10), r.y - sy * (size + 3));
       }
       g.stroke();
       if (r.size < 2) {
         g.fillStyle = colors.muted;
-        g.fillText(`Ø${size * 2}`, r.x + size + 11, r.y - size);
+        g.textAlign = sx > 0 ? "left" : "right";
+        g.fillText(`Ø${size * 2}`, r.x + sx * (size + 11), r.y - sy * size + (sy < 0 ? 8 : 0));
+        g.textAlign = "left";
       }
     }
     g.strokeStyle = colors.muted;
@@ -227,15 +234,20 @@ const parts: Game = (ctx) => {
       const c = Math.cos(angle);
       const sn = Math.sin(angle);
       const pt = (f: number, side: number) => [x + c * f - sn * side, y + sn * f + c * side] as const;
-      g.strokeStyle = dead ? colors.accent : colors.signal;
+      // Filled, in the signal blue: the one solid shape on a field of outlined parts.
+      const ink = dead ? colors.accent : colors.signal;
+      g.fillStyle = ink;
+      g.strokeStyle = ink;
       g.lineWidth = 2;
       g.beginPath();
-      g.moveTo(...pt(7, 0));
-      g.lineTo(...pt(-5, 4));
-      g.lineTo(...pt(-5, -4));
+      g.moveTo(...pt(8, 0));
+      g.lineTo(...pt(-5, 5));
+      g.lineTo(...pt(-5, -5));
       g.closePath();
+      g.fill();
+      g.beginPath();
       g.moveTo(...pt(-5, 0));
-      g.lineTo(...pt(-10, 0));
+      g.lineTo(...pt(-11, 0));
       g.stroke();
       if ((ctx.held("up") || pressed) && started && !dead) {
         g.strokeStyle = colors.muted;
@@ -257,7 +269,7 @@ const parts: Game = (ctx) => {
     if (!started) {
       g.textAlign = "center";
       g.fillStyle = colors.ink;
-      g.fillText("arrows to fly, space to fire", W / 2, H - 14);
+      g.fillText("wasd or arrows, space fires", W / 2, H - 14);
     }
   });
 

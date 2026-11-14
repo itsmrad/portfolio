@@ -12,8 +12,8 @@
 import type { Entry } from "../contract";
 
 export const games: Entry[] = [
-  { id: "sheets", name: "Sheet sizes", howTo: "Arrows or drag slide every sheet. Two equal sheets make the next size up. Reach A0.", section: "faq", side: "right", load: () => import("./sheets") },
-  { id: "punch", name: "Centre punch", howTo: "Click each mark before it shrinks away, or aim with arrows and press Space. Twenty seconds.", section: "faq", side: "left", load: () => import("./punch") },
+  { id: "sheets", name: "Sheet sizes", howTo: "WASD, the arrows or a drag slide every sheet. Two equal sheets make the next size. Reach A0.", section: "faq", side: "right", load: () => import("./sheets") },
+  { id: "punch", name: "Centre punch", howTo: "Click each mark before it shrinks, or aim with WASD or the arrows and press Space.", section: "faq", side: "left", load: () => import("./punch") },
   { id: "words", name: "Word check", howTo: "Type a five-letter word and press Enter. Six tries; the marks show what is right.", section: "stack", near: "Engineering", side: "right", load: () => import("./words") },
-  { id: "plane", name: "Paper plane", howTo: "Space, click or tap to climb. Fly through the gaps; they narrow as you go.", section: "codenaya", near: "Agent runs that outlive", side: "left", load: () => import("./plane") },
+  { id: "plane", name: "Paper plane", howTo: "Space, W, Up or a click climbs. Fly through the gaps; they narrow as you go.", section: "codenaya", near: "Agent runs that outlive", side: "left", load: () => import("./plane") },
 ];

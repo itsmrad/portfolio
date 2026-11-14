@@ -101,16 +101,22 @@ const sheets: Game = (ctx) => {
         ctx.announce(`Made an A${TOP - merged}.`);
       }
     } else ctx.play("tick");
+    // The round ends once this slide has landed, so the frame left under the result is a settled board.
     if (largest >= TOP) {
       done = true;
-      ctx.play("success");
-      ctx.over(`A0 reached. ${total} points.`);
+      ending = () => {
+        ctx.play("success");
+        ctx.over(`A0 reached. ${total} points.`);
+      };
     } else if (stuck()) {
       done = true;
-      ctx.play("gameOver");
-      ctx.over(`No moves left. Largest sheet A${TOP - largest}, ${total} points.`);
+      ending = () => {
+        ctx.play("gameOver");
+        ctx.over(`No moves left. Largest sheet A${TOP - largest}, ${total} points.`);
+      };
     }
   };
+  let ending: (() => void) | null = null;
 
   const DIRS: Record<string, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
   ctx.onKey((key, down) => {
@@ -180,6 +186,9 @@ const sheets: Game = (ctx) => {
     }
 
     g.restore();
+    // restore() also undid the alignment: the panel's labels are centred on their column again.
+    g.textAlign = "center";
+    g.textBaseline = "middle";
 
     // The A-series diagram: A0 halved again and again, each piece filled once that size is made.
     let [x, y, w, h] = [190, 16, 42, 59];
@@ -210,6 +219,11 @@ const sheets: Game = (ctx) => {
     }
     text("points", 211, 146, 8, ctx.fonts.mono, colors.muted);
     if (!total) text("arrows or drag", 211, 170, 8, ctx.fonts.mono, colors.muted);
+    if (ending && t >= 1) {
+      const end = ending;
+      ending = null;
+      end();
+    }
   });
 
   return () => {};
