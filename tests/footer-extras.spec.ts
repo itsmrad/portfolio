@@ -28,11 +28,14 @@ test.describe("without JavaScript", () => {
   });
 });
 
-test("the visitor cell stays empty and the endpoint answers 404 while no store is configured", async ({ page, request }) => {
+test("without a store: no visitor cell, an empty shared read, and no write routes", async ({ page, request }) => {
   await page.goto("/");
   await expect(page.locator("footer dt", { hasText: "Visitors" })).toHaveCount(0);
-  expect((await request.get("/api/visit")).status()).toBe(404);
+  const shared = await request.get("/api/visit");
+  expect(shared.status()).toBe(200);
+  expect(await shared.json()).toEqual({});
   expect((await request.post("/api/visit")).status()).toBe(404);
+  expect((await request.post("/api/visit/live?id=AbCdEfGhIjKlMnOpQrStUv")).status()).toBe(404);
   // Only GET and POST exist.
   for (const method of ["PUT", "DELETE", "PATCH"]) expect((await request.fetch("/api/visit", { method })).status()).toBe(405);
 });
@@ -197,3 +200,150 @@ for (const theme of THEMES) {
     });
   }
 }
+
+/** The map's states, with the counter's answers stood in (this build has no store). */
+type Stats = { count?: number; live?: number; cells?: number[][] };
+async function withMap(page: Page, stats: Stats, you: object = {}) {
+  await page.route("**/api/visit", (route) => route.fulfill({ json: route.request().method() === "GET" ? stats : {} }));
+  await page.route("**/api/visit/live?**", (route) => route.fulfill({ json: you }));
+}
+const globe = (page: Page) => page.locator("footer [data-drawn]");
+const shownLabels = (page: Page) =>
+  page.locator("footer [data-label][data-shown]").evaluateAll((labels) => labels.map((label) => (label as HTMLElement).dataset.label));
+const caption = (page: Page) => page.locator("footer [data-caption]");
+
+/** Every shown tag inside the stage's clear area, none overlapping another; the caption inside the footer. */
+async function laidOutCleanly(page: Page) {
+  return page.evaluate(() => {
+    const issues: string[] = [];
+    const stage = document.querySelector("footer [data-drawn]")!.getBoundingClientRect();
+    const tags = [...document.querySelectorAll("footer [data-label][data-shown]")].map((tag) => tag.getBoundingClientRect());
+    for (const t of tags) {
+      if (t.left < Math.max(0, stage.left) || t.right > Math.min(innerWidth, stage.right) || t.top < stage.top || t.bottom > stage.top + stage.height * 0.75) {
+        issues.push("a tag leaves the clear area");
+      }
+    }
+    tags.forEach((a, i) =>
+      tags.slice(i + 1).forEach((b) => {
+        if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) issues.push("tags overlap");
+      }),
+    );
+    const note = document.querySelector("footer [data-caption]")!.getBoundingClientRect();
+    if (note.right > innerWidth || note.left < 0 || note.bottom > document.querySelector("footer")!.getBoundingClientRect().bottom + 1) {
+      issues.push("caption overflows");
+    }
+    return issues;
+  });
+}
+
+const MANY: number[][] = [
+  ...Array.from({ length: 30 }, (_, i) => [24 + (i % 7), 72 + (i % 9), 1 + (i % 5)]),
+  ...Array.from({ length: 30 }, (_, i) => [45 + (i % 10), -5 + (i % 15), 1 + (i % 3)]),
+  ...Array.from({ length: 30 }, (_, i) => [30 + (i % 15), -120 + i, 1 + (i % 4)]),
+  [82, 30, 2],
+  [-78, 0, 1],
+  [5, 179, 3],
+  [-40, -178, 2],
+];
+
+test.describe("the visitor map", () => {
+  test("with no store: the plain globe and Anupam's pin, no dots, no caption, nothing in the console", async ({ page }) => {
+    const errors = collectErrors(page);
+    await withMap(page, {});
+    await page.goto("/");
+    await toFooter(page);
+    await expect(globe(page)).toHaveAttribute("data-visitors", "0");
+    await expect.poll(() => shownLabels(page)).toEqual(["home"]);
+    await expect(caption(page)).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+
+  test("with an empty store: the caption, no dots, and this visitor's distance", async ({ page }) => {
+    await withMap(page, { count: 0, live: 0, cells: [] }, { you: [52, 0], distance: { value: 6700, unit: "km" } });
+    await page.goto("/");
+    await toFooter(page);
+    await expect(caption(page)).toBeVisible();
+    await expect(caption(page)).toContainText("you're about 6,700 km from Anupam");
+    await expect(globe(page)).toHaveAttribute("data-visitors", "0");
+  });
+
+  test("one visitor: one dot", async ({ page }) => {
+    await withMap(page, { count: 1, live: 1, cells: [[29, 76, 1]] });
+    await page.goto("/");
+    await toFooter(page);
+    await expect(globe(page)).toHaveAttribute("data-visitors", "1");
+  });
+
+  test("you and Anupam in the same cell: one merged label and a warmer line", async ({ page }) => {
+    await withMap(page, { count: 5, live: 2, cells: [[29, 77, 5]] }, { you: [29, 77], distance: { same: true } });
+    await page.goto("/");
+    await toFooter(page);
+    // Anupam's tag speaks for both; the visitor's own tag stands down.
+    await expect.poll(() => shownLabels(page)).toEqual(["home"]);
+    await expect(page.locator('footer [data-label="home"]')).toHaveText("you're both here");
+    await expect(caption(page)).toContainText("you're in Anupam's city");
+    await expect(page.locator("footer [data-distance-line]")).toHaveText("you're in Anupam's city");
+  });
+
+  test("an unknown place: no 'you' and no distance line", async ({ page }) => {
+    await withMap(page, { count: 5, live: 1, cells: MANY });
+    await page.goto("/");
+    await toFooter(page);
+    await expect(caption(page)).toBeVisible();
+    await expect(page.locator("footer [data-distance-line]")).toHaveText("");
+    expect(await shownLabels(page)).not.toContain("you");
+  });
+
+  for (const width of [360, 390, 768, 1024, 1440, 1920]) {
+    for (const theme of THEMES) {
+      test(`many visitors at ${width}px, ${theme}: labels never overlap or leave the drawing`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        await page.emulateMedia({ colorScheme: theme });
+        const errors = collectErrors(page);
+        // A visitor close to Anupam, so both labels compete for room.
+        await withMap(page, { count: 1284, live: 3, cells: MANY }, { you: [19, 73], distance: { value: 1200, unit: "km" } });
+        await page.goto("/");
+        await toFooter(page);
+        await expect.poll(() => shownLabels(page)).toEqual(["home", "you"]);
+        // Across the turn, too.
+        for (let i = 0; i < 4; i++) {
+          expect(await laidOutCleanly(page)).toEqual([]);
+          await page.waitForTimeout(700);
+        }
+        expect(Number(await globe(page).getAttribute("data-visitors"))).toBeGreaterThan(0);
+        expect(errors).toEqual([]);
+      });
+    }
+  }
+
+  test("is the same whatever the visitor's time zone", async ({ browser }) => {
+    const seen: unknown[] = [];
+    for (const timezoneId of ["Pacific/Auckland", "America/Los_Angeles", "Asia/Kolkata"]) {
+      const context = await browser.newContext({ timezoneId, reducedMotion: "reduce" });
+      const page = await context.newPage();
+      await withMap(page, { count: 7, live: 2, cells: MANY }, { you: [52, 0], distance: { value: 4200, unit: "mi" } });
+      await page.goto("/");
+      await toFooter(page);
+      await expect(caption(page)).toBeVisible();
+      await expect(caption(page)).toContainText("4,200 miles");
+      await expect.poll(() => shownLabels(page)).toContain("you");
+      seen.push([await globe(page).getAttribute("data-visitors"), await shownLabels(page), await caption(page).textContent()]);
+      await context.close();
+    }
+    expect(seen[1]).toEqual(seen[0]);
+    expect(seen[2]).toEqual(seen[0]);
+  });
+
+  test("under reduced motion the map is drawn whole at once and holds still", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await withMap(page, { count: 7, live: 2, cells: MANY }, { you: [52, 0], distance: { value: 6700, unit: "km" } });
+    await page.goto("/");
+    await toFooter(page);
+    await expect(caption(page)).toBeVisible();
+    const first = await page.locator("footer canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+    await page.waitForTimeout(1500);
+    expect(await page.locator("footer canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL())).toBe(first);
+    await context.close();
+  });
+});

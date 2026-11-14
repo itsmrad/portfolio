@@ -17,4 +17,16 @@ export const footer = {
   timeBehind: "behind you",
   signAgain: "Sign again",
   visitorsUnit: "visitors so far",
+  /** The live line under the total. With a handful of visitors a month it is nearly always the first. */
+  liveAlone: "just you right now",
+  liveMany: "people here right now",
+  /** The visitor map on the globe: labels, and the caption under it. */
+  mapYou: "you're here",
+  mapAnupam: "Anupam's here",
+  mapBoth: "you're both here",
+  mapNote: "dots: where visitors came from, to about 100 km · nothing personal kept",
+  /** {n} and {unit} are filled in; units are "km" or "miles" by the visitor's country. */
+  distance: "you're about {n} {unit} from Anupam",
+  distanceUnits: { km: "km", mi: "miles" },
+  distanceSame: "you're in Anupam's city",
 } as const;
