@@ -75,7 +75,8 @@ export function toggle(button: HTMLElement) {
   const status = document.createElement("p");
   const row = calendar.nextElementSibling as HTMLElement | null;
   wrap.dataset.game = "contributions";
-  wrap.style.cssText = `position:absolute;left:0;right:0;z-index:3;top:${svg.getBoundingClientRect().top - calendar.getBoundingClientRect().top}px`;
+  // scroll-margin-bottom: on phones the search dock and its fade cover the foot of the screen; the ship stays above them.
+  wrap.style.cssText = `position:absolute;left:0;right:0;z-index:3;scroll-margin-bottom:7rem;top:${svg.getBoundingClientRect().top - calendar.getBoundingClientRect().top}px`;
   // The page accent, as the arcade palette names it (R19): a hit, the last life.
   wrap.style.setProperty("--arcade-accent", "var(--accent)");
   canvas.tabIndex = 0;
@@ -95,6 +96,8 @@ export function toggle(button: HTMLElement) {
     exclusive: true,
     pauseOnBlur: true,
     announce: (text) => (status.textContent = text),
+    // From anywhere on the page (review S2), through the host.
+    onEscape: () => close?.(),
     onRunning: (on) => {
       running = on;
       h?.repaint();
@@ -103,15 +106,8 @@ export function toggle(button: HTMLElement) {
   const ctx = h.ctx;
   const { g, colors, reduced } = ctx;
   let shades: string[] = [];
-  // With transitions off for the read: under reduced motion the global 0.01 ms transition would hand back the
-  // previous theme's colours (the same trap the host avoids for its tokens).
-  const readShades = () =>
-    (shades = paths.map((path) => {
-      path.style.setProperty("transition", "none", "important");
-      const stroke = getComputedStyle(path).stroke;
-      path.style.removeProperty("transition");
-      return stroke;
-    }));
+  // The days' paths never transition (activity.module.css), so this reads the new theme's colours at once.
+  const readShades = () => (shades = paths.map((path) => getComputedStyle(path).stroke));
   readShades();
   ctx.onTheme(readShades);
   let best = 0;
@@ -213,7 +209,6 @@ export function toggle(button: HTMLElement) {
     if (!running) finish();
   };
   const finish = () => {
-    document.removeEventListener("keydown", onEscape);
     h.stop();
     wrap.remove();
     if (row) row.inert = false;
@@ -454,7 +449,7 @@ export function toggle(button: HTMLElement) {
     }
 
     // The sheet below: its frame, the heads-up line, the floor.
-    g.font = `${10.5 * u}px ${ctx.fonts.mono}`;
+    font(10.5);
     g.textBaseline = "middle";
     const focused = document.activeElement === canvas;
     g.strokeStyle = focused && running ? colors.signal : colors.line;
@@ -468,11 +463,11 @@ export function toggle(button: HTMLElement) {
     g.textAlign = "right";
     g.fillText(narrow ? "× back" : touch ? "back to the graph ×" : "esc · back to the graph", W - 8 * u, hud);
     const grow = 1 + (reduced ? 0 : out(bump) * 0.18);
-    g.font = `${13 * grow * u}px ${ctx.fonts.pixel}`;
+    font(13 * grow, ctx.fonts.pixel);
     g.fillStyle = colors.ink;
     g.textAlign = "right";
     g.fillText(fmt(shown), W / 2 - 3 * u, hud + u);
-    g.font = `${10.5 * u}px ${ctx.fonts.mono}`;
+    font(10.5);
     g.fillStyle = colors.muted;
     g.textAlign = "left";
     g.fillText(`/ ${fmt(total)}`, W / 2 + 3 * u, hud);
@@ -514,7 +509,7 @@ export function toggle(button: HTMLElement) {
       g.globalAlpha = 1 - out(bit.t);
       g.fillStyle = bit.color;
       if (bit.text) {
-        g.font = `${10 * u}px ${ctx.fonts.mono}`;
+        font(10);
         g.fillText(bit.text, bit.x, bit.y);
       } else if (bit.vx || bit.vy) square(bit.x, bit.y, 3 * u * (1 - bit.t));
       else {
@@ -540,21 +535,25 @@ export function toggle(button: HTMLElement) {
 
     if (phase === "lift" && clock < 1400) caption(`${label(waves[wave]!)}`, clamp(Math.sin((clock / 1400) * Math.PI) * 1.4, 0, 1));
     if (phase === "over" && clock > 600) {
+      // The result lines keep 12 units of paper each side (review S4): the canvas condenses a longer one to fit.
+      const line = W - 24 * u;
       const a = out((clock - 600) / 320);
       const y = TOP + 22 * u + (1 - a) * 6 * u;
       g.globalAlpha = a;
       g.textAlign = "center";
       g.fillStyle = colors.ink;
-      g.font = `${24 * u}px ${ctx.fonts.pixel}`;
+      font(24, ctx.fonts.pixel);
       g.fillText(fmt(score), W / 2, y);
-      fitted(won ? `all ${fmt(total)} contributions of the year, cleared` : `of ${fmt(total)} contributions in the last year, cleared`, 12, y + 24 * u);
+      font(12);
+      g.fillText(won ? `all ${fmt(total)} contributions of the year, cleared` : `of ${fmt(total)} contributions in the last year, cleared`, W / 2, y + 24 * u, line);
       g.fillStyle = colors.muted;
-      fitted(`${won ? waves.length : wave} of ${waves.length} stretches cleared · ${record ? "new best" : `best ${fmt(best)}`}`, 10.5, y + 42 * u);
+      font(10.5);
+      g.fillText(`${won ? waves.length : wave} of ${waves.length} stretches cleared · ${record ? "new best" : `best ${fmt(best)}`}`, W / 2, y + 42 * u, line);
       g.fillStyle = colors.signal;
-      g.fillText(touch ? "tap to play again" : "space or click to play again", W / 2, y + 62 * u);
+      g.fillText(`${touch ? "tap" : "space or click"} to play again`, W / 2, y + 62 * u);
       g.globalAlpha = 1;
     }
-    if (!running && phase !== "open" && phase !== "close" && unroll >= 1) caption(touch ? "paused · tap to go on" : "paused · click or press a key to go on", 1);
+    if (!running && phase !== "open" && phase !== "close" && unroll >= 1) caption(`paused · ${touch ? "tap" : "click"} to go on`, 1);
 
     // Below the unrolling edge the page shows through; the edge itself is a ruled line.
     if (unroll < 1) {
@@ -563,15 +562,9 @@ export function toggle(button: HTMLElement) {
       g.fillRect(0, edge - u, W, u);
     }
   };
-  /** A centred mono line that keeps 12 units of paper each side: the font steps down to 0.8 of its size, never below. */
-  function fitted(text: string, size: number, y: number) {
-    let px = size * u;
-    g.font = `${px}px ${ctx.fonts.mono}`;
-    const room = W - 24 * u;
-    const wide = g.measureText(text).width;
-    if (wide > room) px = Math.max(size * u * 0.8, (px * room) / wide);
-    g.font = `${px}px ${ctx.fonts.mono}`;
-    g.fillText(text, W / 2, y, room);
+  /** Sizes are in field units; mono unless another face is given. */
+  function font(size: number, face = ctx.fonts.mono) {
+    g.font = `${size * u}px ${face}`;
   }
   function ship(cx: number, cy: number, k: number, color: string) {
     g.strokeStyle = color;
@@ -587,7 +580,7 @@ export function toggle(button: HTMLElement) {
     g.stroke();
   }
   function caption(text: string, alpha: number) {
-    g.font = `${11 * u}px ${ctx.fonts.mono}`;
+    font(11);
     const w = g.measureText(text).width + 16 * u;
     const y = TOP + 7 * P + 18 * u;
     g.globalAlpha = alpha;
@@ -603,16 +596,7 @@ export function toggle(button: HTMLElement) {
     if (dt) update(dt);
     if (wrap.isConnected) draw();
   });
-  // Esc always exits (R16), wherever focus is, unless a dialog (the palette) owns it.
-  const onEscape = (event: KeyboardEvent) => {
-    if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
-    event.preventDefault();
-    close?.();
-  };
-  document.addEventListener("keydown", onEscape);
   ctx.play("open");
   canvas.focus({ preventScroll: true });
-  // On phones the search dock and its fade cover the bottom of the screen: keep the ship and lives above them.
-  wrap.style.scrollMarginBottom = "7rem";
   wrap.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
 }

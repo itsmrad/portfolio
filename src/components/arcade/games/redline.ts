@@ -42,9 +42,14 @@ const redline: Game = (ctx) => {
   let pulse = 0;
 
   const lines = () => order[n]![3].split("\n");
-  const top = 26;
-  const pitch = () => Math.min(14, 118 / lines().length);
-  const lineAt = (y: number) => Math.floor((y - top + pitch() * 0.75) / pitch());
+  // The layout grid (round 3): a line-number column, the code column, and a marker column the code never enters.
+  // Row i spans [top + i * p, top + (i + 1) * p]; numbers and code sit on its middle, its cloud stays inside it.
+  const top = 18;
+  const NUM = 17;
+  const CODE = 28;
+  const MARK = 18;
+  const pitch = () => Math.min(14, 120 / lines().length);
+  const lineAt = (y: number) => Math.floor((y - top) / pitch());
 
   const choose = (line: number) => {
     if (answered || line < 0 || line >= lines().length) return;
@@ -105,19 +110,19 @@ const redline: Game = (ctx) => {
     else choose(lineAt(y));
   });
 
-  // A revision cloud: scallops round a box.
+  // A revision cloud: a row-high capsule with scalloped long sides, drawn wholly inside [x, x + w] by [y, y + h].
   const cloud = (x: number, y: number, w: number, h: number) => {
+    const b = Math.min(2.5, h / 6);
+    const r = (h - 2 * b) / 2;
+    const [cy, l, rr] = [y + h / 2, x + r + b, x + w - r - b];
+    const n = Math.max(1, Math.round((rr - l) / 6));
+    const step = (rr - l) / n;
     g.beginPath();
-    for (let i = 0; i < w; i += 6) {
-      g.moveTo(x + i, y);
-      g.arc(x + i + 3, y, 3, Math.PI, 0);
-      g.moveTo(x + i + 6, y + h);
-      g.arc(x + i + 3, y + h, 3, 0, Math.PI);
-    }
-    g.moveTo(x + w, y);
-    g.arc(x + w, y + h / 2, h / 2, -Math.PI / 2, Math.PI / 2);
-    g.moveTo(x, y + h);
-    g.arc(x, y + h / 2, h / 2, Math.PI / 2, Math.PI * 1.5);
+    g.arc(l, cy, r, Math.PI / 2, Math.PI * 1.5);
+    for (let i = 0; i < n; i++) g.arc(l + step * (i + 0.5), cy - r, step / 2, Math.PI, 0);
+    g.arc(rr, cy, r, -Math.PI / 2, Math.PI / 2);
+    for (let i = n - 1; i >= 0; i--) g.arc(l + step * (i + 0.5), cy + r, step / 2, 0, Math.PI);
+    g.closePath();
     g.stroke();
   };
   const wrap = (text: string, width: number) =>
@@ -157,49 +162,66 @@ const redline: Game = (ctx) => {
       g.textAlign = "center";
       g.fillStyle = colors.ink;
       g.fillText("each function has one bug.", W / 2, 70);
-      g.fillText("click its line, or arrows and space,", W / 2, 84);
+      g.fillText("click its line, or w/s and space,", W / 2, 84);
       g.fillText("before the line runs out.", W / 2, 98);
       g.fillStyle = colors.signal;
       g.fillText("press space to start", W / 2, 124);
       return;
     }
 
-    // The code, sized to fit the widest line.
+    // The code: one size for every line, stepped down until the widest line fits its column and the buggy line
+    // fits with its cloud (canvas text does not scale smoothly with the size).
     const widest = rows.reduce((a, b) => (b.length > a.length ? b : a));
-    // Step down until the widest line fits: canvas text does not scale smoothly with the size.
-    let size = 10.5;
-    do g.font = `${(size -= 0.5)}px ${ctx.fonts.mono}`;
-    while (size > 7 && g.measureText(widest).width > W - 32);
+    const room = W - MARK - 2 - CODE;
+    const buggy = rows[bug - 1]!;
+    // Set, measured and drawn at 4x and scaled down: at these sizes canvas snaps advances to whole pixels, so an
+    // 8 and a 7.75 px line would measure the same and sizes would jump between snippets.
+    let size = Math.min(9.5, p - 3);
+    const font = () => (g.font = `${size * 4}px ${ctx.fonts.mono}`);
+    const measure = (text: string) => g.measureText(text).width / 4;
+    const write = (text: string, x: number, y: number) => {
+      g.save();
+      g.scale(0.25, 0.25);
+      g.fillText(text, x * 4, y * 4);
+      g.restore();
+    };
+    const fits = () => measure(widest) <= room && measure(buggy) + p <= room;
+    for (font(); size > 6.5 && !fits(); font()) size -= 0.25;
+    const mid = (i: number) => top + i * p + p / 2;
+    g.textBaseline = "middle";
     rows.forEach((row, i) => {
-      const y = top + i * p;
+      const y = mid(i);
       g.textAlign = "right";
       g.fillStyle = colors.line;
-      g.fillText(String(i + 1), 17, y);
+      write(String(i + 1), NUM, y);
       g.textAlign = "left";
-      g.fillStyle = answered && i === pick && i + 1 !== bug ? colors.muted : colors.ink;
-      g.fillText(row, 24, y);
-      if (answered && i === pick && i + 1 !== bug) {
+      const struck = answered && i === pick && i + 1 !== bug;
+      g.fillStyle = struck ? colors.muted : colors.ink;
+      write(row, CODE, y);
+      if (struck) {
         g.strokeStyle = colors.muted;
+        g.lineWidth = 1;
         g.beginPath();
-        g.moveTo(24 + g.measureText(row.match(/^ */)![0]).width, y - size * 0.3);
-        g.lineTo(24 + g.measureText(row).width, y - size * 0.3);
+        g.moveTo(CODE + measure(row.match(/^ */)![0]), Math.round(y) + 0.5);
+        g.lineTo(CODE + measure(row), Math.round(y) + 0.5);
         g.stroke();
       }
     });
+    g.textBaseline = "alphabetic";
 
     if (!answered) {
-      // Your cursor: a bracket in the gutter and a rule under the line.
+      // Your cursor: a bracket between the numbers and the code, and a rule along the foot of the row.
       const y = top + hover * p;
       g.strokeStyle = colors.signal;
       g.lineWidth = 2;
       g.beginPath();
-      g.moveTo(21, y - p + 3);
-      g.lineTo(21, y + 2);
+      g.moveTo(CODE - 5, y + 2);
+      g.lineTo(CODE - 5, y + p - 2);
       g.stroke();
       g.lineWidth = 1;
       g.beginPath();
-      g.moveTo(24, y + 2.5);
-      g.lineTo(W - 8, y + 2.5);
+      g.moveTo(CODE, Math.round(y + p) - 0.5);
+      g.lineTo(W - MARK - 2, Math.round(y + p) - 0.5);
       g.stroke();
 
       // The countdown: a dimension line that shortens, its length written on it.
@@ -227,26 +249,32 @@ const redline: Game = (ctx) => {
       return;
     }
 
-    // The answer: a revision cloud round the buggy line, a delta at the margin, the note below.
-    const y = top + (bug - 1) * p;
+    // The answer: a revision cloud inside the buggy line's own row, a delta in the marker column, the note below.
     const right = pick + 1 === bug;
     g.strokeStyle = right ? colors.green : colors.accent;
-    g.lineWidth = 1.5;
-    const grow = ctx.reduced ? 0 : pulse * 3;
-    const code = rows[bug - 1]!;
-    const indent = 24 + g.measureText(code.match(/^ */)![0]).width;
-    cloud(indent - 3 - grow, y - p + 2 - grow, Math.min(W - 36 - indent, g.measureText(code.trim()).width + 6) + grow * 2, p + grow * 2);
-    const dx = W - 14;
+    g.fillStyle = g.strokeStyle;
+    g.lineWidth = 1.25;
+    const grow = ctx.reduced ? 0 : pulse;
+    font();
+    const indent = CODE + measure(buggy.match(/^ */)![0]);
+    const rowTop = top + (bug - 1) * p;
+    const ends = p / 2;
+    cloud(indent - ends - grow, rowTop + 0.5 - grow * 0.5, measure(buggy.trim()) + 2 * ends + grow * 2, p - 1 + grow);
+    // The delta: a triangle centred in the marker column on the row's middle, its number inside.
+    const dx = W - MARK / 2;
+    const dy = mid(bug - 1);
+    const t = Math.min(6, p / 2 - 0.5);
     g.beginPath();
-    g.moveTo(dx, y - 9);
-    g.lineTo(dx + 6, y + 2);
-    g.lineTo(dx - 6, y + 2);
+    g.moveTo(dx, dy - t);
+    g.lineTo(dx + t * 1.1, dy + t * 0.8);
+    g.lineTo(dx - t * 1.1, dy + t * 0.8);
     g.closePath();
     g.stroke();
-    g.font = `7px ${ctx.fonts.mono}`;
+    g.font = `${Math.max(5.5, t)}px ${ctx.fonts.mono}`;
     g.textAlign = "center";
-    g.fillStyle = g.strokeStyle;
-    g.fillText(String(n + 1), dx, y);
+    g.textBaseline = "middle";
+    g.fillText(String(n + 1), dx, dy + t * 0.25);
+    g.textBaseline = "alphabetic";
 
     g.font = `9px ${ctx.fonts.mono}`;
     g.textAlign = "left";
