@@ -9,7 +9,9 @@ import styles from "./cat.module.css";
  * and falls asleep three seconds later. It is never in the way: no pointer
  * events, hidden while the window is not focused, gone on Escape.
  */
-const STOP = 24;
+/** Half its 64px cell: positions are its centre. */
+const HALF = 32;
+const STOP = 44;
 
 export function Cat() {
   const element = useRef<HTMLDivElement>(null);
@@ -27,7 +29,7 @@ export function Cat() {
     const show = (atX: number, atY: number) => {
       x = atX;
       y = atY;
-      cat.style.translate = `${x - 16}px ${y - 16}px`;
+      cat.style.translate = `${x - HALF}px ${y - HALF}px`;
       cat.dataset.pose = "idle";
       cat.setAttribute("data-on", "");
     };
@@ -46,7 +48,7 @@ export function Cat() {
       last = now;
       cat.dataset.pose = Math.floor(now / 105) % 2 ? "runA" : "runB";
       cat.toggleAttribute("data-left", dx < 0);
-      cat.style.translate = `${x - 16}px ${y - 16}px`;
+      cat.style.translate = `${x - HALF}px ${y - HALF}px`;
       frame = requestAnimationFrame(chase);
     };
     const follow = (event: PointerEvent) => {
@@ -54,7 +56,7 @@ export function Cat() {
       toX = event.clientX;
       toY = event.clientY;
       if (!cat.hasAttribute("data-on")) {
-        show(toX + (toX > innerWidth / 2 ? -52 : 52), Math.max(16, Math.min(innerHeight - 16, toY + 22)));
+        show(toX + (toX > innerWidth / 2 ? -84 : 84), Math.max(HALF, Math.min(innerHeight - HALF, toY + 30)));
       }
       if (!frame && Math.hypot(toX - x, toY - y) > STOP + 0.1) {
         last = performance.now();
@@ -67,7 +69,7 @@ export function Cat() {
       cat.removeAttribute("data-on");
     };
 
-    if (bed && bed.bottom > 0 && bed.top < innerHeight) show(bed.left + 16, bed.top + 16);
+    if (bed && bed.bottom > 0 && bed.top < innerHeight) show(bed.left + HALF, bed.top + HALF);
     dispatchEvent(new CustomEvent("playful:cat", { detail: true }));
     addEventListener("pointermove", follow, { passive: true });
     addEventListener("blur", hide);
