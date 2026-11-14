@@ -13,6 +13,7 @@ import { Dimension, DimensionExtension, DimensionLine } from "@/components/layou
 import { ResumeDownload } from "@/components/layout/resume-download";
 import { Section } from "@/components/layout/section";
 import { HeroStickers } from "@/components/playful/hero-stickers";
+import { SingButton, SingName } from "@/components/sound/sing-name";
 import { buttonVariants } from "@/components/ui/button";
 import { Img } from "@/components/ui/img";
 import { Kbd } from "@/components/ui/kbd";
@@ -111,15 +112,17 @@ export function Hero() {
             </Dimension>
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto]">
+            {/* The letters are separate elements for the name melody; the label keeps the name whole. */}
             <h1
               id="top-title"
+              aria-label={site.name}
               className="screen-line-top px-4 pt-2 pb-1.5 font-serif text-[clamp(1.625rem,7.5vw,2.5rem)]/none tracking-[-0.015em]"
             >
-              {site.name}
+              <SingName>{site.name}</SingName>
             </h1>
             <ul
-              className={`${styles.taglines} screen-line-top h-9 items-center px-4 font-mono text-[0.8125rem] text-muted-foreground sm:text-sm`}
+              className={`${styles.taglines} screen-line-top col-span-2 h-9 items-center px-4 font-mono text-[0.8125rem] text-muted-foreground sm:text-sm`}
             >
               {taglines.map((line, index) => (
                 <li key={line} style={{ "--index": index } as React.CSSProperties}>
@@ -128,6 +131,8 @@ export function Hero() {
               ))}
             </ul>
             <style>{taglineRotation(taglines.length)}</style>
+            {/* After the taglines in the source, beside the name on the page. */}
+            <SingButton className="col-start-2 row-start-1 mr-2 self-center" />
           </div>
         </div>
       </div>
