@@ -21,7 +21,7 @@ import styles from "./margins.module.css";
  */
 
 /** The page's section ids, in order (the contract of app/page.tsx). */
-const SECTIONS = ["top", "about", "experience", "work", "building", "activity", "stack", "education", "contact"];
+const SECTIONS = ["top", "about", "experience", "work", "building", "activity", "stack", "education", "faq", "contact"];
 const WIDE = "(min-width: 64rem) and (pointer: fine)";
 /** Where a note sits below the top of its section, and which way its arrow goes. */
 // Codenaya's note points at its stat cells, below the cartridge beside the capture.

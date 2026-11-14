@@ -55,6 +55,8 @@ export const playful = {
     { kind: "note", side: "right", in: "xflow", text: "Daemon and CLI", dy: -40, note: "the daemon is rust" },
     { kind: "note", side: "left", in: "activity", dy: 90, note: "every square\nis one day" },
     { kind: "note", side: "left", in: "stack", text: "AI/LLM", dy: -20, note: "the day job,\nrag and tools" },
+    { kind: "note", side: "left", in: "faq", text: "Who is Anupam Das?", dy: -40, note: "nine questions,\nshort answers" },
+    { kind: "note", side: "right", in: "faq", text: "How can I contact", dy: -40, note: "ask him the rest,\nit's just below" },
     { kind: "toy", toy: "term", side: "left", in: "education", dy: 70, caption: "final year", items: ["aug 2023", "aug 2027"] },
   ],
   /** The cat asleep beside "currently building"; clicking it wakes the cursor companion. */
