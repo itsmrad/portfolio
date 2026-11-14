@@ -195,8 +195,11 @@ test.describe("sound engine", () => {
       const muted = await audio(page);
       expect(muted.contexts).toBe(1);
       expect(muted.starts).toBeGreaterThan(0);
-      // The button sits on the right of the screen, so the voice pans right.
-      expect(muted.pans.at(-1)).toBeGreaterThan(0.2);
+      // The voice sits where the button does: right of centre, 0.6 of the way at the screen's edge.
+      const box = (await button.boundingBox())!;
+      const expected = 0.6 * (((box.x + box.width / 2) / 1440) * 2 - 1);
+      expect(expected).toBeGreaterThan(0.05);
+      expect(Math.abs(muted.pans.at(-1)! - expected)).toBeLessThan(0.02);
       await expect(button).toHaveAttribute("aria-pressed", "false");
       expect(await page.evaluate(() => [localStorage.getItem("sound"), document.documentElement.dataset.sound])).toEqual(["off", "off"]);
 
@@ -225,6 +228,9 @@ test.describe("sound engine", () => {
       await instrument(page);
       await page.addInitScript(() => localStorage.setItem("sound", "off"));
       await page.goto("/");
+      // The first input fetches the home effects and the playful layer; the engine must not come with them or after.
+      await settle(page);
+      await page.mouse.move(300, 300);
       await settle(page);
       const scripts = (await resources(page)).length;
       await page.getByRole("button", { name: "Toggle light and dark theme", exact: true }).click();

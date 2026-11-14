@@ -194,6 +194,9 @@ test.describe("projects interaction", () => {
 
   test("the section ships no JavaScript of its own", async ({ page }) => {
     await page.goto("/");
+    // The first input fetches the home effects and the playful layer; let them land first.
+    await settle(page);
+    await page.mouse.move(300, 300);
     await settle(page);
     const added = await scriptBytesAddedBy(page, async () => {
       await page.locator("#building").scrollIntoViewIfNeeded();

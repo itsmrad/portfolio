@@ -135,10 +135,10 @@ test("without the store's variables there is no route and no cell", async () => 
   expect(VisitorCounter()).toBeNull();
 });
 
-test("with the store, the cell is two columns wide and hidden until the client has a real count", async () => {
+test("with the store, the cell is one column (beside Sound) and hidden until the client has a real count", async () => {
   const cell = VisitorCounter() as unknown as { props: { label: string; className: string; children: { props: object } } };
   expect(cell.props.label).toBe("Visitors");
-  expect(cell.props.className.split(" ")).toEqual(expect.arrayContaining(["invisible", "col-span-2"]));
+  expect(cell.props.className.split(" ")).toEqual(["invisible"]);
   // No number from the server: the only child is the client counter, given the unit alone.
   expect(Object.keys(cell.props.children.props)).toEqual(["unit"]);
 });

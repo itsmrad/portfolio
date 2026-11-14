@@ -45,12 +45,16 @@ test.describe("phone", () => {
       const state = window as unknown as { __queries: number };
       const real = window.matchMedia.bind(window);
       state.__queries = 0;
-      window.matchMedia = (query) => (state.__queries++, real(query));
+      // The sticker's own voice asks "(pointer: coarse)" once per vibration; that is not the loader.
+      window.matchMedia = (query) => ((state.__queries += query === "(pointer: coarse)" ? 0 : 1), real(query));
     });
     await page.goto("/");
     await expect(page.locator("[data-sticker]:visible")).toHaveCount(3);
     await settle(page);
     const queries = () => page.evaluate(() => (window as unknown as { __queries: number }).__queries);
+    // The first tap fetches the home effects, which ask about reduced motion once; then nothing more may ask.
+    await page.locator('[data-sticker="keycap"] > div').tap();
+    await settle(page);
     const before = await queries();
     for (let tap = 0; tap < 5; tap++) await page.locator('[data-sticker="keycap"] > div').tap();
     expect(await queries()).toBe(before);
@@ -165,7 +169,7 @@ test.describe("wide", () => {
     await openWide(page);
     // End states only: with transitions off, a hover style is either applied or not.
     await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; }" });
-    const link = page.locator("main a.link-underline").first();
+    const link = page.locator("main a.link-underline:visible").first();
     await link.scrollIntoViewIfNeeded();
     await link.hover();
     expect(await link.evaluate((element) => getComputedStyle(element).textDecorationStyle)).toBe("wavy");
@@ -185,6 +189,27 @@ test.describe("wide", () => {
       return [style.backgroundSize, style.width, style.height];
     });
     expect(box).toEqual(["1.25px 100%, 1.25px 100%", "40px", "40px"]);
+  });
+
+  test("keys typed while the palette opens are its search, never an egg", async ({ page }) => {
+    await openWide(page);
+    // Cold: the palette chunk is held back, so "kitty" lands while it is still opening.
+    await page.route("**/_next/static/chunks/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    await page.keyboard.press("/");
+    await page.keyboard.type("kitty");
+    const search = page.getByRole("combobox", { name: "Search commands" });
+    await expect(search).toHaveValue("kitty");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(600);
+    await expect(page.locator("[data-cat]")).toHaveCount(0);
+    // Once it has closed, the egg works again.
+    await page.unroute("**/_next/static/chunks/**");
+    await page.keyboard.type("kitty");
+    await expect(page.locator("[data-cat]")).toHaveCount(1);
   });
 
   test("an egg whose chunk fails does nothing, and works on the next try", async ({ page }) => {
@@ -292,6 +317,8 @@ test.describe("wide", () => {
   });
 
   test("lazy chunks stay inside their budgets", async ({ page }) => {
+    // Muted, so an egg's first voice does not bring the sound engine's chunk into the egg's count.
+    await page.addInitScript(() => localStorage.setItem("sound", "off"));
     // Untouched, the page has fetched none of the layer's chunks.
     await page.goto("/");
     await settle(page);

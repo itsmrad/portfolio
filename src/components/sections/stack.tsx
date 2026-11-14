@@ -30,7 +30,6 @@ export function Stack() {
                       key={item}
                       style={slot === undefined ? undefined : ({ "--slot": slot, "--brand": colour } as React.CSSProperties)}
                     >
-                      {slot !== undefined && <i />}
                       {item}
                     </li>
                   );

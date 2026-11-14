@@ -1,9 +1,11 @@
 import { site, socials, xHandle } from "@/content/site";
 import { buildInfo } from "@/lib/build";
+import { counterStore } from "@/components/footer/counter-store";
 import { FinaleToy, Signature, StatusStrip, VisitorCounter, Wordmark } from "@/components/footer/extras";
 import { ExternalLink } from "@/components/layout/external-link";
 import { Frame } from "@/components/layout/frame";
 import { TitleBlock, TitleBlockField } from "@/components/layout/title-block";
+import { SoundSwitch } from "@/components/sound/switch";
 
 /**
  * Footer laid out as the title block of a drawing, with real provenance.
@@ -69,6 +71,12 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </TitleBlockField>
+          {/* The header button's twin. Without JavaScript the whole cell goes (the switch's own
+              noscript rule hides `data-sound-control`), leaving the block's hatch. It gives one
+              column to the visitor counter once the store is connected. */}
+          <TitleBlockField label="Sound" data-sound-control="" className={counterStore() ? undefined : "col-span-2"}>
+            <SoundSwitch />
           </TitleBlockField>
           <VisitorCounter />
           <Signature />

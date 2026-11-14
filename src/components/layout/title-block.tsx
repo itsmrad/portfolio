@@ -17,13 +17,10 @@ export function TitleBlockField({
   label,
   className,
   children,
-}: {
-  label: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
+  ...props
+}: React.ComponentProps<"div"> & { label: string }) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1 border-r border-b border-line bg-background px-4 py-3", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-1 border-r border-b border-line bg-background px-4 py-3", className)} {...props}>
       <dt className="text-[0.625rem]/4 font-medium tracking-wider text-muted-foreground uppercase">{label}</dt>
       <dd className="flex-1 text-sm">{children}</dd>
     </div>

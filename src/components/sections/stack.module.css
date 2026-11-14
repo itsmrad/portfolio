@@ -47,8 +47,10 @@
     box-shadow 0.2s;
 }
 
-/* The mark: one cell of the strip, cut out of a flat colour. */
-.rows i {
+/* The mark: one cell of the strip, cut out of a flat colour. A pseudo-element, not a node:
+   the page holds its element count tight (52 pills). Only pills with a mark set --slot. */
+.rows li[style]::before {
+  content: "";
   width: 0.875rem;
   height: 0.875rem;
   background: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
@@ -63,7 +65,7 @@
     translate: 0 -2px;
     box-shadow: inset 0 0 0 1px var(--brand, var(--foreground));
   }
-  .rows li:hover i {
+  .rows li[style]:hover::before {
     background: var(--brand, var(--foreground));
     scale: 1.08;
   }

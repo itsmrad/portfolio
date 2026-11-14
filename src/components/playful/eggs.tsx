@@ -19,6 +19,10 @@ import type { MenuProps } from "./menu";
  * command branch's single-key shortcuts are untouched; the two letters that
  * end the Konami code and Shift+R are swallowed so they cannot also fire a
  * shortcut. Nothing here takes focus except the menu, which gives it back.
+ *
+ * While the command palette is opening or open, no key counts towards an egg:
+ * this listener runs before the palette's (capture phase), and the keys typed
+ * while its chunk loads are the visitor's search, not a code.
  */
 const KONAMI = "ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a".split(" ");
 const WORD = "kitty";
@@ -56,6 +60,17 @@ export function Eggs({ data }: { data: Data }) {
     const title = document.title;
     let progress = 0;
     let typed = "";
+    // Until when an open request for the palette may still be loading (the palette gives up after 3 s).
+    let opening = 0;
+    const palette = () => {
+      if (document.querySelector("dialog[open]")) return !(opening = 0);
+      return Date.now() < opening;
+    };
+    const paletteRequested = () => {
+      opening = Date.now() + 3000;
+      progress = 0;
+      typed = "";
+    };
 
     const exploded = () => root.getAttribute("data-exploded") === "on";
     // An egg whose chunk fails to load (offline, a deploy mid-visit) does nothing at all:
@@ -85,10 +100,15 @@ export function Eggs({ data }: { data: Data }) {
     };
 
     const onKey = (event: KeyboardEvent) => {
+      const k = event.key.toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && k === "k") return paletteRequested();
+      // Checked before the text-field test: it also notices the palette has opened, ending the wait.
+      if (palette()) return;
       if (event.ctrlKey || event.metaKey || event.altKey || typing(event.target)) return;
+      if (k === "/" || k === "?") return paletteRequested();
       if (event.key === "Escape") {
         // An open dialog or menu owns Escape.
-        if (document.querySelector('[role="dialog"], [role="menu"]')) return;
+        if (document.querySelector('dialog[open], [role="dialog"], [role="menu"]')) return;
         explode(false);
         cat(false);
         return;
@@ -113,6 +133,7 @@ export function Eggs({ data }: { data: Data }) {
       if (typed === WORD) summon("cat");
     };
     const onSummon = (event: Event) => summon((event as CustomEvent).detail);
+    const onClick = (event: MouseEvent) => (event.target as Element).closest?.("[data-command-open]") && paletteRequested();
     const onVisibility = () => (document.title = document.hidden ? data.away : title);
     const onMenu = (event: MouseEvent) => {
       const mark = (event.target as Element).closest<HTMLElement>(MARK);
@@ -126,11 +147,13 @@ export function Eggs({ data }: { data: Data }) {
 
     addEventListener("keydown", onKey, true);
     addEventListener("playful:summon", onSummon);
+    addEventListener("click", onClick, true);
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("contextmenu", onMenu);
     return () => {
       removeEventListener("keydown", onKey, true);
       removeEventListener("playful:summon", onSummon);
+      removeEventListener("click", onClick, true);
       document.removeEventListener("visibilitychange", onVisibility);
       document.removeEventListener("contextmenu", onMenu);
       root.removeAttribute("data-exploded");

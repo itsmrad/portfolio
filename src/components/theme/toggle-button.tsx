@@ -1,6 +1,6 @@
 "use client";
 
-import { haptic, play } from "@/lib/sound";
+import { play } from "@/lib/sound";
 import { toggleTheme } from "@/lib/theme";
 
 import styles from "./theme.module.css";
@@ -19,8 +19,8 @@ export function ToggleButton(props: React.ComponentProps<"button">) {
         const root = document.documentElement;
         // A second press while the circle is still growing would snapshot a half-drawn page.
         if (root.classList.contains(styles.switching!)) return;
+        // play() vibrates the voice's own pair on phones; no second haptic.
         play("toggle");
-        haptic();
         if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) {
           toggleTheme();
           return;
