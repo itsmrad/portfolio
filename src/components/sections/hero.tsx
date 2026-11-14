@@ -85,7 +85,7 @@ export function Hero() {
   return (
     <Section id="top" rule={false} aria-labelledby="top-title">
       <div className={styles.cover}>
-        <div className={styles.mark}>
+        <div className={styles.mark} data-glyphs>
           <Monogram label={`${site.initials} monogram. Press it.`} />
         </div>
 

@@ -49,6 +49,28 @@ export function click(event: MouseEvent) {
   else if (target.closest("main summary")) play("detent");
 }
 
+/* --- Banner glyphs ------------------------------------------------------------ */
+
+// Their hit-testing is its own small chunk (glyph-hit.ts), fetched on the first press in the hero (not on a hover,
+// so the first input's budget is untouched); from then on it shows the pointer cursor over a tile.
+let glyphHit: Promise<void> | undefined;
+let glyphsReady = false;
+const pressesWhileLoading: PointerEvent[] = [];
+function towardGlyphs(event: PointerEvent) {
+  // The chunk takes the event that fetched it, and any press made while it loads, then follows the pointer itself.
+  if (glyphsReady) return;
+  if (glyphHit) return void (event.type === "pointerdown" && pressesWhileLoading.push(event));
+  if (!(event.target as Element).closest?.("#top")) return;
+  glyphHit = import("./glyph-hit").then(
+    (module) => {
+      glyphsReady = true;
+      [event, ...pressesWhileLoading.splice(0)].forEach(module.start);
+    },
+    () => (glyphHit = undefined),
+  );
+}
+addEventListener("pointerdown", towardGlyphs, { passive: true });
+
 /* --- Contribution calendar: read out a day ------------------------------- */
 
 const PITCH = 12; // one cell and its gap, in the drawing's units
@@ -106,7 +128,9 @@ addEventListener("pointerdown", pointed, { passive: true });
 
 /** The input that fetched this chunk, replayed by the loader: a hover or tap on the calendar still reads its day. */
 export function wake(event: Event) {
-  if (event instanceof PointerEvent) pointed(event);
+  if (!(event instanceof PointerEvent)) return;
+  pointed(event);
+  if (event.type === "pointerdown") towardGlyphs(event);
 }
 
 const KEYS: Record<string, (from: number, last: number) => number> = {
