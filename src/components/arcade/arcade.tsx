@@ -7,7 +7,9 @@
  * input, so an untouched page and every phone load none of it.
  *
  * It sits outside the aria-hidden gutters: the cards are real controls in a
- * landmark named "Arcade", after <main> in the tab order.
+ * region named "Arcade", at the end of <main> in the tab order. Mounted by the
+ * home page only (app/page.tsx), never the 404. Positioned against the
+ * layout's relative wrapper around <main>, like the gutters.
  *
  * Other code can open it without a key:
  *   window.dispatchEvent(new CustomEvent("arcade:play", { detail: "snake" }))
@@ -26,14 +28,16 @@ import { games as c } from "./games/registry-c";
 import { host } from "./host";
 
 const GAMES = [...a, ...b, ...c];
-/** The index card is placed like a cartridge. */
-const INDEX = { id: "arcade", section: "about", side: "right" as const };
+/** The index card is placed like a cartridge, beside About. */
+const INDEX: Pick<Entry, "id" | "section" | "near" | "side"> = { id: "arcade", section: "about", near: "final-year" };
 /** Logical field: 4:3, about one CSS px a unit at 1280. */
 const W = 240;
 const H = 180;
 /** Room each card keeps below its top on its side: a playing card's full height and a gap. */
 const SLOT = 400;
 const BELOW_TITLE = 104;
+/** Left cards must clear the scroll ruler and its labels at the margin's outer edge. */
+const RULER = 176;
 
 type Best = { v: number; t?: string };
 const readBest = (id: string): Best | null => {
@@ -51,22 +55,37 @@ const writeBest = (id: string, best: Best) => {
   }
 };
 
+/** The first element in `section` holding `text`, as deep as it goes; the section itself without text. */
+function anchor(section: string, text?: string) {
+  const root = document.getElementById(section);
+  if (!root || !text) return root;
+  let hit: Element | null = null;
+  for (const element of root.querySelectorAll("*")) if (element.textContent?.includes(text) && (!hit || hit.contains(element))) hit = element;
+  return hit;
+}
+
 type Place = { top: number; side: "left" | "right" };
 
-/** Card tops beside their sections, kept current as the page reflows; cards on one side never overlap. */
+/** Card tops beside their anchors, kept current as the page reflows; cards on one side never overlap. */
 function usePlaces(root: React.RefObject<HTMLElement | null>) {
   const [places, setPlaces] = useState<Record<string, Place>>({});
   useEffect(() => {
     const measure = () => {
-      const origin = root.current!.getBoundingClientRect().top;
+      const box = root.current!.getBoundingClientRect();
+      // The column is --frame-width, 640px by design.
+      const margin = (box.width - 640) / 2;
+      const card = Math.min(320, margin - 56);
+      const roomLeft = margin - 24 - card >= RULER;
       const next: Record<string, Place> = {};
       const floor = { left: 0, right: 0 };
-      let flip: Place["side"] = "right";
-      for (const item of [INDEX, ...GAMES]) {
-        const section = document.getElementById(item.section);
-        if (!section) continue;
-        const side = item.side ?? (flip = flip === "left" ? "right" : "left");
-        const top = Math.max(Math.round(section.getBoundingClientRect().top - origin) + BELOW_TITLE, floor[side]);
+      // Flow down the page in page order, whatever the registry order.
+      const wanted = [INDEX, ...GAMES].flatMap((item) => {
+        const element = anchor(item.section, item.near);
+        return element ? [{ item, top: Math.round(element.getBoundingClientRect().top - box.top) + (item.near ? 0 : BELOW_TITLE) }] : [];
+      });
+      for (const { item, top: want } of wanted.sort((x, y) => x.top - y.top)) {
+        const side = item.side === "left" && roomLeft ? "left" : "right";
+        const top = Math.max(want, floor[side]);
         next[item.id] = { top, side };
         floor[side] = top + SLOT;
       }
@@ -74,6 +93,7 @@ function usePlaces(root: React.RefObject<HTMLElement | null>) {
     };
     const observer = new ResizeObserver(measure);
     observer.observe(document.getElementById("main") ?? document.body);
+    observer.observe(root.current!);
     return () => observer.disconnect();
   }, [root]);
   return places;
@@ -294,9 +314,14 @@ export function Arcade() {
     return () => removeEventListener("arcade:play", onPlay);
   }, [start]);
 
+  // Margin decoration under a card steps aside: tell it where the cards are now.
+  useEffect(() => {
+    dispatchEvent(new Event("arcade:layout"));
+  }, [places, active]);
+
   const index = places[INDEX.id];
   return (
-    <aside ref={root} aria-label={copy.label} className={styles.arcade}>
+    <section ref={root} aria-label={copy.label} className={styles.arcade}>
       {index && (
         <Card entry={{ id: INDEX.id, name: copy.index, howTo: copy.indexHowTo }} place={index} active={false}>
           <ul className={styles.list}>
@@ -322,6 +347,6 @@ export function Arcade() {
         );
       })}
       <p ref={status} role="status" className="sr-only" />
-    </aside>
+    </section>
   );
 }

@@ -66,6 +66,12 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       canvas.style.color = `var(${token}, var(--foreground))`;
       colors[name as keyof Colors] = getComputedStyle(canvas).color;
     }
+    // shortcut: before rebuild-accent lands, --accent is still the grey hover surface; a colourless accent
+    // means "not here yet", so take the starting value. Delete once the accent branch is merged.
+    if (Number(/oklch\([\d.]+ ([\d.]+)/.exec(colors.accent)?.[1] ?? 1) < 0.05) {
+      canvas.style.color = "var(--arcade-accent-fallback, var(--foreground))";
+      colors.accent = getComputedStyle(canvas).color;
+    }
     canvas.style.color = "";
     for (const listener of themes) listener();
     repaint();

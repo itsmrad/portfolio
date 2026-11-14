@@ -35,15 +35,15 @@ export type Colors = {
   paper: string;
   /** The site's one state colour: the player, the live thing. */
   signal: string;
-  /** Arcade palette: six hues that hold contrast on `paper` in both themes. */
-  red: string;
+  /** Arcade palette: six hues that hold contrast on `paper` in both themes. The first is the site accent (R19): failure, misses, the one thing that must be seen. */
+  accent: string;
   amber: string;
   green: string;
   teal: string;
   blue: string;
   violet: string;
 };
-export const HUES = ["red", "amber", "green", "teal", "blue", "violet"] as const;
+export const HUES = ["accent", "amber", "green", "teal", "blue", "violet"] as const;
 
 /** Arrow keys map to directions, Space and Enter to "action"; any other key is null (read `event.key`, e.g. for typing). */
 export type Key = "up" | "down" | "left" | "right" | "action" | null;
@@ -97,7 +97,9 @@ export type Entry = {
   howTo: string;
   /** Section id the cartridge sits beside (see app/page.tsx). */
   section: string;
-  /** Which gutter; the shell alternates when omitted. */
+  /** Text inside that section to line the card up with (the first element holding it); else just below the section title. */
+  near?: string;
+  /** Prefer the left gutter. Honoured only where it fits beside the scroll ruler (about 1440 px and wider); otherwise right. */
   side?: "left" | "right";
   /** Best score is the lowest (a reaction time) instead of the highest. */
   lower?: boolean;

@@ -10,18 +10,24 @@
   z-index: 1;
   display: none;
   pointer-events: none;
+}
 
-  /*
-   * The arcade palette (R18): six hues, each at least 3:1 against the page
-   * background in its theme, so a coloured mark reads as a shape on its own.
-   * Games get them as ctx.colors.red ... violet; nothing else uses them.
-   */
-  --arcade-red: light-dark(oklch(0.58 0.21 27), oklch(0.7 0.19 25));
-  --arcade-amber: light-dark(oklch(0.6 0.15 60), oklch(0.82 0.16 78));
+/*
+ * The arcade palette (R18, R19), kept apart from the page's tokens: six hues,
+ * each at least 3:1 against the page background in its theme, so a coloured
+ * mark reads as a shape on its own. The first is the site's one accent (the
+ * drafting red-orange of rebuild-accent), with its starting values as the
+ * fallback; the others are spaced round the wheel from it. Games read them
+ * as ctx.colors.accent ... violet; nothing outside a game's frame uses them.
+ */
+.arcade {
+  --arcade-accent-fallback: light-dark(oklch(0.58 0.21 33), oklch(0.7 0.19 40));
+  --arcade-accent: var(--accent, var(--arcade-accent-fallback));
+  --arcade-amber: light-dark(oklch(0.6 0.14 82), oklch(0.84 0.15 88));
   --arcade-green: light-dark(oklch(0.55 0.15 150), oklch(0.78 0.18 150));
   --arcade-teal: light-dark(oklch(0.55 0.1 200), oklch(0.78 0.12 200));
   --arcade-blue: light-dark(oklch(0.52 0.2 262), oklch(0.7 0.16 258));
-  --arcade-violet: light-dark(oklch(0.52 0.22 300), oklch(0.73 0.17 302));
+  --arcade-violet: light-dark(oklch(0.52 0.22 305), oklch(0.73 0.17 305));
 }
 @media (min-width: 80rem) {
   .arcade {
@@ -33,6 +39,7 @@
 .card {
   position: absolute;
   width: min(20rem, calc(50% - var(--frame-width) / 2 - 3.5rem));
+  animation: arrive 280ms cubic-bezier(0.22, 1, 0.36, 1);
   border: 1px solid var(--line);
   background: var(--background);
   pointer-events: auto;
@@ -41,6 +48,17 @@
 .card:hover,
 .card:focus-within {
   border-color: var(--cross);
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
 }
 /* Left cards sit clear of the column; right ones also clear the margin's height chain. */
 .card[data-side="left"] {
@@ -90,9 +108,10 @@
     color 150ms,
     scale 150ms;
 }
+/* The neutral hover surface (--muted), not --accent, which becomes the red-orange (R19). */
 .button:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
+  background: var(--muted);
+  color: var(--foreground);
 }
 .button:active {
   scale: 0.97;
