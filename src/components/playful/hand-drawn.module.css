@@ -102,12 +102,13 @@
     text-decoration-style: wavy;
     text-decoration-thickness: 1.3px;
   }
-  /* The north-east arrow of an external link nudges the way it points. */
-  :global(body):has(> .hooks) :global(.link-underline) > span[aria-hidden] {
+  /* The north-east arrow of an external link nudges the way it points. Links only: a button
+     styled as a link (the hero's copy-email line) keeps its own hidden "copied" label hidden. */
+  :global(body):has(> .hooks) a:global(.link-underline) > span[aria-hidden] {
     display: inline-block;
     transition: translate 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
-  :global(body):has(> .hooks) :global(.link-underline):hover > span[aria-hidden] {
+  :global(body):has(> .hooks) a:global(.link-underline):hover > span[aria-hidden] {
     translate: 1.5px -1.5px;
   }
 }
