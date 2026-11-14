@@ -32,7 +32,7 @@ test.describe("answer content", () => {
       expect(item.id).toMatch(/^faq-[a-z]+$/);
       expect(item.question).toMatch(/\?$/);
       // Quotable alone: names him, one or two sentences.
-      expect(item.answer, item.question).toContain("Anupam Das");
+      expect(item.answer, item.question).toContain("Anupam");
       expect(item.answer.split(/(?<=[.!?])\s+(?=[A-Z])/).length, item.question).toBeLessThanOrEqual(2);
     }
     const topics = faq.map((item) => item.question).join(" ");
@@ -80,6 +80,46 @@ test.describe("answer content", () => {
     // The counters are still drawn, from the attribute.
     await expect(page.locator("#experience-title")).toHaveAttribute("data-count", "03");
   });
+});
+
+test("R20: the full name only where it identifies him; elsewhere he is Anupam", async ({ page, request }) => {
+  const FULL = /Anupam Das(?!-Resume)/g;
+  await page.goto("/");
+  // Visible text and labels: About's first sentence, the first question and the start of its answer,
+  // the h1's label, the signature and the copyright line.
+  const places = await page.evaluate(() => {
+    const out: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const text = walker.currentNode as Text;
+      if (!text.parentElement!.closest("script, style") && text.textContent!.includes("Anupam Das")) out.push(text.textContent!.trim());
+    }
+    for (const element of document.body.querySelectorAll("*"))
+      for (const attribute of element.attributes) if (attribute.value.includes("Anupam Das")) out.push(`[${attribute.name}] ${attribute.value}`);
+    return out;
+  });
+  expect(places.map((place) => place.replace(/^(.{0,40}).*$/s, "$1"))).toEqual([
+    "I'm Anupam Das, a software and AI engine",
+    "Who is Anupam Das?",
+    "Anupam Das is a software engineer and AI",
+    "Anupam Das",
+    "Anupam Das",
+    "[aria-label] Anupam Das",
+  ]);
+  await expect(page.locator("#faq-who + p")).toHaveText(/^Anupam Das is /);
+  await expect(page.locator("footer li").filter({ hasText: "©" })).toContainText("Anupam Das");
+
+  // The text files: the title and one defining sentence (llms.txt); the Markdown copies mirror the page.
+  expect((await (await request.get("/llms.txt")).text()).match(FULL)).toHaveLength(2);
+  for (const path of ["/index.md", "/llms-full.txt"]) {
+    const text = await (await request.get(path)).text();
+    expect(text.match(FULL), path).toHaveLength(4);
+    expect(text, path).toMatch(/^# Anupam Das\n/);
+  }
+  // Names, titles and meta keep the full name.
+  const html = await (await request.get("/")).text();
+  expect(html).toContain("<title>Anupam Das — ");
+  expect(html).toMatch(/<meta property="og:title" content="Anupam Das/);
 });
 
 test.describe("entity", () => {
