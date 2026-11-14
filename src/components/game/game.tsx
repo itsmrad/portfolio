@@ -2,8 +2,9 @@
 
 /**
  * The playable 404's loader. The server page reserves the figure (4:3, shown
- * from 64rem only), so nothing shifts. The game module (breakout.ts, its own
- * chunk) is imported when the canvas first intersects the viewport. A hidden
+ * from 64rem only), so nothing shifts. The game module (play404.ts: the shared
+ * engine and host, its own chunk) is imported when the canvas first intersects
+ * the viewport. A hidden
  * figure (below 64rem) never intersects, so phones never download it, and a
  * window widened later starts it then. If the chunk fails, the figure is
  * removed and the page reads as the plain 404.
@@ -24,7 +25,7 @@ export function Game({ copy }: { copy: GameCopy }) {
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry?.isIntersecting) return;
       observer.disconnect();
-      import("@/components/game/breakout").then(
+      import("@/components/game/play404").then(
         (game) => {
           if (cancelled) return;
           stop = game.start(element, copy, (message) => {
