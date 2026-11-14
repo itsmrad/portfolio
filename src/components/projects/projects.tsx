@@ -9,10 +9,12 @@
  * Every element here ships twice (HTML and the RSC payload), so repeated rows
  * use the short CSS-module classes in article.module.css, not utility lists.
  */
+import { projectAccents } from "@/content/accent";
 import { projects, type Project } from "@/content/site";
 import { formatMonth } from "@/lib/markdown";
 import { ExternalLink } from "@/components/layout/external-link";
 import { Section, SectionHeader } from "@/components/layout/section";
+import { Highlight } from "@/components/ui/highlight";
 
 import s from "./article.module.css";
 import { Benchmarks } from "./benchmarks";
@@ -47,6 +49,7 @@ function ProjectArticle({ project }: { project: Project }) {
   if (project.decisions) parts.push(["Engineering decisions", <Decisions key="d" decisions={project.decisions} />]);
   if (project.layers) parts.push(["Stack by layer", <Layers key="l" layers={project.layers} />]);
 
+  const accent = projectAccents[project.slug];
   return (
     <article id={project.slug} aria-labelledby={`${project.slug}-title`} className={`${s.article} screen-line-bottom`}>
       <ProjectWindow project={project} />
@@ -69,13 +72,15 @@ function ProjectArticle({ project }: { project: Project }) {
           </span>
         </a>
       </h3>
-      <p className={s.tagline}>{project.tagline}</p>
+      <p className={s.tagline}>
+        <Highlight text={project.tagline} marks={accent ? [accent.phrase] : []} />
+      </p>
       <p className={s.description}>{project.description}</p>
       {project.authorship && <p className={s.byline}>{project.authorship}</p>}
 
       <dl className={s.metrics}>
         {project.metrics.map((metric) => (
-          <div key={metric.label}>
+          <div key={metric.label} data-accent={accent?.metrics.includes(metric.label) || undefined}>
             <dt>{metric.label}</dt>
             <dd>{metric.value}</dd>
             {metric.note && <dd>{metric.note}</dd>}

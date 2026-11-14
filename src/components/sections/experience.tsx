@@ -4,10 +4,12 @@
  * it opens without JavaScript; the current role starts open. Community work
  * follows as a smaller group of plain rows.
  */
+import { experienceAccents } from "@/content/accent";
 import { experience, type Experience as Job } from "@/content/site";
 import { formatMonth } from "@/lib/markdown";
 import { ExternalLink } from "@/components/layout/external-link";
 import { Section, SectionHeader } from "@/components/layout/section";
+import { Highlight } from "@/components/ui/highlight";
 import { Img } from "@/components/ui/img";
 
 import { ChevronIcon } from "./icons";
@@ -76,7 +78,9 @@ function Role({ job, current }: { job: Job; current: boolean }) {
         {job.highlights.length > 0 && (
           <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-pretty marker:text-muted-foreground">
             {job.highlights.map((highlight) => (
-              <li key={highlight}>{highlight}</li>
+              <li key={highlight}>
+                <Highlight text={highlight} marks={experienceAccents} />
+              </li>
             ))}
           </ul>
         )}
@@ -125,7 +129,9 @@ export function Experience() {
                   <span className="sr-only">, </span>
                   {job.role}
                 </span>
-                <p className="mt-0.5 text-muted-foreground">{job.summary}</p>
+                <p className="mt-0.5 text-muted-foreground">
+                  <Highlight text={job.summary} marks={experienceAccents} />
+                </p>
               </li>
             ))}
           </ul>

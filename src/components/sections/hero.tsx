@@ -143,7 +143,7 @@ export function Hero() {
         <p className="max-w-80 text-lg text-balance sm:max-w-none">
           <Claim />
         </p>
-        <p className="mt-2 flex max-w-72 gap-2 text-sm text-balance text-muted-foreground sm:max-w-none">
+        <p className="mt-2 flex max-w-72 gap-2 text-sm font-medium text-balance sm:max-w-none">
           <span aria-hidden className={`${styles.live} mt-1.5`} />
           {site.availability}.
         </p>
