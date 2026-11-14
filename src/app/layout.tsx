@@ -5,7 +5,6 @@ import { baseMetadata, jsonLd, siteGraph } from "@/lib/seo";
 import { THEME_COLOR, themeScript } from "@/lib/theme";
 import { CommandRoot } from "@/components/command/root";
 import { Footer } from "@/components/layout/footer";
-import { ArcadeSlot } from "@/components/arcade/slot";
 import { Frame, Gutter } from "@/components/layout/frame";
 import { Header } from "@/components/layout/header";
 import { GutterLeft, GutterRight } from "@/components/playful/gutters";
@@ -48,7 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main">
             <Frame>{children}</Frame>
           </main>
-          <ArcadeSlot />
           <Gutter side="right">
             <GutterRight />
           </Gutter>
