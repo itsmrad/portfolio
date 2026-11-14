@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 
 import { counterStore, type CounterStore } from "./counter-store";
+import { standIn } from "./stand-in";
 
 /**
  * Server side of the visitor counter, the live count and the visitor map
@@ -151,6 +152,8 @@ const mayWrite = (headers: Headers, now: number) =>
 
 /** GET /api/visit: the shared numbers, cached by the CDN. Without a store, an empty answer cached for a day. */
 export async function stats() {
+  const preview = standIn();
+  if (preview) return json(preview.stats);
   const store = counterStore();
   if (!store) return json({}, "public, s-maxage=86400");
   const now = Date.now();
@@ -227,10 +230,12 @@ export async function live(request: Request) {
   const headers = request.headers;
   if (Number(headers.get("content-length") ?? 0) > 0) return json({}, "no-store", 413);
   const id = new URL(request.url).searchParams.get("id") ?? "";
-  if (!/^[A-Za-z0-9_-]{22}$/.test(id) || !fromPage(headers)) return json({});
+  const preview = standIn();
+  // A preview served over plain HTTP gets no Sec-Fetch headers from the browser; it is local only.
+  if (!/^[A-Za-z0-9_-]{22}$/.test(id) || (!preview && !fromPage(headers))) return json({});
   const now = Date.now();
-  const cell = cellFrom(headers);
-  const country = headers.get("x-vercel-ip-country");
+  const cell = preview?.you ?? cellFrom(headers);
+  const country = preview?.country ?? headers.get("x-vercel-ip-country");
   const you = cell ? { you: cell, distance: distanceFrom(cell, /^[A-Za-z]{2}$/.test(country ?? "") ? country : null) } : {};
   if (mayWrite(headers, now)) {
     try {

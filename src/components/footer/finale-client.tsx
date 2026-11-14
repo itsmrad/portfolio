@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { whenNear } from "./dom";
 
-/** Loads and starts the globe when the footer comes within 400px of the viewport. */
+/** Loads and starts the globe when it comes within 400px of the viewport, from below or (after a jump to the end) above. */
 export function FinaleStage(props: React.ComponentProps<"div">) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -23,7 +23,7 @@ export function FinaleStage(props: React.ComponentProps<"div">) {
           // A chunk that cannot load leaves the hatched silhouette in place.
           () => {},
         ),
-      "0px 0px 400px 0px",
+      "400px 0px",
     );
     return () => {
       gone = true;

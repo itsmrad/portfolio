@@ -29,4 +29,13 @@ export const footer = {
   distance: "you're about {n} {unit} from Anupam",
   distanceUnits: { km: "km", mi: "miles" },
   distanceSame: "you're in Anupam's city",
+  /** The globe: its text alternative (filled in as the map arrives), the drag hint and the reset. */
+  globe: {
+    label: "Globe on the Earth's 23.4° axis, with Anupam's pin on New Delhi",
+    visitors: "{total} visitors so far from {places} places, {live} on the site now",
+    keys: "Drag or use the arrow keys to turn it; Home turns it back",
+    role: "interactive globe",
+    hint: "DRAG TO TURN",
+    reset: "reset view",
+  },
 } as const;

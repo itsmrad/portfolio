@@ -1,52 +1,47 @@
-/* The stage: 192px tall, 208px from sm, at least 720px wide so the globe
-   keeps its curve on phones; the bottom fades into the page. */
-.stage {
+/* The figure: the globe's stage and its caption, in the page's column. The
+   container lets the stage size itself from the column's width. */
+.figure {
   position: relative;
-  height: 12rem;
-  overflow: hidden;
-  user-select: none;
-  mask-image: linear-gradient(to bottom, #000 75%, transparent);
-  @media (min-width: 40rem) {
-    height: 13rem;
-  }
-}
-
-/* The column's width (the page's 640px), never less than 590px so phones
-   still see a curve: the cap's top, at stage height - 0.3209 x width, then
-   stays inside the stage at every size. */
-.scene {
-  position: relative;
-  left: 50%;
-  width: calc(100% + 24px);
-  min-width: 590px;
-  max-width: var(--frame-width);
-  height: 100%;
-  translate: -50% 0;
   container-type: inline-size;
 }
 
-.spin {
-  height: 100%;
-  transform-origin: bottom;
+/* The sphere's radius is min(36% of the width, 180px) (globe.ts); the stage
+   is its diameter plus 48px above for the axis and its angle, and 48px below
+   for the axis and the hint. Fixed by CSS, so nothing moves when it draws.
+   Vertical swipes stay the page's; sideways drags turn the globe. */
+.stage {
+  position: relative;
+  height: calc(min(72cqw, 360px) + 6rem);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.stage[data-dragging] {
+  cursor: grabbing;
+}
+
+.stage:focus-visible {
+  outline-offset: -2px;
 }
 
 .canvas {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  image-rendering: pixelated;
 }
 
 /* The globe's silhouette in hatch until the first frame is drawn (and for
-   good without JavaScript): the same circle the renderer uses, radius 0.55
-   of the width, its centre below the stage. */
+   good without JavaScript): the same circle the renderer draws. */
 .silhouette {
   position: absolute;
   left: 50%;
-  top: calc(100% - 32.09cqw);
-  width: 110cqw;
+  top: 50%;
+  width: min(72cqw, 360px);
   aspect-ratio: 1;
-  translate: -50% 0;
+  translate: -50% -50%;
   border: 1px solid var(--line);
   border-radius: 50%;
   transition: opacity 400ms;
@@ -54,32 +49,6 @@
 
 [data-drawn] .silhouette {
   opacity: 0;
-}
-
-.satellite {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 3rem;
-  height: 2.25rem;
-  /* Parked out of view until the orbit starts. */
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Set by the globe: the satellite fades while it passes over a pin or a label. */
-.satellite > svg {
-  opacity: var(--duck, 1);
-  transition: opacity 300ms;
-}
-
-/* The annotation layer: over the globe and the satellite, moved with the
-   globe's parallax by the script. */
-.labels {
-  position: absolute;
-  inset: 0;
-  transform-origin: bottom;
-  pointer-events: none;
 }
 
 /* A label is its tag, placed by the globe; the leader runs from the tag's
@@ -92,9 +61,10 @@
   padding: 1px 4px;
   background: color-mix(in oklab, var(--background) 88%, transparent);
   border: 1px solid color-mix(in oklab, currentColor 35%, transparent);
+  pointer-events: none;
   visibility: hidden;
   opacity: 0;
-  transition: opacity 400ms;
+  transition: opacity 300ms;
 }
 
 .tag::before {
@@ -115,14 +85,35 @@
   opacity: 1;
 }
 
-/* Under the stage, in the blank band the footer already leaves after the
-   globe, so it adds no height and never meets the drawing. Aligned to the
-   page's column. */
-.caption {
+/* Back to the home view; shown once the globe has been turned. 24px tall. */
+.reset {
   position: absolute;
-  top: calc(100% + 0.25rem);
-  left: max(1rem, calc(50% - var(--frame-width) / 2 + 1rem));
-  right: max(1rem, calc(50% - var(--frame-width) / 2 + 1rem));
+  top: 0.5rem;
+  left: 1rem;
+  min-height: 1.5rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--line);
+  background: var(--background);
+  color: var(--muted-foreground);
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.reset:hover {
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.reset[hidden] {
+  display: none;
+}
+
+/* Under the stage; three lines reserved so it never moves anything when it
+   appears. */
+.caption {
+  min-height: 3.5rem;
+  padding: 0 1rem 0.75rem;
   visibility: hidden;
 }
 
