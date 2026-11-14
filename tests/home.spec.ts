@@ -341,7 +341,10 @@ test.describe("stack, education, contact", () => {
       "07Libraries & Platforms",
     ]);
     await expect(page.locator("#stack li").first()).toHaveText("Rust");
-    await expect(page.locator("#stack li", { hasText: "TypeScript" }).locator("i")).toHaveCount(1);
+    // The mark is a pseudo-element of pills that carry a slot.
+    const mark = (text: string) =>
+      page.locator("#stack li", { hasText: text }).evaluate((li) => getComputedStyle(li, "::before").maskImage);
+    expect(await mark("TypeScript")).toContain("stack-marks");
     const education = page.locator("#education");
     await expect(education).toContainText("B.Tech in Information Technology");
     await expect(education.locator("time")).toHaveText(["Aug 2023", "Aug 2027"]);

@@ -69,13 +69,12 @@ export function SectionBody({ className, ...props }: React.ComponentProps<"div">
   return <div className={cn("p-4", className)} {...props} />;
 }
 
-/** The 32px hatch band between major sections. */
-export function Separator({ className, children }: { className?: string; children?: React.ReactNode }) {
+/** The 32px hatch band between major sections, under a dashed rule. Two bare elements, no wrapper: the page's element count is tight. */
+export function Separator({ className }: { className?: string }) {
   return (
-    <div aria-hidden data-print="hide" className="relative">
-      <div className="rule" />
-      <div className={cn("hatch-band", className)} />
-      {children}
-    </div>
+    <>
+      <div aria-hidden data-print="hide" className="rule" />
+      <div aria-hidden data-print="hide" className={cn("hatch-band", className)} />
+    </>
   );
 }
