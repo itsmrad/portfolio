@@ -123,7 +123,8 @@ test.describe("the commit readings", () => {
         const reading = document.querySelector(`[data-ratio="${value}"]`)!;
         const box = reading.getBoundingClientRect();
         const cover = innerHeight + box.height;
-        scrollTo(0, box.top + scrollY - innerHeight + (0.1 + 0.3 * q) * cover);
+        // Instantly: the page scrolls smoothly, and a test must not read the reading halfway through a scroll.
+        scrollTo({ top: box.top + scrollY - innerHeight + (0.1 + 0.3 * q) * cover, behavior: "instant" });
       },
       { value, q },
     );
