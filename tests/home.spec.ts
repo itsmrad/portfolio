@@ -27,7 +27,7 @@ test.describe("hero", () => {
     await expect(page.locator("h1")).toHaveText("Anupam Das");
     expect(await page.locator("h1").evaluate((h1) => getComputedStyle(h1).fontFamily)).toContain("serif");
     const portrait = page.locator("#top img");
-    await expect(portrait).toHaveAttribute("alt", /Anupam Das/);
+    await expect(portrait).toHaveAttribute("alt", /^Anupam in profile/);
     expect((await portrait.locator("xpath=ancestor::div[3]").boundingBox())?.width).toBe(96);
     // The rotation names both products and never repeats the role, which the first fact row states.
     await expect(page.locator("#top h1 + ul li")).toHaveText(["Building Codenaya", "Building xflow in Rust", "Final-year B.Tech at BPIT"]);
