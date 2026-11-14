@@ -33,6 +33,15 @@ const TOKENS: Record<keyof Colors, string> = {
   ...(Object.fromEntries(HUES.map((hue) => [hue, `--arcade-${hue}`])) as Record<(typeof HUES)[number], string>),
 };
 
+/** Whether a CSS colour has (almost) no hue, in whatever colour space the browser reports it. */
+function grey(color: string) {
+  const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
+  probe.fillStyle = color;
+  probe.fillRect(0, 0, 1, 1);
+  const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+  return Math.max(r!, g!, b!) - Math.min(r!, g!, b!) < 24;
+}
+
 export function host(canvas: HTMLCanvasElement, options: Options) {
   const { width: W, height: H } = options;
   const g = canvas.getContext("2d")!;
@@ -68,7 +77,7 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
     }
     // shortcut: before rebuild-accent lands, --accent is still the grey hover surface; a colourless accent
     // means "not here yet", so take the starting value. Delete once the accent branch is merged.
-    if (Number(/oklch\([\d.]+ ([\d.]+)/.exec(colors.accent)?.[1] ?? 1) < 0.05) {
+    if (grey(colors.accent)) {
       canvas.style.color = "var(--arcade-accent-fallback, var(--foreground))";
       colors.accent = getComputedStyle(canvas).color;
     }
@@ -207,6 +216,8 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
   return {
     ctx,
     running: () => running,
+    /** Draw the field once now (dt 0), e.g. the final frame of a round. */
+    repaint,
     /** Drops the game's subscriptions; clears the field too unless the last frame should stay (a result over it). */
     reset(clear = true) {
       frames = [];

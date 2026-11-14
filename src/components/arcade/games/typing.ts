@@ -12,8 +12,9 @@ const SNIPPETS: [string, string][] = [
   ["xflow · core/text.rs", "fn folded(text: &str) -> String {\n  text.split_whitespace()\n    .map(str::to_lowercase)\n    .collect::<Vec<_>>()\n    .join(\" \")\n}"],
   ["codenaya · debounce-serial.ts", "const schedule = () => {\n  clearTimeout(timer);\n  timer = setTimeout(run, delayMs);\n};"],
   ["codenaya · command-palette.tsx", "const goTo = (href: string) => {\n  setOpen(false);\n  router.push(href);\n};"],
-  ["codenaya · custom-cursor.tsx", "const onMouseDown = (e: MouseEvent) => {\n  setIsDown(true);\n  addRipple(e.clientX, e.clientY);\n};"],
+  ["codenaya · connect-api-key-form.tsx", "const handleStart = () => {\n  notifiedRef.current = null;\n  void start(providerId, projectId);\n};"],
 ];
+// Every line fits the 240-unit field: at most 39 characters.
 const GHOST_WPM = 35;
 const LINE = 13;
 const CHAR = 5.8;

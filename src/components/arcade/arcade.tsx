@@ -108,7 +108,8 @@ function Player({ entry, best, onBest, onClose, announce }: { entry: Entry; best
   const overAt = useRef(0);
   const [phase, setPhase] = useState<Phase>("loading");
   const [score, setScore] = useState<Best | null>(null);
-  const [paused, setPaused] = useState(false);
+  // Paused means focus has left the canvas (off-screen and hidden-tab pauses need no notice).
+  const [focused, setFocused] = useState(true);
 
   useEffect(() => {
     const element = canvas.current!;
@@ -121,12 +122,12 @@ function Player({ entry, best, onBest, onClose, announce }: { entry: Entry; best
       exclusive: true,
       pauseOnBlur: true,
       announce,
-      onRunning: (running) => setPaused(!running),
       onScore: (v, t) => setScore((last = { v, t })),
       onOver: (result) => {
+        // Paint the round's final state (it may have ended inside a key handler), then keep it under the result.
+        h.repaint();
         stop?.();
         stop = undefined;
-        // Keep the last frame on screen under the result.
         h.reset(false);
         overAt.current = Date.now();
         setPhase("over");
@@ -164,7 +165,7 @@ function Player({ entry, best, onBest, onClose, announce }: { entry: Entry; best
   // A key still held from the last round does not restart it.
   const again = () => phase === "over" && Date.now() - overAt.current > 500 && restart.current();
   const overlay =
-    phase === "loading" ? copy.loading : phase === "failed" ? copy.failed : phase === "over" ? `${copy.over} ${copy.again}` : paused ? copy.paused : null;
+    phase === "loading" ? copy.loading : phase === "failed" ? copy.failed : phase === "over" ? `${copy.over} ${copy.again}` : focused ? null : copy.paused;
 
   return (
     <>
@@ -179,6 +180,8 @@ function Player({ entry, best, onBest, onClose, announce }: { entry: Entry; best
           className={styles.canvas}
           onKeyDown={(event) => !event.repeat && (event.key === " " || event.key === "Enter") && again()}
           onPointerDown={again}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
         {overlay && (
           <p className={styles.overlay} data-phase={phase} aria-hidden>
