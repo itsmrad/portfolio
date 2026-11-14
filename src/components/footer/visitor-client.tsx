@@ -2,15 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { cubicBezier, prefersReducedMotion, whenNear } from "./dom";
+import { whenNear } from "./dom";
 
 // Set once a browser has been counted; setting it by hand opts a browser out (the owner's own, say).
 const COUNTED = "visit-counted";
 const DIGITS = 6;
-const COUNT_FROM = 24; // the last numbers roll up, like an odometer catching up
-const DURATION = 1400;
-const LIVE_DURATION = 400;
-const EASE = cubicBezier(0.2, 0.7, 0.2, 1);
 
 /** The total from this browser's own counted visit, or null. Never throws. */
 async function countVisit() {
@@ -21,23 +17,6 @@ async function countVisit() {
   } catch {
     return null;
   }
-}
-
-/** Animates a shown number toward a target; returns a cancel. */
-function roll(from: number, to: number, duration: number, set: (value: number) => void) {
-  if (prefersReducedMotion() || from === to) {
-    set(to);
-    return () => {};
-  }
-  let frame = 0;
-  const start = performance.now();
-  const tick = (now: number) => {
-    const t = Math.min(1, (now - start) / duration);
-    set(Math.round(from + (to - from) * EASE(t)));
-    if (t < 1) frame = requestAnimationFrame(tick);
-  };
-  tick(start);
-  return () => cancelAnimationFrame(frame);
 }
 
 /**
@@ -83,33 +62,13 @@ export function Counter({ unit, alone, many }: { unit: string; alone: string; ma
       } else count();
     }
 
-    let cancelTotal = () => {};
-    let cancelLive = () => {};
-    let unsubscribe = () => {};
+    // The rest (reading, rolling the numbers, the live line) loads with the footer.
+    let detach = () => {};
     let gone = false;
-    let lastTotal: number | null = null;
-    let lastLive: number | null = null;
     const stop = whenNear(element, () => {
       void Promise.all([first ? post() : null, import("./visitors")]).then(
         ([mine, visitors]) => {
-          if (gone) return;
-          if (mine !== null) visitors.noteTotal(mine);
-          unsubscribe = visitors.subscribe(({ total: next, live: here }) => {
-            if (next === undefined) return;
-            element.closest("dd")?.parentElement?.style.setProperty("visibility", "visible");
-            if (next !== lastTotal) {
-              cancelTotal();
-              cancelTotal = roll(lastTotal ?? Math.max(0, next - COUNT_FROM), next, DURATION, setShown);
-              lastTotal = next;
-              setTotal(next);
-            }
-            const people = Math.max(1, here ?? 1);
-            if (people !== lastLive) {
-              cancelLive();
-              cancelLive = roll(lastLive ?? people, people, LIVE_DURATION, setLive);
-              lastLive = people;
-            }
-          });
+          if (!gone) detach = visitors.showCounter(element, mine, { total: setTotal, shown: setShown, live: setLive });
         },
         () => {},
       );
@@ -117,9 +76,7 @@ export function Counter({ unit, alone, many }: { unit: string; alone: string; ma
     return () => {
       gone = true;
       stop();
-      unsubscribe();
-      cancelTotal();
-      cancelLive();
+      detach();
       document.removeEventListener("prerenderingchange", count);
     };
   }, []);

@@ -1,3 +1,5 @@
+import { cubicBezier, prefersReducedMotion } from "./dom";
+
 /**
  * The visitor data shared by the counter cell and the globe, loaded lazily
  * when the footer comes near. One stats read and one heartbeat loop per page:
@@ -117,4 +119,62 @@ export function subscribe(listener: (state: Visitors) => void) {
 /** A total this page learned from its own counted visit (fresher than the cached stats). */
 export function noteTotal(total: number) {
   if (total > (state.total ?? 0)) emit({ total });
+}
+
+const COUNT_FROM = 24; // the total's last numbers roll up, like an odometer catching up
+const EASE = cubicBezier(0.2, 0.7, 0.2, 1);
+
+/** Animates a shown number toward a target; returns a cancel. */
+function roll(from: number, to: number, duration: number, set: (value: number) => void) {
+  if (prefersReducedMotion() || from === to) {
+    set(to);
+    return () => {};
+  }
+  let frame = 0;
+  const start = performance.now();
+  const tick = (now: number) => {
+    const t = Math.min(1, (now - start) / duration);
+    set(Math.round(from + (to - from) * EASE(t)));
+    if (t < 1) frame = requestAnimationFrame(tick);
+  };
+  tick(start);
+  return () => cancelAnimationFrame(frame);
+}
+
+/**
+ * Drives the counter cell: reveals it once a real total arrives, rolls the
+ * total and the live number to each new value. Live is never below 1: whoever
+ * is looking is here. Returns a detach.
+ */
+export function showCounter(
+  element: HTMLElement,
+  mine: number | null,
+  set: { total: (total: number) => void; shown: (shown: number) => void; live: (live: number) => void },
+) {
+  if (mine !== null) noteTotal(mine);
+  let lastTotal: number | null = null;
+  let lastLive: number | null = null;
+  let cancelTotal = () => {};
+  let cancelLive = () => {};
+  const unsubscribe = subscribe(({ total, live }) => {
+    if (total === undefined) return;
+    element.closest("dd")?.parentElement?.style.setProperty("visibility", "visible");
+    if (total !== lastTotal) {
+      cancelTotal();
+      cancelTotal = roll(lastTotal ?? Math.max(0, total - COUNT_FROM), total, 1400, set.shown);
+      lastTotal = total;
+      set.total(total);
+    }
+    const people = Math.max(1, live ?? 1);
+    if (people !== lastLive) {
+      cancelLive();
+      cancelLive = roll(lastLive ?? people, people, 400, set.live);
+      lastLive = people;
+    }
+  });
+  return () => {
+    unsubscribe();
+    cancelTotal();
+    cancelLive();
+  };
 }
