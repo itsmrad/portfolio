@@ -388,6 +388,30 @@ test.describe("stack, education, contact", () => {
       expect(errors).toEqual([]);
     });
   });
+
+  test("a refused copy selects the address and says so", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("denied")) } });
+    });
+    await page.goto("/");
+    for (const where of ["#top", "#contact"]) {
+      await page.locator(`${where} [data-copy]`).click();
+      await expect(page.locator(`${where} [data-copy] [role=status]`)).toHaveText(/Copy failed/);
+      expect(await page.evaluate(() => getSelection()?.toString())).toBe("itsmrad@gmail.com");
+    }
+  });
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("no control that needs a script is shown", async ({ page }) => {
+      await page.goto("/");
+      const shown = await page.locator("[data-js], [data-sound-control]").evaluateAll((items) => items.filter((item) => getComputedStyle(item).display !== "none").length);
+      expect(shown).toBe(0);
+      // The addresses themselves stay: the hero's line and the contact link.
+      await expect(page.locator('#contact a[href^="mailto:"]')).toBeVisible();
+    });
+  });
 });
 
 /**

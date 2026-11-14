@@ -24,7 +24,11 @@ async function copy(button: HTMLElement) {
   try {
     await navigator.clipboard.writeText(button.dataset.copy!);
   } catch {
-    return play("error"); // Blocked: the address stays selectable beside the button.
+    // Refused: select the address so it can be copied by hand, and say so.
+    const address = [button.firstElementChild, ...button.parentElement!.children].find((element) => element?.textContent === button.dataset.copy);
+    if (address) getSelection()?.selectAllChildren(address);
+    button.querySelector('[role="status"]')!.textContent = button.dataset.failedLabel!;
+    return play("error");
   }
   play("copy");
   const status = button.querySelector('[role="status"]')!;

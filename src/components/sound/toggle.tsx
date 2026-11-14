@@ -14,8 +14,12 @@ import styles from "./toggle.module.css";
 export const paintMuted = (attribute: "aria-pressed" | "aria-checked") =>
   `try{if(localStorage.getItem("sound")==="off"){document.documentElement.dataset.sound="off";document.currentScript.previousElementSibling.setAttribute("${attribute}","false")}}catch{}`;
 
-/** Without JavaScript a sound control would do nothing, so it is not shown. */
-export const hideWithoutScript = <noscript><style>{"[data-sound-control]{display:none!important}"}</style></noscript>;
+/**
+ * Without JavaScript these controls would do nothing, so they are not shown: the sound
+ * controls (`data-sound-control`) and every other script-only button (`data-js`). Rendered
+ * with the header's sound button, so it is on every page.
+ */
+export const hideWithoutScript = <noscript><style>{"[data-sound-control],[data-js]{display:none!important}"}</style></noscript>;
 
 export function SoundToggle() {
   return (

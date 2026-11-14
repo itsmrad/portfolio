@@ -112,7 +112,7 @@ export function Hero() {
             </Dimension>
           </div>
 
-          <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)]">
             {/* The letters are separate elements for the name melody; the label keeps the name whole. */}
             <h1
               id="top-title"
@@ -131,8 +131,8 @@ export function Hero() {
               ))}
             </ul>
             <style>{taglineRotation(taglines.length)}</style>
-            {/* After the taglines in the source, beside the name on the page. */}
-            <SingButton className="col-start-2 row-start-1 mr-2 self-center" />
+            {/* After the taglines in the source, right after the name on the page. */}
+            <SingButton className="col-start-2 row-start-1 -ml-2 self-center justify-self-start" />
           </div>
         </div>
       </div>
@@ -154,6 +154,7 @@ export function Hero() {
           <button
             type="button"
             data-slot="button"
+            data-js=""
             data-command-open
             aria-haspopup="dialog"
             aria-keyshortcuts="Control+K Meta+K"

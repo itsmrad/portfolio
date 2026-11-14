@@ -38,7 +38,8 @@ export function CommandItem({ selected, ...props }: React.ComponentProps<"div"> 
 /** The keys that run an item: one cap per key, `g` chords as two, and `spoken` for screen readers in their place. */
 export function CommandShortcut({ keys, spoken }: { keys: string[]; spoken: string }) {
   return (
-    <span className="flex shrink-0 items-center gap-1">
+    // Key caps mean nothing without a keyboard: hidden on touch screens, for sighted and screen-reader users alike.
+    <span className="flex shrink-0 items-center gap-1 pointer-coarse:hidden">
       <span className="sr-only">{spoken}</span>
       {keys.map((key, index) => (
         <kbd key={index} aria-hidden className={kbd}>

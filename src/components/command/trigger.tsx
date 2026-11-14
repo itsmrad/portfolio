@@ -19,7 +19,7 @@ export function SearchIcon(props: React.ComponentProps<"svg">) {
  */
 export function CommandTrigger() {
   return (
-    <button type="button" data-slot="button" data-command-open aria-haspopup="dialog" aria-keyshortcuts="/ Control+K Meta+K" className={styles.pill}>
+    <button type="button" data-slot="button" data-js="" data-command-open aria-haspopup="dialog" aria-keyshortcuts="/ Control+K Meta+K" className={styles.pill}>
       <SearchIcon className="size-3.5" />
       <span className="sr-only">Search</span>
       <kbd aria-hidden className={styles.ctrl}>
