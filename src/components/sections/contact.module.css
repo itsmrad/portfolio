@@ -27,7 +27,7 @@
 }
 
 .socials a:hover {
-  background: color-mix(in oklab, var(--accent) 50%, transparent);
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
 }
 
 .socials a:focus-visible {

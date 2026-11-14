@@ -17,7 +17,7 @@ export type MenuProps = {
 };
 
 const item =
-  "flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-left outline-none select-none hover:bg-accent focus-visible:bg-accent";
+  "flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-left outline-none select-none hover:bg-muted focus-visible:bg-muted";
 
 export function Menu({ mark, x, y, labels, toast, onClose }: MenuProps) {
   const menu = useRef<HTMLDivElement>(null);

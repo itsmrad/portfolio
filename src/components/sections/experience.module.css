@@ -24,7 +24,7 @@
 }
 
 .role summary:hover {
-  background: color-mix(in oklab, var(--accent) 50%, transparent);
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
 }
 
 .role summary:focus-visible {
