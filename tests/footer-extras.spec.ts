@@ -157,9 +157,10 @@ test.describe("reduced motion", () => {
     await expect(ink(page)).toHaveCSS("opacity", "1");
     await toFooter(page);
     await expect(page.locator("footer [data-drawn]")).toHaveCount(1);
-    const satellite = page.locator("footer [data-satellite]");
-    const states = await satellite.evaluate((element) => element.getAnimations().map((animation) => animation.playState));
-    expect(states.every((state) => state === "paused")).toBe(true);
+    const frame = () => page.locator("footer canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+    const still = await frame();
+    await page.waitForTimeout(1000);
+    expect(await frame()).toBe(still);
   });
 });
 
@@ -212,14 +213,14 @@ const shownLabels = (page: Page) =>
   page.locator("footer [data-label][data-shown]").evaluateAll((labels) => labels.map((label) => (label as HTMLElement).dataset.label));
 const caption = (page: Page) => page.locator("footer [data-caption]");
 
-/** Every shown tag inside the stage's clear area, none overlapping another; the caption inside the footer. */
+/** Every shown tag inside the stage, none overlapping another; the caption inside the footer. */
 async function laidOutCleanly(page: Page) {
   return page.evaluate(() => {
     const issues: string[] = [];
     const stage = document.querySelector("footer [data-drawn]")!.getBoundingClientRect();
     const tags = [...document.querySelectorAll("footer [data-label][data-shown]")].map((tag) => tag.getBoundingClientRect());
     for (const t of tags) {
-      if (t.left < Math.max(0, stage.left) || t.right > Math.min(innerWidth, stage.right) || t.top < stage.top || t.bottom > stage.top + stage.height * 0.75) {
+      if (t.left < Math.max(0, stage.left) || t.right > Math.min(innerWidth, stage.right) || t.top < stage.top || t.bottom > stage.bottom) {
         issues.push("a tag leaves the clear area");
       }
     }

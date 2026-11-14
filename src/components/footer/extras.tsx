@@ -9,7 +9,7 @@
  *   absent, and the page stays static: the count is fetched by the client.
  * - <Signature />: the "Approved by" title-block cell.
  * - <Wordmark />: the full-width hatched wordmark under the title block.
- * - <FinaleToy />: the globe, the last thing on the page.
+ * - <FinaleToy />: the globe figure, between the status strip and the title block.
  *
  * Every extra reserves its size in CSS and lazy-loads what is interactive, so
  * none can shift the layout when it hydrates.

@@ -22,6 +22,7 @@ export function Footer() {
         <div className="rule" aria-hidden />
         <div className="hatch-band h-12" aria-hidden />
         <StatusStrip />
+        <FinaleToy />
 
         <div className="screen-line-top screen-line-bottom flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3 text-sm">
           <span className="font-mono font-medium">{site.domain}</span>
@@ -99,7 +100,6 @@ export function Footer() {
       </Frame>
 
       <Wordmark />
-      <FinaleToy />
       <div className="h-16" aria-hidden />
     </footer>
   );
