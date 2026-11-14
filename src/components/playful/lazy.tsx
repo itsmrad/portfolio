@@ -14,6 +14,7 @@ const pieces = {
   left: () => import("./margins").then((module) => module.Left),
   right: () => import("./margins").then((module) => module.Right),
   eggs: () => import("./eggs").then((module) => module.Eggs),
+  arcade: () => import("@/components/arcade/arcade").then((module) => module.Arcade),
 };
 const INPUTS = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"];
 
