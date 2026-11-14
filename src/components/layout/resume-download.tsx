@@ -8,7 +8,7 @@ export function ResumeDownload({ className }: { className?: string }) {
   const resume = resumePdf();
   if (!resume) return null;
   return (
-    <Button asChild className={className}>
+    <Button asChild variant="accent" className={className}>
       <a href={resume} download={site.resume.fileName}>
         <DownloadIcon className="size-3.5" />
         Download resume
