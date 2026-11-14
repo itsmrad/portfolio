@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336 28" width="336" height="28">
+<defs>
+<g id="p" transform="translate(1 4) scale(.1064) translate(-82 -103)" fill="none" stroke-width="20" stroke-linecap="round">
+<clipPath id="r"><path clip-rule="evenodd" d="M83 170.5a68 68 0 1 0 136 0a68 68 0 1 0-136 0ZM103 170.5a48 48 0 1 0 96 0a48 48 0 1 0-96 0Z"/></clipPath>
+<path style="stroke:var(--a,#000)" d="M92 113V286"/><circle style="stroke:var(--a,#000)" cx="151" cy="170.5" r="58"/>
+<path id="c" style="stroke:var(--b,#000)" d="M307.5 130.5A58 58 0 1 0 307.5 212.5"/>
+<use href="#c" style="stroke:var(--c,#000)" clip-path="url(#r)"/>
+</g>
+<g id="d" transform="translate(.5 6.16) scale(.1144) translate(-179 -108)">
+<mask id="k" maskUnits="userSpaceOnUse" x="150" y="80" width="300" height="200"><rect x="150" y="80" width="300" height="200" fill="#fff"/><use href="#t" stroke="#000" stroke-width="7"/></mask>
+<g mask="url(#k)" fill="none" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--a,#000)">
+<path stroke-width="16" d="M281 114.5H247.5A61.5 61.5 0 0 0 247.5 237.5H260L324 115"/><path stroke-width="19" d="M324 115L385.5 238"/></g>
+<g id="t"><path style="fill:var(--b,#000)" d="M397 157.5Q343 173.25 289 182L305 212L316 209.5L308.5 190Q352.75 178.9 397 157.5Z"/><path style="fill:var(--c,#000)" d="M411 164.5Q365 178.9 319 195L334 221.5L344.5 218.5L338 199Q374.5 185.6 411 164.5Z"/></g>
+</g>
+<g id="s" transform="translate(3 3) scale(.22)">
+<mask id="x"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/><path d="M-10-30.3L110.3 90M-10 130.3L110.3 10" stroke="#000" stroke-width="5"/><path d="M70.3 27.8L92.5 50L70.3 72.2L48.1 50Z"/><g fill="#fff"><circle cx="48.1" cy="50" r="13.2"/><circle cx="92.5" cy="50" r="13.2"/><circle cx="70.3" cy="27.8" r="13.2"/><circle cx="70.3" cy="72.2" r="13.2"/></g></mask>
+<circle cx="50" cy="50" r="50" mask="url(#x)" style="fill:var(--a,#000)"/>
+</g>
+<g id="b"><rect x="5" y="5" width="12" height="12" style="fill:var(--a,#000)"/><path d="M20 5h3v18H5v-3h15Z" style="fill:var(--b,#000)"/></g>
+</defs>
+<use href="#p"/><use href="#d" x="28"/><use href="#s" x="56"/><use href="#b" x="84"/>
+<use href="#p" x="112" style="--a:#2c99ce;--b:#f7913e;--c:#0f475f"/>
+<use href="#d" x="140" style="--a:#175888;--b:#f57b24;--c:#53b748"/>
+<use href="#s" x="168" style="--a:#2376ab"/>
+<use href="#b" x="196" style="--a:#2e3094;--b:#ed1c24"/>
+<use href="#p" x="224" style="--a:#2c99ce;--b:#f7913e;--c:#1b6584"/>
+<use href="#d" x="252" style="--a:#4a8cc4;--b:#f57b24;--c:#53b748"/>
+<use href="#s" x="280" style="--a:#3d8cc4"/>
+<use href="#b" x="308" style="--a:#5a5dd0;--b:#ed1c24"/>
+</svg>

@@ -1,5 +1,5 @@
 /**
- * Experience: one row per role (letter tile, organisation, title and place,
+ * Experience: one row per role (organisation mark, organisation, title and place,
  * dates with the infinity sign while ongoing). A row is a native <details>, so
  * it opens without JavaScript; the current role starts open. Community work
  * follows as a smaller group of plain rows.
@@ -10,16 +10,22 @@ import { formatMonth } from "@/lib/markdown";
 import { ExternalLink } from "@/components/layout/external-link";
 import { Section, SectionHeader } from "@/components/layout/section";
 import { Highlight } from "@/components/ui/highlight";
-import { Img } from "@/components/ui/img";
 
 import { ChevronIcon } from "./icons";
 import styles from "./experience.module.css";
 
-function Tile({ job }: { job: Job }) {
-  return (
+/** Each organisation's cell in logos.svg. The name is in the text beside the tile, so the mark is decorative. */
+const LOGOS: Record<string, number> = { PlanCover: 0, "Dasgupta Maiti & Associates": 1, Syuniqe: 2, BPIT: 3 };
+
+/** The organisation's mark, painted by CSS (no extra elements); a letter when it has none. */
+export function Tile({ name }: { name: string }) {
+  const slot = LOGOS[name];
+  return slot === undefined ? (
     <span className={styles.tile} aria-hidden>
-      {job.logo ? <Img src={job.logo} alt="" width={34} height={34} /> : job.org[0]}
+      {name[0]}
     </span>
+  ) : (
+    <span className={styles.tile} style={{ "--slot": slot } as React.CSSProperties} aria-hidden />
   );
 }
 
@@ -41,7 +47,7 @@ function Role({ job, current }: { job: Job; current: boolean }) {
     <details className={styles.role} open={current}>
       <summary>
         {/* Only phrasing content and a heading may sit in a summary, so the grid places these directly. */}
-        <Tile job={job} />
+        <Tile name={job.org} />
         <h3 className={styles.org}>
           {job.org} {current && <Current />}
         </h3>
