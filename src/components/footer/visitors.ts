@@ -143,15 +143,27 @@ function roll(from: number, to: number, duration: number, set: (value: number) =
 
 /**
  * Drives the counter cell: reveals it once a real total arrives, rolls the
- * total and the live number to each new value. Live is never below 1: whoever
- * is looking is here. Returns a detach.
+ * total to each new value, and writes who is here right now ("just you right
+ * now", or "3 people here right now" with the number rolling). Live is never
+ * below 1: whoever is looking is here. Returns a detach.
  */
 export function showCounter(
   element: HTMLElement,
   mine: number | null,
-  set: { total: (total: number) => void; shown: (shown: number) => void; live: (live: number) => void },
+  set: { total: (total: number) => void; shown: (shown: number) => void },
 ) {
   if (mine !== null) noteTotal(mine);
+  const line = element.querySelector<HTMLElement>("[data-live]");
+  const number = document.createElement("span");
+  number.className = "font-pixel text-foreground";
+  const write = (people: number) => {
+    if (!line) return;
+    line.dataset.shown = "";
+    if (people > 1) {
+      number.textContent = String(people);
+      line.replaceChildren(number, ` ${line.dataset.many ?? ""}`);
+    } else line.textContent = line.dataset.alone ?? "";
+  };
   let lastTotal: number | null = null;
   let lastLive: number | null = null;
   let cancelTotal = () => {};
@@ -168,7 +180,7 @@ export function showCounter(
     const people = Math.max(1, live ?? 1);
     if (people !== lastLive) {
       cancelLive();
-      cancelLive = roll(lastLive ?? people, people, 400, set.live);
+      cancelLive = roll(lastLive ?? people, people, 400, write);
       lastLive = people;
     }
   });

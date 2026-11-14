@@ -28,8 +28,6 @@ export function Counter({ unit, alone, many }: { unit: string; alone: string; ma
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
-  // Never below 1: whoever is looking is here.
-  const [live, setLive] = useState<number | null>(null);
 
   useEffect(() => {
     const element = ref.current;
@@ -68,7 +66,7 @@ export function Counter({ unit, alone, many }: { unit: string; alone: string; ma
     const stop = whenNear(element, () => {
       void Promise.all([first ? post() : null, import("./visitors")]).then(
         ([mine, visitors]) => {
-          if (!gone) detach = visitors.showCounter(element, mine, { total: setTotal, shown: setShown, live: setLive });
+          if (!gone) detach = visitors.showCounter(element, mine, { total: setTotal, shown: setShown });
         },
         () => {},
       );
@@ -91,22 +89,13 @@ export function Counter({ unit, alone, many }: { unit: string; alone: string; ma
         {digits.slice(lead)}
       </span>
       {total !== null && <span className="sr-only">{`${total.toLocaleString("en-IN")} ${unit}`}</span>}
-      {/* Two lines reserved, so the row never grows when the line changes; the live dot is its ::before. */}
+      {/* Who is here right now, written by the footer's lazy code; two lines reserved so nothing moves. */}
       <span
-        className={`h-7 font-mono text-[0.625rem]/3.5 tracking-wider text-muted-foreground uppercase ${
-          live === null
-            ? ""
-            : "before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-signal before:align-[0.0625rem]"
-        }`}
-      >
-        {live === null ? null : live > 1 ? (
-          <>
-            <span className="font-pixel text-foreground">{live}</span> {many}
-          </>
-        ) : (
-          alone
-        )}
-      </span>
+        data-live
+        data-alone={alone}
+        data-many={many}
+        className="h-7 font-mono text-[0.625rem]/3.5 tracking-wider text-muted-foreground uppercase before:mr-1.5 before:hidden before:size-1.5 before:rounded-full before:bg-signal before:align-[0.0625rem] data-shown:before:inline-block"
+      />
     </span>
   );
 }
