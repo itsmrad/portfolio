@@ -45,7 +45,8 @@ test("the strip scrambles in cell by cell without moving, then settles on the tr
   // Record every scrambled span's text and width on each frame from the moment the strip is reached.
   const frames = await strip(page).evaluate(async (element) => {
     const nodes = [...element.querySelectorAll<HTMLElement>("[data-scramble]")];
-    element.scrollIntoView({ block: "center" });
+    // Instantly: on the full page a smooth scroll would still be on its way when the recording ends.
+    element.scrollIntoView({ block: "center", behavior: "instant" });
     const samples: { text: string[]; width: number[] }[] = [];
     const start = performance.now();
     while (performance.now() - start < 2500) {

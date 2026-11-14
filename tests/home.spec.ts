@@ -99,7 +99,7 @@ test.describe("hero", () => {
   test("only the drawn solid is pressable, and the highlight follows the cursor", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    const svg = (await page.locator("#top button svg").boundingBox())!;
+    const svg = (await page.getByRole("button", { name: /monogram/ }).locator("svg").boundingBox())!;
     // The bottom-left corner of the drawing's box is empty paper.
     await page.mouse.move(svg.x + 4, svg.y + svg.height - 4);
     await page.mouse.down();
@@ -189,7 +189,12 @@ test.describe("hero", () => {
 });
 
 test.describe("script budget", () => {
+  // A touch phone: the playful layer's margins and eggs never load there, so the first input fetches the home chunk alone.
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
   test("the monogram is the only home script before input; the rest arrives on the first input", async ({ page }) => {
+    // Muted, so the tap does not also fetch the sound engine (its own budget is in the sound spec).
+    await page.addInitScript(() => localStorage.setItem("sound", "off"));
     await page.goto("/");
     await settle(page);
     const scripts = (await resources(page)).filter((resource) => resource.type === "script");
@@ -199,7 +204,7 @@ test.describe("script budget", () => {
     // Nothing of the lazy chunk may be in what has loaded so far.
     for (const script of scripts) expect(source(script.url), script.url).not.toContain("data-calendar");
 
-    const added = await scriptBytesAddedBy(page, () => page.mouse.move(300, 300));
+    const added = await scriptBytesAddedBy(page, () => page.touchscreen.tap(195, 700));
     console.log(`home ${JSON.stringify({ "monogram chunk": kb(scriptBrotli(monogram[0]!.url)), "lazy effects": kb(added) })}`);
     expect(scriptBrotli(monogram[0]!.url), "monogram chunk").toBeLessThanOrEqual(LIMIT.monogram);
     expect(added, "the effects chunk loads on the first input").toBeGreaterThan(0);

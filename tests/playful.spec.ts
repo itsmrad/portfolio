@@ -45,12 +45,16 @@ test.describe("phone", () => {
       const state = window as unknown as { __queries: number };
       const real = window.matchMedia.bind(window);
       state.__queries = 0;
-      window.matchMedia = (query) => (state.__queries++, real(query));
+      // The sticker's own voice asks "(pointer: coarse)" once per vibration; that is not the loader.
+      window.matchMedia = (query) => ((state.__queries += query === "(pointer: coarse)" ? 0 : 1), real(query));
     });
     await page.goto("/");
     await expect(page.locator("[data-sticker]:visible")).toHaveCount(3);
     await settle(page);
     const queries = () => page.evaluate(() => (window as unknown as { __queries: number }).__queries);
+    // The first tap fetches the home effects, which ask about reduced motion once; then nothing more may ask.
+    await page.locator('[data-sticker="keycap"] > div').tap();
+    await settle(page);
     const before = await queries();
     for (let tap = 0; tap < 5; tap++) await page.locator('[data-sticker="keycap"] > div').tap();
     expect(await queries()).toBe(before);
@@ -165,7 +169,7 @@ test.describe("wide", () => {
     await openWide(page);
     // End states only: with transitions off, a hover style is either applied or not.
     await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; }" });
-    const link = page.locator("main a.link-underline").first();
+    const link = page.locator("main a.link-underline:visible").first();
     await link.scrollIntoViewIfNeeded();
     await link.hover();
     expect(await link.evaluate((element) => getComputedStyle(element).textDecorationStyle)).toBe("wavy");
@@ -292,6 +296,8 @@ test.describe("wide", () => {
   });
 
   test("lazy chunks stay inside their budgets", async ({ page }) => {
+    // Muted, so an egg's first voice does not bring the sound engine's chunk into the egg's count.
+    await page.addInitScript(() => localStorage.setItem("sound", "off"));
     // Untouched, the page has fetched none of the layer's chunks.
     await page.goto("/");
     await settle(page);
