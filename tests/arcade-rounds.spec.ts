@@ -26,7 +26,17 @@ function pin(page: Page, seed: number | "zero") {
 }
 
 async function start(page: Page, id: string) {
-  await page.addInitScript(() => localStorage.setItem("sound", "off"));
+  await page.addInitScript(() => {
+    localStorage.setItem("sound", "off");
+    // Count animation frames asked for, to show the loop rests once a round has ended (review S6).
+    const counted = window as unknown as { __frames: number };
+    counted.__frames = 0;
+    const request = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      counted.__frames++;
+      return request(callback);
+    };
+  });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await expect(async () => {
@@ -189,6 +199,12 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
           await round.play(page, game);
           await expect(game.over).toBeVisible({ timeout: round.limit ?? 60_000 });
           if (round.score) expect(await game.score()).toMatch(round.score);
+          // Under the result nothing animates: no frames are requested while it waits for a restart.
+          const frames = () => page.evaluate(() => (window as unknown as { __frames: number }).__frames);
+          await page.waitForTimeout(300);
+          const before = await frames();
+          await page.waitForTimeout(500);
+          expect((await frames()) - before, "frames asked for while the result shows").toBeLessThanOrEqual(2);
           if (n === 0) await restart(page, game);
         }
         expect(errors).toEqual([]);
