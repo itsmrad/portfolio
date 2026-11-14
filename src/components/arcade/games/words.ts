@@ -49,6 +49,8 @@ const words: Game = (ctx) => {
   let shake = 0;
   let pressed = "";
   let flash = 0;
+  // The solved row's wave, in ms; the round ends when it has passed.
+  let hop = -1;
   let done = false;
 
   // 2 right place, 1 elsewhere, 0 not in the word; repeated letters count only as often as the answer has them.
@@ -104,7 +106,8 @@ const words: Game = (ctx) => {
     if (won) {
       ctx.play("success");
       ctx.score(7 - tries.length, `${tries.length}/6`);
-      ctx.over(`${answer} in ${tries.length} of 6.`);
+      if (ctx.reduced) ctx.over(`${answer} in ${tries.length} of 6.`);
+      else hop = 0;
     } else {
       ctx.play("gameOver");
       ctx.over(`The word was ${answer}.`);
@@ -174,6 +177,10 @@ const words: Game = (ctx) => {
       if (Math.floor(reveal) > before) ctx.play("note", { index: [0, 4, 8][marks.at(-1)![before]!] });
       if (reveal === 5) finish();
     }
+    if (hop >= 0 && (hop += dt) > 700) {
+      hop = -1;
+      ctx.over(`${answer} in ${tries.length} of 6.`);
+    }
     shake = Math.max(0, shake - dt / 300);
     flash = Math.max(0, flash - dt / 150);
 
@@ -184,9 +191,17 @@ const words: Game = (ctx) => {
     for (let r = 0; r < 6; r++) {
       const row = tries[r] ?? (r === tries.length ? typed : "");
       for (let i = 0; i < 5; i++) {
-        const m = r < marks.length && (r < marks.length - 1 || i < reveal) ? marks[r]![i] : undefined;
+        const latest = r === marks.length - 1;
+        // The newest row turns over tile by tile, its mark showing from the half-turn.
+        const p = latest ? reveal - i : 1;
+        const m = r < marks.length && p >= 0.5 ? marks[r]![i] : undefined;
         const live = r === tries.length;
-        cell(GX + i * STEP + (live ? sx : 0), 4 + r * STEP, TILE, TILE, row[i] ?? "", m, 11);
+        const y = 4 + r * STEP - (latest && hop > 0 ? 3 * Math.max(0, Math.sin(Math.min(1, Math.max(0, (hop - i * 70) / 220)) * Math.PI)) : 0);
+        g.save();
+        g.translate(0, y + TILE / 2);
+        g.scale(1, p > 0 && p < 1 ? Math.max(0.05, Math.abs(Math.cos(p * Math.PI))) : 1);
+        cell(GX + i * STEP + (live ? sx : 0), -TILE / 2, TILE, TILE, row[i] ?? "", m, 11);
+        g.restore();
         if (live && i === typed.length && !done) {
           g.fillStyle = colors.signal;
           g.fillRect(GX + i * STEP + 3, 4 + r * STEP + TILE - 3, TILE - 6, 1.5);

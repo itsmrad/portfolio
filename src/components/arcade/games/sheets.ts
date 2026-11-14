@@ -27,6 +27,9 @@ const sheets: Game = (ctx) => {
   let total = 0;
   let largest = 1;
   let done = false;
+  // The points the last move earned and how long ago, for the "+8" that rises under the total.
+  let gain = 0;
+  let since = 1e9;
 
   const at = (x: number, y: number) => tiles.find((tile) => !tile.gone && tile.x === x && tile.y === y);
   const spawn = () => {
@@ -53,6 +56,8 @@ const sheets: Game = (ctx) => {
     for (const tile of tiles) Object.assign(tile, { fx: tile.x, fy: tile.y, pop: 0 });
     let moved = false;
     let merged = 0;
+    gain = 0;
+    since = 0;
     for (let i = 0; i < N; i++) {
       // The cells of one row or column, from the edge the tiles slide towards.
       const line = [0, 1, 2, 3].map((j): [number, number] => {
@@ -68,6 +73,7 @@ const sheets: Game = (ctx) => {
           last.pop = 1;
           Object.assign(tile, { gone: true, x: last.x, y: last.y });
           total += 2 ** last.k;
+          gain += 2 ** last.k;
           merged = Math.max(merged, last.k);
           moved = true;
         } else {
@@ -185,6 +191,12 @@ const sheets: Game = (ctx) => {
     text("largest", 211, 92, 8, ctx.fonts.mono, colors.muted);
     text(`A${TOP - largest}`, 211, 110, 18, ctx.fonts.pixel, hue(largest));
     text(String(total), 211, 134, 11, ctx.fonts.mono, colors.ink);
+    since += dt;
+    if (gain && since < 700) {
+      g.globalAlpha = 1 - since / 700;
+      text(`+${gain}`, 211, 158 - (ctx.reduced ? 0 : since / 70), 9, ctx.fonts.mono, colors.signal);
+      g.globalAlpha = 1;
+    }
     text("points", 211, 146, 8, ctx.fonts.mono, colors.muted);
     if (!total) text("arrows or drag", 211, 170, 8, ctx.fonts.mono, colors.muted);
   });

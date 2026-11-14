@@ -27,6 +27,9 @@ const plane: Game = (ctx) => {
   let scroll = 0;
   let bob = 0;
   let made = 0;
+  // The flight path: points dropped every 50 ms of flight, carried left with the columns.
+  const trail: [number, number][] = [];
+  let drop = 0;
   const columns: Column[] = [];
 
   const add = (x: number) => {
@@ -76,6 +79,12 @@ const plane: Game = (ctx) => {
       y = Math.max(6, y + v * step);
       const speed = Math.min(0.075, 0.058 + cleared * 0.001);
       scroll += speed * step;
+      for (const point of trail) point[0] -= speed * step;
+      if ((drop += step) > 50) {
+        drop = 0;
+        trail.push([PX - 8, y]);
+        if (trail.length > 14) trail.shift();
+      }
       for (const c of columns) {
         c.x -= speed * step;
         if (!c.passed && c.x + COL_W < PX - 4) {
@@ -139,6 +148,9 @@ const plane: Game = (ctx) => {
       g.fillText(String(Math.round(c.size)), dx + 4, c.gap);
     }
 
+    g.fillStyle = colors.muted;
+    for (const [tx, ty] of trail) g.fillRect(tx - 0.5, ty - 0.5, 1, 1);
+
     // The plane, nose up as it climbs: a folded dart in the signal colour, its fold line in ink.
     const py = started ? y : y + (ctx.reduced ? 0 : Math.sin(bob / 300) * 3);
     g.save();
@@ -170,7 +182,11 @@ const plane: Game = (ctx) => {
       g.fillStyle = colors.muted;
       g.fillText("space, click or tap to fly", W / 2, FLOOR - 16);
     }
+    // The count on a paper patch, so a passing column never runs through it.
     g.font = `16px ${ctx.fonts.pixel}`;
+    const half = g.measureText(String(cleared)).width / 2 + 4;
+    g.fillStyle = colors.paper;
+    g.fillRect(W / 2 - half, 6, half * 2, 20);
     g.fillStyle = colors.ink;
     g.fillText(String(cleared), W / 2, 16);
   });

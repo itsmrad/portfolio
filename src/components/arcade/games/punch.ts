@@ -135,6 +135,12 @@ const punch: Game = (ctx) => {
         g.beginPath();
         g.arc(h.x, h.y, 2.5, 0, Math.PI * 2);
         g.fill();
+        if (h.age < 260 && !ctx.reduced) {
+          g.strokeStyle = colors.signal;
+          g.beginPath();
+          g.arc(h.x, h.y, 3 + h.age / 26, 0, Math.PI * 2);
+          g.stroke();
+        }
         g.fillStyle = colors.muted;
         g.fillText(`${(h.off / 10).toFixed(1)}`, h.x + 5, h.y - 5);
       }
