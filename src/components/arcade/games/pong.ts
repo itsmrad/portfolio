@@ -33,11 +33,12 @@ const pong: Game = (ctx) => {
     ctx.play(yours ? "success" : "error", { x: yours ? W : 0 });
     ctx.score(you.score, `${you.score}–${cpu.score}`);
     shake = 1;
+    // Back to the centre at once: left outside the frame it would score again on every frame (and on the final repaint).
+    Object.assign(ball, { x: W / 2, y: H / 2, vx: 0, vy: 0 });
     if (you.score === WIN || cpu.score === WIN) {
       ctx.play("gameOver");
       return ctx.over(you.score === WIN ? `You win, ${you.score} to ${cpu.score}.` : `The machine wins, ${cpu.score} to ${you.score}.`);
     }
-    ball.vx = ball.vy = 0;
     serve = 700;
     // The loser of the point serves next: the ball goes towards them.
     serveTo = yours ? 1 : -1;

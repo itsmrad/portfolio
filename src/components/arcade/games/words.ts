@@ -96,6 +96,8 @@ const words: Game = (ctx) => {
     typed = "";
     reveal = ctx.reduced ? 5 : 0;
     ctx.announce(m.map((v, i) => `${tries.at(-1)![i]} ${["no", "elsewhere", "yes"][v]}`).join(", "));
+    // Without the animated reveal (reduced motion) the frame loop never reaches its end-of-row step: end here.
+    if (ctx.reduced) finish();
   };
 
   const finish = () => {
