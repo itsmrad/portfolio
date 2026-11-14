@@ -61,6 +61,9 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
   const repaint = () => paint(0, performance.now());
 
   const readColors = () => {
+    // Read straight back, so no transition: under reduced motion globals.css gives every property a 0.01 ms one,
+    // and each read would return the previous token.
+    canvas.style.setProperty("transition", "none", "important");
     for (const [name, token] of Object.entries(TOKENS)) {
       // Palette hues fall back to ink where the arcade's tokens are not defined (the 404).
       canvas.style.color = `var(${token}, var(--foreground))`;
