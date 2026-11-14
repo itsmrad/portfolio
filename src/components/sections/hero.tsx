@@ -80,8 +80,8 @@ function Fact({ icon, label, children }: { icon: React.ReactNode; label: string;
 
 export function Hero() {
   const current = experience.find((job) => job.kind === "work" && !job.end);
-  // The role is stated in the facts below, so the rotation opens on the next line and comes to it last.
-  const taglines = [...site.taglines.slice(1), site.taglines[0]];
+  // The first tagline is the role, which the first fact row states just below: the rotation leaves it out.
+  const taglines = site.taglines.slice(1);
   return (
     <Section id="top" rule={false} aria-labelledby="top-title">
       <div className={styles.cover}>
