@@ -33,13 +33,13 @@ export const faq: Question[] = [
     id: "codenaya",
     question: "What is Codenaya?",
     answer:
-      "Codenaya is Anupam Das's own product, live at codenaya.tech: a browser IDE with a built-in coding agent that writes an app file by file, runs it with a live preview and a terminal, and exports it to GitHub or a ZIP. He started it in February 2026 and wrote 777 of its 801 commits.",
+      "Codenaya is Anupam Das's own product, live at codenaya.tech: a browser IDE with a built-in coding agent that writes an app file by file, runs it with a live preview and a terminal, and exports it to GitHub or a ZIP. He started it in February 2026 and authored 777 of its 801 commits.",
   },
   {
     id: "xflow",
     question: "What is xflow?",
     answer:
-      "xflow is an open-source, MIT-licensed dictation tool for macOS and Linux that Anupam Das wrote in Rust: hold a key, speak, and it types the cleaned-up text at your cursor in any app. Its published benchmarks on an Apple M2 show 3.0 MiB of memory at idle and text a median 255 ms after you stop speaking.",
+      "xflow is an open-source, MIT-licensed dictation tool for macOS and Linux that Anupam Das wrote in Rust: hold a key, speak, and it types the cleaned-up text at your cursor in any app. Its published benchmarks on an Apple M2 show 3.0 MiB of memory at idle and text a median 255 ms after you stop speaking (paste excluded).",
   },
   {
     id: "stack",
