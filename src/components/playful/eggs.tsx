@@ -54,8 +54,9 @@ const shortcutsOff = () => {
     return false;
   }
 };
+// Text fields, and a game with focus (the arcade, the 404): their keys are not codes.
 const typing = (target: EventTarget | null) =>
-  target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || !!target.closest("[data-game]"));
 
 export function Eggs({ data }: { data: Data }) {
   const [Cat, setCat] = useState<ComponentType | null>(null);
