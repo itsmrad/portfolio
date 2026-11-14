@@ -68,6 +68,13 @@
   stroke-width: 10;
   stroke-linecap: square;
 }
+/* The global reduced-motion rule gives everything a 0.01 ms transition; the contribution game reads these strokes
+   right after a theme change, and mid-transition it would get the old theme's colours. */
+@media (prefers-reduced-motion: reduce) {
+  .days g path {
+    transition: none !important;
+  }
+}
 
 /* The day being read: an outline a little larger than its cell. */
 .days rect {

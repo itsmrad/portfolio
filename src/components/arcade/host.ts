@@ -17,15 +17,30 @@ type Options = {
   pauseOnBlur: boolean;
   onScore?: (value: number, text?: string) => void;
   onOver?: (result?: string) => void;
+  /** Esc from anywhere on the page (not only the focused canvas), unless a dialog is open. */
   onEscape?: () => void;
   /** Fired when the loop stops or starts for any reason, so the shell can show "paused". */
   onRunning?: (running: boolean) => void;
   announce: (message: string) => void;
 };
 
-const KEYS: Record<string, Key> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", " ": "action", Enter: "action" };
-/** WASD by physical position (ZQSD on an AZERTY board), like a proper game. Typing games read `event.key`, so they still get letters. */
-const WASD: Record<string, Key> = { KeyW: "up", KeyA: "left", KeyS: "down", KeyD: "right" };
+/**
+ * By physical key (event.code): arrows and W/A/S/D (ZQSD on an AZERTY board) to directions, Space and Enter to
+ * "action". Typing games read `event.key`, so W, A, S and D still type there.
+ */
+const KEYS: Record<string, Key> = {
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  KeyW: "up",
+  KeyS: "down",
+  KeyA: "left",
+  KeyD: "right",
+  Space: "action",
+  Enter: "action",
+  NumpadEnter: "action",
+};
 const TOKENS: Record<keyof Colors, string> = {
   ink: "--foreground",
   muted: "--muted-foreground",
@@ -132,14 +147,9 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
   };
   const onKey = (event: KeyboardEvent) => {
     if (event.key === "Tab" || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
-    if (event.key === "Escape") {
-      if (event.type === "keydown" && options.onEscape) {
-        event.preventDefault();
-        options.onEscape();
-      }
-      return;
-    }
-    const key = KEYS[event.key] ?? (event.shiftKey ? undefined : WASD[event.code]) ?? null;
+    // Escape is never a game key; with `onEscape` the document listener below handles it.
+    if (event.key === "Escape") return;
+    const key = KEYS[event.code] ?? null;
     if (!key && !options.exclusive) return;
     // The page's shortcut listener skips prevented events; this also stops arrows and Space scrolling.
     event.preventDefault();
@@ -169,6 +179,16 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
     [canvas, "blur", sync],
     [document, "visibilitychange", sync],
     [scheme, "change", readColors],
+    // Esc always exits (R16), wherever focus is, unless a dialog (the palette) owns it.
+    [
+      document,
+      "keydown",
+      ((event: KeyboardEvent) => {
+        if (event.key !== "Escape" || !options.onEscape || document.querySelector("dialog[open]")) return;
+        event.preventDefault();
+        options.onEscape();
+      }) as EventListener,
+    ],
   ];
   for (const [target, type, listener] of events) target.addEventListener(type, listener);
   theme.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -208,7 +228,6 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
 
   return {
     ctx,
-    running: () => running,
     /** Draw the field once now (dt 0), e.g. the final frame of a round. */
     repaint,
     /** Drops the game's subscriptions; clears the field too unless the last frame should stay (a result over it). */

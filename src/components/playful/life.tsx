@@ -47,13 +47,72 @@ function Note({ item, top }: { item: Extract<Item, { kind: "note" }>; top: numbe
   );
 }
 
+/**
+ * A reading over a scale that loads as it scrolls into view (round 3): the fill and the count are a CSS scroll
+ * timeline (reversible, off the main thread); arriving at the value strikes its tick in the accent, the count
+ * pops and settles, and one voice plays, once per arrival. Static where scroll timelines are missing or motion is
+ * reduced. The JS below only watches for the arrival; the range must match `animation-range` in life.module.css.
+ */
+const RANGE = [0.1, 0.4] as const;
 function Ratio({ item, top }: { item: Extract<Item, { kind: "ratio" }>; top: number }) {
+  const element = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const reading = element.current!;
+    if (!CSS.supports("animation-timeline: view()") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    reading.setAttribute("data-reading", "");
+    // Progress through the timeline's range, from where its top meets the viewport's foot.
+    const progress = () => {
+      const box = reading.getBoundingClientRect();
+      const cover = innerHeight + box.height;
+      return (innerHeight - box.top - RANGE[0] * cover) / ((RANGE[1] - RANGE[0]) * cover);
+    };
+    // Already past when the notes arrive: no hit, the visitor did not just get there.
+    let landed = progress() >= 1;
+    let hits = 0;
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      const at = progress();
+      if (!landed && at >= 1) {
+        landed = true;
+        reading.removeAttribute("data-hit");
+        // Restart the hit animation on every arrival.
+        void reading.offsetWidth;
+        reading.setAttribute("data-hit", "");
+        reading.dataset.hits = String(++hits);
+        const box = reading.getBoundingClientRect();
+        play("pop", { x: box.left + box.width * (item.value / item.of) });
+      } else if (landed && at <= 0.2) {
+        // Scrolled well back: the next arrival counts again (a small jiggle at the end does not).
+        landed = false;
+        reading.removeAttribute("data-hit");
+      }
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(check));
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) addEventListener("scroll", onScroll, { passive: true });
+      else removeEventListener("scroll", onScroll);
+    });
+    observer.observe(reading);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      removeEventListener("scroll", onScroll);
+    };
+  }, [item.value, item.of]);
   return (
-    <p data-life className={`${styles.ratio} ${styles.item}`} style={{ top, "--p": item.value / item.of } as CSSProperties}>
+    <p
+      ref={element}
+      data-life
+      data-ratio={item.value}
+      className={`${styles.ratio} ${styles.item}`}
+      style={{ top, "--p": item.value / item.of, "--v": item.value } as CSSProperties}
+    >
       <span className="block tabular-nums text-foreground">
-        {item.value} / {item.of}
+        <span className={styles.count}>{item.value}</span> / {item.of}
       </span>
       {item.label}
+      <i className={styles.strike} aria-hidden />
     </p>
   );
 }
@@ -92,14 +151,16 @@ function Toy({ item, top }: { item: Extract<Item, { kind: "toy" }>; top: number 
       </>
     );
   } else if (item.toy === "lock") {
+    // An old padlock: the long left leg stays in the body; the shackle lifts until the short leg clears, then
+    // swings out round the long leg. State 0 locked, 1 open, 2 locked again (only then does the close play).
     press = () => {
-      play(state ? "toggle" : "toggleOff");
-      setState((value) => 1 - value);
+      play(state === 1 ? "toggle" : "toggleOff");
+      setState((value) => (value === 1 ? 2 : 1));
     };
     body = (
-      <svg viewBox="0 0 32 36" className={styles.lock} data-open={state || undefined}>
-        <path className={styles.shackle} d="M9 16V10a7 7 0 0 1 14 0v6" />
-        <rect x="5" y="16" width="22" height="17" rx="2" />
+      <svg viewBox="-6 -4 36 40" className={styles.lock} data-open={state === 1 || undefined} data-moved={state > 0 || undefined}>
+        <path className={styles.shackle} d="M10 27V11.5a6.5 6.5 0 0 1 13 0V19" />
+        <rect className={styles.body} x="5" y="16" width="22" height="17" rx="2" />
         <path d="M16 22v5" />
       </svg>
     );

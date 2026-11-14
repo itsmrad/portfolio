@@ -437,7 +437,8 @@ export function Arcade() {
       setBests((all) => {
         const entry = GAMES.find((game) => game.id === active)!;
         const best = all[entry.id];
-        if (score.v <= 0 && !entry.lower) return all;
+        // No score at all (a round ended before scoring) is never a best, higher or lower.
+        if (score.v <= 0) return all;
         if (best && (entry.lower ? score.v >= best.v : score.v <= best.v)) return all;
         writeBest(entry.id, score);
         return { ...all, [entry.id]: score };
