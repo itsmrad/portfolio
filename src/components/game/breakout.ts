@@ -30,7 +30,9 @@ export type Brick = { x: number; y: number; w: number; h: number; label?: string
 
 type Options = {
   boards: (() => Brick[])[];
-  copy: Pick<GameCopy, "start" | "cleared" | "clearedNote" | "lost">;
+  copy: Pick<GameCopy, "start" | "cleared" | "clearedNote" | "lost"> & { paused?: string };
+  /** The 404: given a function that pauses play mid-rally (tab hidden, scrolled away); Space resumes. */
+  onPause?: (pause: () => void) => void;
   /** Balls before the round is over; endless on the 404. */
   lives?: number;
   /** Arcade cartridge: score in the shell's readout, larger prompt, wider paddle, coloured bricks. */
@@ -59,7 +61,7 @@ export const grid = (brick: number, rows: number, pattern: string[]) => () => {
   return bricks;
 };
 
-export function breakout({ boards, copy, lives = Infinity, cartridge = false }: Options): Game {
+export function breakout({ boards, copy, lives = Infinity, cartridge = false, onPause }: Options): Game {
   return (ctx) => {
     const { g } = ctx;
     const k = ctx.width / W;
@@ -71,6 +73,7 @@ export function breakout({ boards, copy, lives = Infinity, cartridge = false }: 
     let score = 0;
     let balls = lives;
     let running = false;
+    let paused = false;
     let paddle = W / 2 - PADDLE_W / 2;
     const ball = { x: W / 2, y: H * 0.6, vx: 0, vy: 0 };
     let dirty = true;
@@ -175,7 +178,7 @@ export function breakout({ boards, copy, lives = Infinity, cartridge = false }: 
 
       if (!running) {
         g.textBaseline = "middle";
-        text(copy.start, W / 2, H * 0.6 + (cartridge ? 70 : 40), cartridge ? 36 : 15, c.muted, "center");
+        text(paused && copy.paused ? copy.paused : copy.start, W / 2, H * 0.6 + (cartridge ? 70 : 40), cartridge ? 36 : 15, c.muted, "center");
       }
       g.restore();
     };
@@ -248,7 +251,7 @@ export function breakout({ boards, copy, lives = Infinity, cartridge = false }: 
       }
     };
 
-    // Launch, or move on to the next board.
+    // Launch, resume, or move on to the next board.
     const action = () => {
       dirty = true;
       if (!bricks.length) {
@@ -256,10 +259,17 @@ export function breakout({ boards, copy, lives = Infinity, cartridge = false }: 
         resetBall();
         running = false;
       } else if (!running) {
-        resetBall();
+        if (!paused) resetBall();
+        paused = false;
         running = true;
       }
     };
+    onPause?.(() => {
+      if (!running) return;
+      running = false;
+      paused = true;
+      dirty = true;
+    });
 
     let lag = 0;
     ctx.frame((dt, now) => {

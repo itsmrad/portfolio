@@ -11,8 +11,9 @@ const BOARDS = [
 /** Attaches the game to a canvas; returns a function that stops it and removes every listener. */
 export function start(canvas: HTMLCanvasElement, copy: GameCopy, announce: (message: string) => void) {
   // Only the game's keys are taken: "/" still opens the search on this page.
-  const h = host(canvas, { width: 800, height: 600, exclusive: false, pauseOnBlur: false, announce });
-  const stop = breakout({ boards: BOARDS, copy })(h.ctx);
+  let pause = () => {};
+  const h = host(canvas, { width: 800, height: 600, exclusive: false, pauseOnBlur: false, announce, onRunning: (running) => running || pause() });
+  const stop = breakout({ boards: BOARDS, copy, onPause: (fn) => (pause = fn) })(h.ctx);
   return () => {
     stop();
     h.stop();
