@@ -104,7 +104,9 @@ test.describe("arcade at 1440", () => {
     await page.addInitScript(() => localStorage.setItem("arcade:reaction", JSON.stringify({ v: 231, t: "231 ms" })));
     await open(page);
     const index = page.locator('[data-arcade-card="arcade"]');
-    await expect(index.getByRole("listitem")).toHaveCount(GAMES.length);
+    // Every registry's entries, not only this file's table: other engineers' games join the index too.
+    const entries = ["a", "b", "c"].reduce((sum, r) => sum + (readFileSync(`src/components/arcade/games/registry-${r}.ts`, "utf8").match(/\{ id: "/g)?.length ?? 0), 0);
+    await expect(index.getByRole("listitem")).toHaveCount(entries);
     await index.getByRole("button", { name: "Ruler and rivet" }).click();
     await expect(page.locator('[data-arcade-card="pong"] canvas')).toBeFocused();
     await index.getByRole("button", { name: "Cursor race" }).click();
