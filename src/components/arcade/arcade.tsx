@@ -17,7 +17,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { play } from "@/lib/sound";
 import { arcadeCopy as copy } from "@/content/arcade";
-import { Button } from "@/components/ui/button";
 
 import styles from "./arcade.module.css";
 import type { Entry } from "./contract";
@@ -174,9 +173,9 @@ function Player({ entry, best, onBest, onClose, announce }: { entry: Entry; best
         <span className="tabular-nums text-muted-foreground">
           <span className="eyebrow">{copy.best}</span> {best ? (best.t ?? best.v) : "—"}
         </span>
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose} aria-keyshortcuts="Escape">
+        <button type="button" data-slot="button" className={`${styles.button} ${styles.ghost}`} onClick={onClose} aria-keyshortcuts="Escape">
           {copy.close} <kbd className="font-mono text-xs">Esc</kbd>
-        </Button>
+        </button>
       </div>
     </>
   );
@@ -235,12 +234,12 @@ function Card({
         </p>
         {children}
         {onPlay && !active && (
-          <Button ref={button} variant="outline" size="sm" className={styles.play} onClick={onPlay} aria-label={`${copy.play} ${entry.name}`}>
+          <button ref={button} type="button" data-slot="button" className={`${styles.button} ${styles.play}`} onClick={onPlay} aria-label={`${copy.play} ${entry.name}`}>
             <svg viewBox="0 0 12 12" aria-hidden className="size-3" fill="currentColor">
               <path d="M3 1.5v9l7.5-4.5z" />
             </svg>
             {copy.play}
-          </Button>
+          </button>
         )}
       </div>
     </div>
