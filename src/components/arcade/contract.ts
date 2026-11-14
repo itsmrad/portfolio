@@ -43,6 +43,9 @@ export type Colors = {
   blue: string;
   violet: string;
 };
+/** Where the arcade exists (R16): wide margins and a mouse. */
+export const ARCADE_WIDE = "(min-width: 80rem) and (pointer: fine)";
+
 export const HUES = ["accent", "amber", "green", "teal", "blue", "violet"] as const;
 
 /** Arrow keys map to directions, Space and Enter to "action"; any other key is null (read `event.key`, e.g. for typing). */

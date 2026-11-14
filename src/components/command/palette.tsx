@@ -19,6 +19,7 @@ import {
   Download,
   FileText,
   FolderOpen,
+  Gamepad2,
   Globe,
   GraduationCap,
   Hammer,
@@ -40,6 +41,7 @@ import { site } from "@/content/site";
 import { play, toggleSound } from "@/lib/sound";
 import { CommandGroup, CommandItem, CommandLegend, CommandShortcut, kbd } from "@/components/ui/command";
 import { Dialog } from "@/components/ui/dialog";
+import { ARCADE_WIDE } from "@/components/arcade/contract";
 import { actions, type Action } from "@/components/command/shortcuts";
 
 import styles from "./command.module.css";
@@ -89,6 +91,7 @@ const icons: Record<string, React.ReactNode> = {
   keyboard: <Keyboard />,
   theme: <SunMoon />,
   sound: <Volume2 />,
+  game: <Gamepad2 />,
   github: (
     <Brand d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3" />
   ),
@@ -137,7 +140,12 @@ function copy(text: string, done: string) {
 }
 
 function perform(action: Action) {
-  if (action.id === "sound") {
+  if (action.group === "Arcade") {
+    // The arcade loads once its stretch of page is near: go there, and leave the request for it to pick up.
+    document.documentElement.dataset.arcade = action.id.slice(7) || "arcade";
+    document.querySelector(action.href!.slice(1))?.scrollIntoView();
+    dispatchEvent(new Event("arcade:request"));
+  } else if (action.id === "sound") {
     toggleSound();
   } else if (action.id === "keys") {
     const off = !keysOff();
@@ -241,6 +249,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
     const found = actions.filter(
       (action) =>
         (resume || action.id !== "resume") &&
+        (action.group !== "Arcade" || matchMedia(ARCADE_WIDE).matches) &&
         words.every((word) =>
           `${labelOf(action)} ${action.group} ${action.hint ?? ""} ${action.keywords ?? ""}`.toLowerCase().includes(word),
         ),

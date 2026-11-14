@@ -6,7 +6,7 @@
  */
 import { Lazy } from "@/components/playful/lazy";
 
-export const ARCADE_WIDE = "(min-width: 80rem) and (pointer: fine)";
+import { ARCADE_WIDE } from "./contract";
 
 export function ArcadeSlot() {
   // Once Experience nears: the first input alone stays inside the playful budget.

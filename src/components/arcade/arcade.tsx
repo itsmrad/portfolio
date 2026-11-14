@@ -308,13 +308,27 @@ export function Arcade() {
   );
 
   useEffect(() => {
-    const onPlay = (event: Event) => {
-      const id = (event as CustomEvent<string | undefined>).detail;
-      if (id) start(id);
+    const open = (id?: string) => {
+      if (id && id !== "arcade") start(id);
       else document.querySelector<HTMLElement>('[data-arcade-card="arcade"] button')?.focus();
     };
+    const onPlay = (event: Event) => open((event as CustomEvent<string | undefined>).detail);
+    // A request left by the command palette (html[data-arcade]), possibly made before this chunk loaded.
+    const onRequest = () => {
+      const { dataset } = document.documentElement;
+      const id = dataset.arcade;
+      if (id === undefined) return;
+      delete dataset.arcade;
+      // shortcut: a fixed wait for the cards' first placement; tie it to the layout if it ever races.
+      setTimeout(() => open(id), 300);
+    };
+    onRequest();
     addEventListener("arcade:play", onPlay);
-    return () => removeEventListener("arcade:play", onPlay);
+    addEventListener("arcade:request", onRequest);
+    return () => {
+      removeEventListener("arcade:play", onPlay);
+      removeEventListener("arcade:request", onRequest);
+    };
   }, [start]);
 
   // Margin decoration under a card steps aside: tell it where the cards are now.
