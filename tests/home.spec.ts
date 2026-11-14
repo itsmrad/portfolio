@@ -122,7 +122,7 @@ test.describe("hero", () => {
       expect(await sink(page)).toBe(0);
       expect(await page.locator("#top radialGradient").getAttribute("cx")).toBe(glow);
       const lines = page.locator("#top h1 + ul li");
-      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).animationName))).toEqual(["none", "none", "none", "none"]);
+      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).animationName))).toEqual(["none", "none", "none"]);
       expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).opacity))).toEqual(["1", "0", "0"]);
     });
   });
