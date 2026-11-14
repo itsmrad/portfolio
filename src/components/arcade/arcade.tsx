@@ -68,8 +68,7 @@ function anchor(section: string, text?: string) {
   if (!root || !text) return root;
   let hit: Element | null = null;
   for (const element of root.querySelectorAll("*"))
-    if (element.textContent?.includes(text) && (!hit || hit.contains(element)))
-      hit = element;
+    if (element.textContent?.includes(text) && (!hit || hit.contains(element))) hit = element;
   return hit;
 }
 
@@ -84,8 +83,7 @@ function widths(margin: number) {
   };
 }
 /** A card's full height while a game plays (grip, title block, how-to, the 4:3 frame, the readout), plus a gap. */
-const playing = (width: number) =>
-  236 + Math.ceil(((width - 26) * 3) / 4) + GAP;
+const playing = (width: number) => 236 + Math.ceil(((width - 26) * 3) / 4) + GAP;
 
 /**
  * The layout plan. Every card gets a slot on its side as tall as it is while playing, so opening a game never
@@ -101,15 +99,10 @@ function usePlaces(root: React.RefObject<HTMLElement | null>) {
       // The column is --frame-width, 640px by design.
       const width = widths((box.width - 640) / 2);
       const roomLeft = width.left >= 280;
-      const y = (rect: DOMRect): Span => [
-        rect.top - box.top - GAP,
-        rect.bottom - box.top + GAP,
-      ];
+      const y = (rect: DOMRect): Span => [rect.top - box.top - GAP, rect.bottom - box.top + GAP];
       const taken = { left: [] as Span[], right: [] as Span[] };
       for (const side of ["left", "right"] as const)
-        for (const item of document.querySelectorAll(
-          `[data-margin="${side}"] :is([data-life], [data-note], [data-cat-bed], [data-timer])`,
-        ))
+        for (const item of document.querySelectorAll(`[data-margin="${side}"] :is([data-life], [data-note], [data-cat-bed], [data-timer])`))
           taken[side].push(y(item.getBoundingClientRect()));
       for (const id of RESERVED) {
         const section = document.getElementById(id);
@@ -125,34 +118,30 @@ function usePlaces(root: React.RefObject<HTMLElement | null>) {
           ? [
               {
                 item,
-                top:
-                  Math.round(element.getBoundingClientRect().top - box.top) +
-                  (item.near ? 0 : BELOW_TITLE),
+                top: Math.round(element.getBoundingClientRect().top - box.top) + (item.near ? 0 : BELOW_TITLE),
               },
             ]
           : [];
       });
       for (const { item, top: want } of wanted.sort((a, b) => a.top - b.top)) {
         flip = flip === "left" ? "right" : "left";
-        const side =
-          (item.side ?? flip) === "left" && roomLeft ? "left" : "right";
+        const side = (item.side ?? flip) === "left" && roomLeft ? "left" : "right";
         // The index is as tall as its list (two columns where it fits); a cartridge, as tall as it is playing.
-        const height = item === INDEX ? 132 + Math.ceil(GAMES.length / Math.max(1, Math.floor((width[side] - 26) / 136))) * 26 + GAP : playing(width[side]);
+        const height =
+          item === INDEX
+            ? 132 + Math.ceil(GAMES.length / Math.max(1, Math.floor((width[side] - 26) / 136))) * 26 + GAP
+            : playing(width[side]);
         // Down from where it wants to be, to the first gap tall enough.
         let top = want;
         for (let clash = true; clash;) {
-          const hit = taken[side].find(
-            ([from, to]) => top < to && top + height > from,
-          );
+          const hit = taken[side].find(([from, to]) => top < to && top + height > from);
           clash = !!hit;
           if (hit) top = Math.ceil(hit[1]);
         }
         taken[side].push([top, top + height]);
         next[item.id] = { top, side, width: width[side] };
       }
-      setPlaces((previous) =>
-        JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
-      );
+      setPlaces((previous) => (JSON.stringify(previous) === JSON.stringify(next) ? previous : next));
     };
     const observer = new ResizeObserver(measure);
     observer.observe(document.getElementById("main") ?? document.body);
@@ -169,8 +158,7 @@ function usePlaces(root: React.RefObject<HTMLElement | null>) {
 
 type Phase = "loading" | "playing" | "over" | "failed";
 
-const better = (entry: Entry, score: Best, best: Best | null) =>
-  !!best && (entry.lower ? score.v < best.v : score.v > best.v);
+const better = (entry: Entry, score: Best, best: Best | null) => !!best && (entry.lower ? score.v < best.v : score.v > best.v);
 
 /**
  * The framed canvas, the readout and the game's lifecycle. Mounted while its card is open or closing; the game
@@ -227,12 +215,13 @@ function Player({
       },
     });
     element.focus({ preventScroll: true });
-    element.scrollIntoView({
-      block: "nearest",
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
+    // Bring the card's full playing height into view now, while it unfolds (the loop runs only on screen).
+    const card = element.closest<HTMLElement>("[data-arcade-card]")!;
+    const box = card.getBoundingClientRect();
+    const below = box.top + playing(box.width) - GAP - innerHeight;
+    const above = box.top - 72;
+    const by = below > 0 ? Math.min(below + 16, above) : 0;
+    if (by > 0) scrollBy({ top: by, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     entry.load().then(
       (module) => {
         if (!alive) return;
@@ -244,16 +233,15 @@ function Player({
           setMark(readBest(entry.id));
           setPhase("playing");
           stop = module.default(h.ctx);
+          // The opening frame, even before the loop runs (the card may still be unfolding below the fold).
+          h.repaint();
         };
         restart.current();
       },
       () => alive && setPhase("failed"),
     );
     // Esc always exits, wherever focus is, unless a dialog (the palette) owns it.
-    const onEscape = (event: KeyboardEvent) =>
-      event.key === "Escape" &&
-      !document.querySelector("dialog[open]") &&
-      onClose();
+    const onEscape = (event: KeyboardEvent) => event.key === "Escape" && !document.querySelector("dialog[open]") && onClose();
     document.addEventListener("keydown", onEscape);
     return () => {
       alive = false;
@@ -292,41 +280,25 @@ function Player({
           aria-label={`${entry.name} game`}
           aria-describedby={`arcade-${entry.id}-how`}
           className={styles.canvas}
-          onKeyDown={(event) =>
-            !event.repeat &&
-            (event.key === " " || event.key === "Enter") &&
-            again()
-          }
+          onKeyDown={(event) => !event.repeat && (event.key === " " || event.key === "Enter") && again()}
           onPointerDown={again}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
         {overlay && (
-          <p
-            className={styles.overlay}
-            data-phase={phase}
-            data-beaten={(phase === "over" && beaten) || undefined}
-            aria-hidden
-          >
+          <p className={styles.overlay} data-phase={phase} data-beaten={(phase === "over" && beaten) || undefined} aria-hidden>
             {overlay}
           </p>
         )}
       </div>
       <div className={styles.readout}>
         <output className="tabular-nums" aria-label={copy.score}>
-          <span className="eyebrow">{copy.score}</span>{" "}
-          {/* Keyed by the value: each change replays the small tick. */}
-          <span
-            key={score?.v ?? "none"}
-            className={score ? styles.tick : undefined}
-          >
+          <span className="eyebrow">{copy.score}</span> {/* Keyed by the value: each change replays the small tick. */}
+          <span key={score?.v ?? "none"} className={score ? styles.tick : undefined}>
             {score ? (score.t ?? score.v) : "—"}
           </span>
         </output>
-        <span
-          className={`${styles.best} tabular-nums`}
-          data-beaten={beaten || undefined}
-        >
+        <span className={`${styles.best} tabular-nums`} data-beaten={beaten || undefined}>
           <span className="eyebrow">{beaten ? copy.newBest : copy.best}</span>{" "}
           {beaten ? (score.t ?? score.v) : mark ? (mark.t ?? mark.v) : "—"}
         </span>
@@ -373,18 +345,12 @@ function Card({
     if (
       was.current &&
       !active &&
-      (!focus ||
-        focus === document.body ||
-        focus.closest("[data-arcade-card]") ===
-          button.current?.closest("[data-arcade-card]"))
+      (!focus || focus === document.body || focus.closest("[data-arcade-card]") === button.current?.closest("[data-arcade-card]"))
     )
       button.current?.focus({ preventScroll: true });
     was.current = active;
     if (active) return;
-    const timer = setTimeout(
-      () => setShown(false),
-      matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 320,
-    );
+    const timer = setTimeout(() => setShown(false), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 320);
     return () => clearTimeout(timer);
   }, [active]);
   return (
@@ -399,15 +365,8 @@ function Card({
     >
       <div className={`${styles.grip} hatch`} aria-hidden />
       <div className={styles.body}>
-        <p
-          className="eyebrow flex justify-between"
-          aria-hidden={number === undefined || undefined}
-        >
-          <span>
-            {number === undefined
-              ? copy.index
-              : `${copy.cart} ${String(number).padStart(2, "0")}`}
-          </span>
+        <p className="eyebrow flex justify-between" aria-hidden={number === undefined || undefined}>
+          <span>{number === undefined ? copy.index : `${copy.cart} ${String(number).padStart(2, "0")}`}</span>
           {best !== undefined && !active && (
             <span className="tabular-nums">
               {copy.best} {best ? (best.t ?? best.v) : "—"}
@@ -435,12 +394,7 @@ function Card({
             onClick={onPlay}
             aria-label={`${copy.play} ${entry.name}`}
           >
-            <svg
-              viewBox="0 0 12 12"
-              aria-hidden
-              className="size-3"
-              fill="currentColor"
-            >
+            <svg viewBox="0 0 12 12" aria-hidden className="size-3" fill="currentColor">
               <path d="M3 1.5v9l7.5-4.5z" />
             </svg>
             {copy.play}
@@ -484,8 +438,7 @@ export function Arcade() {
         const entry = GAMES.find((game) => game.id === active)!;
         const best = all[entry.id];
         if (score.v <= 0 && !entry.lower) return all;
-        if (best && (entry.lower ? score.v >= best.v : score.v <= best.v))
-          return all;
+        if (best && (entry.lower ? score.v >= best.v : score.v <= best.v)) return all;
         writeBest(entry.id, score);
         return { ...all, [entry.id]: score };
       }),
@@ -495,13 +448,9 @@ export function Arcade() {
   useEffect(() => {
     const open = (id?: string) => {
       if (id && id !== "arcade") start(id);
-      else
-        document
-          .querySelector<HTMLElement>('[data-arcade-card="arcade"] button')
-          ?.focus();
+      else document.querySelector<HTMLElement>('[data-arcade-card="arcade"] button')?.focus();
     };
-    const onPlay = (event: Event) =>
-      open((event as CustomEvent<string | undefined>).detail);
+    const onPlay = (event: Event) => open((event as CustomEvent<string | undefined>).detail);
     // A request left by the command palette (html[data-arcade]), possibly made before this chunk loaded.
     const onRequest = () => {
       const { dataset } = document.documentElement;
@@ -529,23 +478,13 @@ export function Arcade() {
   return (
     <section ref={root} aria-label={copy.label} className={styles.arcade}>
       {index && (
-        <Card
-          entry={{ id: INDEX.id, name: copy.index, howTo: copy.indexHowTo }}
-          place={index}
-          active={false}
-        >
+        <Card entry={{ id: INDEX.id, name: copy.index, howTo: copy.indexHowTo }} place={index} active={false}>
           {() => (
             <ul className={styles.list}>
               {GAMES.map((game, i) => (
                 <li key={game.id}>
-                  <button
-                    type="button"
-                    className="link-underline"
-                    onClick={() => start(game.id)}
-                  >
-                    <span className="eyebrow mr-2 tabular-nums">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                  <button type="button" className="link-underline" onClick={() => start(game.id)}>
+                    <span className="eyebrow mr-2 tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                     {game.name}
                   </button>
                 </li>
@@ -568,14 +507,7 @@ export function Arcade() {
               onPlay={() => start(game.id)}
             >
               {(open) => (
-                <Player
-                  entry={game}
-                  open={open}
-                  best={bests[game.id] ?? null}
-                  onBest={onBest}
-                  onClose={close}
-                  announce={announce}
-                />
+                <Player entry={game} open={open} best={bests[game.id] ?? null} onBest={onBest} onClose={close} announce={announce} />
               )}
             </Card>
           )

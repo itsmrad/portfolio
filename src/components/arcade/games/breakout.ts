@@ -6,7 +6,10 @@
  */
 import { breakout, type Brick } from "@/components/game/breakout";
 
-import { HUES } from "../contract";
+import type { Colors } from "../contract";
+
+// Spelled out rather than imported: a runtime import from ../contract would pull a shared chunk into this one.
+const HUES: (keyof Colors)[] = ["accent", "amber", "green", "teal", "blue", "violet"];
 
 const ROWS: [string, number][][] = [
   [["DRAWN BY", 3], ["REV", 2], ["DATE", 3], ["SHEET", 2]],
