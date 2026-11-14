@@ -468,10 +468,12 @@ test.describe("desktop", () => {
 
   test("the listener stays within 1 KB", () => {
     const chunks = readdirSync(".next/static/chunks").filter((name) => name.endsWith(".js"));
-    const source = chunks.map((name) => readFileSync(`.next/static/chunks/${name}`, "utf8")).find((text) => text.includes("data-command-open"));
+    // The eggs chunk also mentions data-command-open; only the listener closes the palette by its selector.
+    const marker = "dialog[data-palette][open]";
+    const source = chunks.map((name) => readFileSync(`.next/static/chunks/${name}`, "utf8")).find((text) => text.includes(marker));
     expect(source, "chunk with the listener").toBeTruthy();
     // Turbopack writes each module as `,<id>,e=>{…}`; take the one that defines the listener.
-    const fragment = source!.split(/(?=,\d+,\(?\w\)?=>)/).find((part) => part.includes("data-command-open"))!;
+    const fragment = source!.split(/(?=,\d+,\(?\w\)?=>)/).find((part) => part.includes(marker))!;
     console.log(`listener ${brotli(Buffer.from(fragment))} B brotli`);
     expect(brotli(Buffer.from(fragment))).toBeLessThanOrEqual(1024);
   });
