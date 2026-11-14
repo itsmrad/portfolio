@@ -42,13 +42,93 @@
 }
 
 /* --- Reading over a scale: the fill is the share, ticks every tenth ------- */
+/* Registered so a scroll timeline can animate them: the fill (a share) and the count (an integer). */
+@property --fill {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --n {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
 .ratio {
+  --fill: var(--p);
   width: 9.5rem;
   padding-bottom: 0.625rem;
   background:
-    linear-gradient(var(--foreground), var(--foreground)) 0 100% / calc(var(--p) * 100%) 2px no-repeat,
+    linear-gradient(var(--foreground), var(--foreground)) 0 100% / calc(var(--fill) * 100%) 2px no-repeat,
     repeating-linear-gradient(to right, var(--cross) 0 1px, transparent 1px 10%) 0 100% / 100% 6px no-repeat,
     linear-gradient(var(--cross), var(--cross)) 0 calc(100% - 0.5px) / 100% 1px no-repeat;
+}
+/* The loader: from a tenth of the way into view to four tenths (RANGE in life.tsx), the bar fills and the count runs up. */
+.ratio[data-reading] {
+  animation: reading linear both;
+  animation-timeline: view();
+  animation-range: cover 10% cover 40%;
+}
+@keyframes reading {
+  from {
+    --fill: 0;
+    --n: 0;
+  }
+  to {
+    --fill: var(--p);
+    --n: var(--v);
+  }
+}
+/* The count while loading: the real number keeps its width (and stays as text); the running counter is drawn over it. */
+.count {
+  position: relative;
+  display: inline-block;
+}
+.ratio[data-reading] .count {
+  color: transparent;
+}
+.ratio[data-reading] .count::before {
+  content: counter(n);
+  counter-reset: n var(--n);
+  position: absolute;
+  right: 0;
+  color: var(--foreground);
+}
+/* The tick struck at the value on the scale: quiet at rest, the accent and a pop on arrival. */
+.strike {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--p) * 100% - 0.75px);
+  width: 1.5px;
+  height: 0.625rem;
+  background: var(--cross);
+  transform-origin: bottom;
+}
+.ratio[data-reading] .strike {
+  scale: 1 0;
+}
+.ratio[data-hit] .strike {
+  background: var(--accent);
+  animation: strike 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.ratio[data-hit] .count::before {
+  animation: settle 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes strike {
+  from {
+    scale: 1 0;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+@keyframes settle {
+  from {
+    color: var(--accent);
+    scale: 1.18;
+  }
+  40% {
+    color: var(--accent);
+  }
 }
 
 /* --- Numbered callouts, one per list item, leader towards the column ----- */
@@ -124,15 +204,49 @@
   transition: rotate 320ms cubic-bezier(0.34, 1.56, 0.64, 1), scale 120ms;
 }
 .lock {
-  width: 2rem;
-  height: 2.25rem;
+  width: 2.25rem;
+  height: 2.5rem;
   transition: scale 120ms;
 }
+/* The body hides the long leg's lower end, so the shackle reads as one piece going into it. */
+.lock .body {
+  fill: var(--background);
+}
 .shackle {
-  transition: translate 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-box: view-box;
+  transform-origin: 10px 0;
 }
 .lock[data-open] .shackle {
-  translate: 0 -4px;
+  transform: translateY(-5px) scaleX(-1);
+}
+/* One continuous, eased motion each way: lift until the short leg clears the body, then swing round the long leg. */
+.lock[data-moved][data-open] .shackle {
+  animation: unlock 560ms cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+.lock[data-moved]:not([data-open]) .shackle {
+  animation: relock 560ms cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+@keyframes unlock {
+  from {
+    transform: none;
+  }
+  35% {
+    transform: translateY(-5px);
+  }
+  to {
+    transform: translateY(-5px) scaleX(-1);
+  }
+}
+@keyframes relock {
+  from {
+    transform: translateY(-5px) scaleX(-1);
+  }
+  65% {
+    transform: translateY(-5px);
+  }
+  to {
+    transform: none;
+  }
 }
 .lock[data-open] {
   color: var(--signal);
@@ -232,6 +346,9 @@
   .shackle,
   .key {
     transition: none;
+  }
+  .lock[data-moved] .shackle {
+    animation: none;
   }
   .wave[data-on] > i {
     animation: none;
