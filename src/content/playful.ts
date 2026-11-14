@@ -54,6 +54,7 @@ export const playful = {
     { kind: "note", side: "left", in: "xflow", text: "Paste into whatever", dy: -10, note: "lands wherever\nyour cursor is" },
     { kind: "note", side: "right", in: "xflow", text: "Daemon and CLI", dy: -40, note: "the daemon is rust" },
     { kind: "note", side: "left", in: "activity", dy: 90, note: "every square\nis one day" },
+    { kind: "note", side: "right", in: "activity", text: "Play my contributions", dy: -46, note: "go on, shoot\ndown my year" },
     { kind: "note", side: "left", in: "stack", text: "AI/LLM", dy: -20, note: "the day job,\nrag and tools" },
     { kind: "note", side: "left", in: "faq", text: "Who is Anupam Das?", dy: -40, note: "nine questions,\nshort answers" },
     { kind: "note", side: "right", in: "faq", text: "How can I contact", dy: -40, note: "ask him the rest,\nit's just below" },
