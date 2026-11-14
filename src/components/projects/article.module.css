@@ -124,6 +124,10 @@
   color: var(--muted-foreground);
   font: 0.75rem/1 var(--font-pixel);
 }
+/* The number is drawn by CSS so the heading's text is the title alone. */
+.part h4 span::before {
+  content: attr(data-n);
+}
 
 .built {
   display: grid;

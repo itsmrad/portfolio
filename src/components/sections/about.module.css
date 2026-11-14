@@ -13,6 +13,10 @@
     color 0.15s;
 }
 
+/* Drawn by CSS so the sentence reads "Codenaya is…" to crawlers and assistants. */
+.chip span::before {
+  content: "↘";
+}
 .chip span {
   font-family: var(--font-mono);
   font-size: 0.75em;
