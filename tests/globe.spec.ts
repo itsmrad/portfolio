@@ -161,6 +161,12 @@ const laidOutCleanly = (page: Page) =>
     return issues;
   });
 
+/** Presses a key and waits for the frame that shows it. */
+async function press(page: Page, key: string) {
+  await page.keyboard.press(key);
+  await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+}
+
 async function drag(page: Page, dx: number, dy: number, from?: { x: number; y: number }) {
   const box = (await stage(page).boundingBox())!;
   const start = from ?? { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -186,6 +192,14 @@ test.describe("held still (reduced motion), so every position is exact", () => {
     expect(Math.abs(home.x - centre.x)).toBeLessThan(1);
     expect(Math.abs(home.y - centre.y)).toBeLessThan(1);
     const before = await snapshot(page);
+    // Drawn in the page's inks, not all in the text colour (reduced motion gives elements a tiny transition).
+    const inks = await canvas(page).evaluate((element: HTMLCanvasElement) => {
+      const data = element.getContext("2d")!.getImageData(0, 0, element.width, element.height).data;
+      const seen = new Set<string>();
+      for (let i = 0; i < data.length; i += 4) if (data[i + 3]! > 250) seen.add(`${data[i]! >> 4},${data[i + 1]! >> 4},${data[i + 2]! >> 4}`);
+      return seen.size;
+    });
+    expect(inks).toBeGreaterThan(3);
 
     // Grab the globe just beside the pin and pull right: the pin follows the hand.
     await drag(page, 60, 0);
@@ -234,20 +248,20 @@ test.describe("held still (reduced motion), so every position is exact", () => {
     await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     // Home faces the middle of the great circle from London to New Delhi.
     const start = (await dot(page, "home"))!;
-    await page.keyboard.press("ArrowRight");
+    await press(page, "ArrowRight");
     const right = (await dot(page, "home"))!;
     expect(right.x - start.x).toBeGreaterThan(0.15 * centre.r);
-    await page.keyboard.press("ArrowDown");
+    await press(page, "ArrowDown");
     expect((await dot(page, "home"))!.y).toBeGreaterThan(right.y + 0.1 * centre.r);
-    await page.keyboard.press("ArrowUp");
-    await page.keyboard.press("ArrowLeft");
+    await press(page, "ArrowUp");
+    await press(page, "ArrowLeft");
     const back = (await dot(page, "home"))!;
     expect(Math.abs(back.x - start.x)).toBeLessThan(1);
     expect(Math.abs(back.y - start.y)).toBeLessThan(1);
     // Twelve turns of 15° put New Delhi on the far side: its pin and label go.
-    for (let i = 0; i < 12; i++) await page.keyboard.press("ArrowRight");
+    for (let i = 0; i < 12; i++) await press(page, "ArrowRight");
     expect(await shownLabels(page)).not.toContain("home");
-    await page.keyboard.press("Home");
+    await press(page, "Home");
     await expect.poll(() => shownLabels(page)).toContain("home");
     expect(await page.evaluate(() => scrollY)).toBe(scrolled);
     // Tab moves on: to the reset, then out of the figure.

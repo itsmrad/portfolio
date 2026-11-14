@@ -100,6 +100,8 @@ function landDots(bytes: Uint8Array) {
 
 /** A CSS colour (any syntax, tokens included) as [r, g, b]. */
 function rgb(probe: HTMLElement, value: string) {
+  // Reduced motion gives every element a tiny transition; one on the probe would read back the old colour.
+  probe.style.transitionProperty = "none";
   probe.style.color = value;
   const context = document.createElement("canvas").getContext("2d")!;
   context.fillStyle = getComputedStyle(probe).color;
@@ -192,7 +194,7 @@ export function mountGlobe(stage: HTMLElement) {
     const [r, g, b] = colours.find(([name]) => name === "ink")![1];
     // As a little-endian RGBA word, alpha left out.
     landInk = r | (g << 8) | (b << 16);
-    canvas.style.color = "";
+    canvas.style.color = canvas.style.transitionProperty = "";
     if (caption) font = getComputedStyle(caption).fontFamily;
   };
 
