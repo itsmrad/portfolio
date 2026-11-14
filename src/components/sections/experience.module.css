@@ -31,21 +31,79 @@
   outline-offset: -2px;
 }
 
-/* Letter tile: stands in for a logo the organisation has not supplied. */
+/* Organisation tile: a quiet paper square holding the mark (or a letter where there is none). */
 .tile {
+  position: relative;
   display: grid;
   flex: none;
   place-items: center;
   width: 34px;
   height: 34px;
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-serif);
   font-size: 17px;
   line-height: 1;
+}
+
+/* The mark: one 28px cell of logos.svg (cells 0-3 the silhouettes, 4-7 colour on paper,
+   8-11 colour lifted for the dark page). Pseudo-elements, not nodes: the page holds its
+   element count tight. ::before is the silhouette in ink, ::after the mark in colour. */
+.tile[style]::before,
+.tile[style]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 28px;
+  height: 28px;
+  margin: auto;
+  transition: opacity 0.2s ease-out;
+}
+
+.tile[style]::before {
+  background: var(--muted-foreground);
+  mask: url("./logos.svg") calc(var(--slot) * -28px) 0 / auto 28px no-repeat;
+}
+
+.tile[style]::after {
+  --cell: calc(var(--slot) + 4);
+  background: url("./logos.svg") calc(var(--cell) * -28px) 0 / auto 28px no-repeat;
+  opacity: 0;
+}
+
+:global(.dark) .tile[style]::after {
+  --cell: calc(var(--slot) + 8);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not(.light)) .tile[style]::after {
+    --cell: calc(var(--slot) + 8);
+  }
+}
+
+/* Forced colours would repaint the ink as the canvas colour and lose the mark. */
+@media (forced-colors: active) {
+  .tile[style]::before {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
+/* The row in hand (hovered, focused or open) shows its mark in colour. */
+.role summary:hover .tile::after,
+.role summary:focus-visible .tile::after,
+.role[open] .tile::after,
+.school:hover .tile::after {
+  opacity: 1;
+}
+
+.role summary:hover .tile::before,
+.role summary:focus-visible .tile::before,
+.role[open] .tile::before,
+.school:hover .tile::before {
+  opacity: 0;
 }
 
 .chevron {
@@ -190,5 +248,8 @@
   }
   .chevron {
     display: none;
+  }
+  .tile[style]::before {
+    print-color-adjust: exact;
   }
 }
