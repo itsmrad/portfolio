@@ -9,6 +9,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/85",
+        /** The resume download only: see "Highlights" in globals.css. */
+        accent: "action-accent",
         outline: "border bg-background hover:bg-muted hover:text-foreground",
         ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
         link: "text-foreground link-underline",
