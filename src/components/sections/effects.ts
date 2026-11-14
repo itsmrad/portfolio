@@ -49,6 +49,59 @@ export function click(event: MouseEvent) {
   else if (target.closest("main summary")) play("detent");
 }
 
+/* --- Banner glyphs: pressable by position ---------------------------------- */
+
+// The glyphs are mask layers on the monogram's box (hero.module.css), so they cost no element: a press is found
+// by position, from the layers' own computed masks, and handed to the glyph chunk (glyphs.ts).
+type Layer = { ids: string[]; boxes: number[][]; images: string[] };
+let layers: Layer[] | null = null;
+let layersAt = 0;
+const glyphChunk = () => import("./glyphs");
+
+function glyphAt(x: number, y: number) {
+  const mark = document.querySelector<HTMLElement>("[data-glyphs]");
+  if (!mark || !mark.offsetWidth) return null;
+  // Positions are fixed per width: read them again only when the width changes.
+  if (!layers || layersAt !== innerWidth) {
+    layersAt = innerWidth;
+    layers = ["before", "after"].map((which) => {
+      const style = getComputedStyle(mark, `::${which}`);
+      const sizes = style.maskSize.split(",").map(parseFloat);
+      return {
+        ids: getComputedStyle(mark).getPropertyValue(`--glyphs-${which}`).replace(/"/g, "").trim().split(" "),
+        boxes: style.maskPosition.split(",").map((pair, i) => {
+          const [px, py] = pair.trim().split(" ").map(parseFloat);
+          // A tile is 54 by 38 units: its height follows its width.
+          return [parseFloat(style.left) + px!, parseFloat(style.top) + py!, sizes[i]!, (sizes[i]! * 38) / 54];
+        }),
+        images: style.maskImage.split(/,\s*(?=url\()/),
+      };
+    });
+  }
+  const origin = mark.getBoundingClientRect();
+  for (const layer of layers)
+    for (const [i, [left, top, width, height]] of layer.boxes.entries()) {
+      // Inside the tile's outline: a diamond on top, its two sides below.
+      const u = (x - origin.left - left!) / width!;
+      const v = (y - origin.top - top!) / height!;
+      if (u < 0 || u > 1 || v < 0 || v > 1 || Math.abs(u - 0.5) * 2 + Math.abs(v - 0.48) * 1.9 > 1.15) continue;
+      return { id: layer.ids[i]!, left: left!, top: top!, width: width!, height: height!, image: layer.images[i]!, mark };
+    }
+  return null;
+}
+function glyphPointed(event: PointerEvent) {
+  const hit = (event.target as Element).closest?.("#top") ? glyphAt(event.clientX, event.clientY) : null;
+  const mark = document.querySelector<HTMLElement>("[data-glyphs]");
+  // The cursor says a tile can be pressed, and goes back as soon as the pointer is off it, wherever it went.
+  if (mark && mark.style.cursor !== (hit ? "pointer" : "")) mark.style.cursor = hit ? "pointer" : "";
+  if (!hit) return;
+  // Hovering a glyph fetches its chunk, so the press that follows answers at once.
+  const ready = glyphChunk();
+  if (event.type === "pointerdown") void ready.then((module) => module.press(hit as Parameters<typeof module.press>[0]), () => {});
+}
+addEventListener("pointermove", glyphPointed, { passive: true });
+addEventListener("pointerdown", glyphPointed, { passive: true });
+
 /* --- Contribution calendar: read out a day ------------------------------- */
 
 const PITCH = 12; // one cell and its gap, in the drawing's units
@@ -106,7 +159,9 @@ addEventListener("pointerdown", pointed, { passive: true });
 
 /** The input that fetched this chunk, replayed by the loader: a hover or tap on the calendar still reads its day. */
 export function wake(event: Event) {
-  if (event instanceof PointerEvent) pointed(event);
+  if (!(event instanceof PointerEvent)) return;
+  pointed(event);
+  glyphPointed(event);
 }
 
 const KEYS: Record<string, (from: number, last: number) => number> = {

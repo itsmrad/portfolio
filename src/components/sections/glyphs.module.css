@@ -1,0 +1,84 @@
+/*
+ * The pressed glyph and its joke (glyphs.ts). The tile sits exactly over the
+ * resting drawing: its own box is paper in the tile's outline (so the grey
+ * drawing underneath never shows doubled), and its ::after is the same
+ * drawing in the glyph's colour, which dips and springs back like the
+ * monogram. Both fade back to the resting drawing. Under reduced motion the
+ * colour and the joke simply appear and go.
+ */
+.tile {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+}
+.tile::before,
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+.tile::before {
+  background: var(--background);
+  mask-image: var(--glyph-silhouette);
+}
+.tile::after {
+  background: var(--hue);
+  mask-image: var(--image);
+}
+.tile[data-on] {
+  animation: glyph-colour 1400ms ease both;
+}
+.tile[data-on]::after {
+  animation: glyph-dip 460ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes glyph-colour {
+  from,
+  75% {
+    opacity: 1;
+  }
+}
+@keyframes glyph-dip {
+  25% {
+    translate: 0 2.5px;
+    scale: 1 0.95;
+  }
+}
+
+.popup {
+  position: absolute;
+  z-index: 2;
+  max-width: min(17rem, calc(100vw - 2rem));
+  padding: 0.3125rem 0.5rem 0.3125rem 0.625rem;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--hue);
+  border-radius: 0.25rem;
+  background: var(--background);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--foreground);
+  text-wrap: balance;
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 4px;
+  transition:
+    opacity 260ms ease,
+    translate 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.popup[data-on] {
+  opacity: 1;
+  translate: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile[data-on]::after {
+    animation: none;
+  }
+  .popup {
+    translate: none;
+    transition: opacity 120ms;
+  }
+}
