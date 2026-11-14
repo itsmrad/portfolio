@@ -11,6 +11,7 @@
 import { socials } from "@/content/site";
 import { type Contributions, contributions } from "@/lib/github";
 import { ExternalLink } from "@/components/layout/external-link";
+import { Button } from "@/components/ui/button";
 import { Section, SectionBody, SectionHeader } from "@/components/layout/section";
 
 import styles from "./activity.module.css";
@@ -114,6 +115,13 @@ export async function Activity() {
               <time dateTime={to.toISOString().slice(0, 10)}>{date.format(to)}</time>. Source:{" "}
               <ExternalLink href={github.href}>GitHub</ExternalLink>.
             </p>
+            {/* Turns the graph into a game: the lazy effects load components/arcade/games/contributions on the press. */}
+            <Button variant="outline" size="sm" data-graph-play aria-expanded={false}>
+              <svg viewBox="0 0 12 12" aria-hidden className="size-3" fill="currentColor">
+                <path d="M3 1.5v9l7.5-4.5z" />
+              </svg>
+              Play my contributions
+            </Button>
             <p className={styles.legend} aria-hidden>
               Less
               {LEVELS.map((level) => (
