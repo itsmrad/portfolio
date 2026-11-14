@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { expect, test, type Page } from "@playwright/test";
 
 import { glyphs } from "../src/content/glyphs";
@@ -103,18 +105,22 @@ test.describe("the glyphs at rest", () => {
 
     await open(page, 1440);
     await settle(page);
+    // The press chunk is known by its jokes.
+    const pressChunk = () =>
+      resources(page).then((list) =>
+        list.some((entry) => entry.type === "script" && readFileSync(`.next${new URL(entry.url).pathname.replace("/_next", "")}`, "utf8").includes("borrow checker")),
+      );
     await page.mouse.move(5, 600);
-    await settle(page);
-    const jokes = () => resources(page).then((list) => list.filter((entry) => entry.type === "script").length);
-    const before = await jokes();
-    // Off the glyphs, the press chunk stays away; over one, it arrives (so the press answers at once).
     await page.mouse.move(700, 600);
     await settle(page);
-    expect(await jokes()).toBe(before);
+    // Moving over the hero loads nothing of the glyphs (the first input's budget is untouched).
+    expect(await pressChunk()).toBe(false);
+    // The hit-test and the press arrive with the first press in the hero, and that press still counts.
     const [x, y] = centre((await tiles(page))[0]!);
-    await page.mouse.move(x, y);
+    await page.mouse.click(x, y);
     await settle(page);
-    expect(await jokes()).toBe(before + 1);
+    expect(await pressChunk()).toBe(true);
+    await expect(page.locator("[data-joke][data-on]")).toBeVisible();
   });
 });
 
@@ -127,6 +133,9 @@ test.describe("pressing a glyph", () => {
     // The page itself: loading the chunk adds its own script and stylesheet tags to <head>, which are not the press.
     const count = () => page.evaluate(() => document.body.querySelectorAll("*").length);
     const elements = await count();
+    // The cursor follows from the first press in the hero (here, on the name), which fetches the hit-test.
+    await page.locator("#top h1").click();
+    await settle(page);
     const all = await tiles(page);
     expect(all.length).toBeGreaterThanOrEqual(12);
     for (const tile of all) {
