@@ -43,7 +43,9 @@ async function copy(button: HTMLElement) {
 export function click(event: MouseEvent) {
   const target = event.target as Element;
   const button = target.closest<HTMLElement>("[data-copy]");
+  const game = target.closest<HTMLElement>("[data-graph-play]");
   if (button) void copy(button);
+  else if (game) void import("@/components/arcade/games/contributions").then((module) => module.toggle(game), () => play("error"));
   else if (target.closest("main summary")) play("detent");
 }
 
