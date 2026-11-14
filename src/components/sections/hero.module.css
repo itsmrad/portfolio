@@ -203,3 +203,101 @@
     display: none;
   }
 }
+
+/* --- Tech glyphs in the banner's empty paper (round 3) ---------------------
+   Drawn as masks on two layers of the monogram's own box, so they cost no
+   element, no HTML and no script: Rust, TypeScript, JavaScript, Docker, an AI
+   chip, React, a terminal prompt, a database and git, each a single-weight
+   line drawing on a 24-unit grid, its stroke set so every glyph draws about
+   1.35px of line whatever its size, in the construction-line ink. Positions
+   are in units of the monogram's width (cqw, x then y as a share of its
+   height) and hold at every width from 40rem, where the column is fixed;
+   below that a smaller set keeps clear of the stickers. The second layer
+   drifts 3px, slowly; reduced motion holds it still. To move one, edit its
+   pair in mask-position (same order as the names in the comment). Kept off
+   the monogram, its 30° note and the stickers: tests/round3.spec.ts. */
+.mark {
+  position: relative;
+  container-type: inline-size;
+}
+.mark::before,
+.mark::after {
+  content: "";
+  position: absolute;
+  top: 2.5rem;
+  left: calc(1rem - 30cqw);
+  width: 130cqw;
+  height: calc(100cqw * 385 / 555.26);
+  background: color-mix(in oklab, var(--cross) 80%, transparent);
+  mask-repeat: no-repeat;
+  pointer-events: none;
+}
+.mark::after {
+  animation: glyph-drift 7s ease-in-out infinite alternate;
+}
+@keyframes glyph-drift {
+  to {
+    translate: 0 -3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mark::after {
+    animation: none;
+  }
+}
+.mark::before {
+  /* ts, js, term, git, docker, db */
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.04' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Cpath d='M6.5 10h5M9 10v7.5M18 10.8c-.4-.7-2.8-.9-2.8.6 0 1.7 3 1 3 3 0 1.5-2.6 1.6-3.3.5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.36' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Cpath d='M10.5 10v5.6a1.6 1.6 0 0 1-3.1.5M18 10.8c-.4-.7-2.8-.9-2.8.6 0 1.7 3 1 3 3 0 1.5-2.6 1.6-3.3.5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.36' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='4.5' width='19' height='15' rx='2'/%3E%3Cpath d='M6.5 10l3 2.2-3 2.2M11.5 15.5h5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.36' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='5.5' r='2'/%3E%3Ccircle cx='7' cy='18.5' r='2'/%3E%3Ccircle cx='17' cy='8' r='2'/%3E%3Cpath d='M7 7.5v9M17 10c0 4.5-10 2.5-10 6.5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='0.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 13h17.3c.4-1 1.5-1.6 2.7-1.4-.5 4.4-4.4 7.9-10 7.9-5.3 0-8.6-2.8-10-6.5ZM5.5 13v-2.7h2.8V13M8.3 13v-2.7h2.8V13M11.1 13v-2.7h2.8V13M8.3 10.3V7.6h2.8v2.7'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.36' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5.8' rx='7' ry='2.6'/%3E%3Cpath d='M5 5.8v12.4c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V5.8M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6'/%3E%3C/svg%3E");
+  mask-position:
+    32cqw 2.08cqw,
+    54cqw 1.39cqw,
+    42cqw 13.17cqw,
+    5cqw 23.57cqw,
+    114cqw 53.39cqw,
+    125cqw 59.63cqw;
+  mask-size: 6.5cqw, 5cqw, 5cqw, 5cqw, 9cqw, 5cqw;
+}
+.mark::after {
+  /* rust, ai, react */
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='0.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='7'/%3E%3Cpath d='M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4M10 15.5v-7h2.6a1.9 1.9 0 0 1 0 3.8H10m2.6 0 1.9 3.2'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.04' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='6' width='12' height='12' rx='2'/%3E%3Cpath d='M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3M9 15l1.5-6 1.5 6M9.4 13.3h2.2M14.5 9v6'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.04' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1.3'/%3E%3Cellipse cx='12' cy='12' rx='10' ry='3.8'/%3E%3Cellipse cx='12' cy='12' rx='10' ry='3.8' transform='rotate%2860 12 12%29'/%3E%3Cellipse cx='12' cy='12' rx='10' ry='3.8' transform='rotate%28-60 12 12%29'/%3E%3C/svg%3E");
+  mask-position:
+    8cqw 2.77cqw,
+    20cqw 14.56cqw,
+    100cqw 60.32cqw;
+  mask-size: 9cqw, 6.5cqw, 6.5cqw;
+}
+@media (max-width: 39.99rem) {
+  .mark::before,
+  .mark::after {
+    top: 1.5rem;
+    left: 1rem;
+    width: 100cqw;
+  }
+  .mark::before {
+    /* ts, term */
+    mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.36' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Cpath d='M6.5 10h5M9 10v7.5M18 10.8c-.4-.7-2.8-.9-2.8.6 0 1.7 3 1 3 3 0 1.5-2.6 1.6-3.3.5'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.73' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='4.5' width='19' height='15' rx='2'/%3E%3Cpath d='M6.5 10l3 2.2-3 2.2M11.5 15.5h5'/%3E%3C/svg%3E");
+    mask-position:
+      1cqw 12.48cqw,
+      12cqw 14.56cqw;
+    mask-size: 7cqw, 5.5cqw;
+  }
+  .mark::after {
+    /* docker */
+    mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.06' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 13h17.3c.4-1 1.5-1.6 2.7-1.4-.5 4.4-4.4 7.9-10 7.9-5.3 0-8.6-2.8-10-6.5ZM5.5 13v-2.7h2.8V13M8.3 13v-2.7h2.8V13M11.1 13v-2.7h2.8V13M8.3 10.3V7.6h2.8v2.7'/%3E%3C/svg%3E");
+    mask-position:
+      70cqw 58.24cqw;
+    mask-size: 9cqw;
+  }
+}
