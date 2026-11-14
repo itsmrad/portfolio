@@ -37,7 +37,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import { commandCopy } from "@/content/command";
 import { site } from "@/content/site";
-import { haptic, play, toggleSound } from "@/lib/sound";
+import { play, toggleSound } from "@/lib/sound";
 import { CommandGroup, CommandItem, CommandLegend, CommandShortcut, kbd } from "@/components/ui/command";
 import { Dialog } from "@/components/ui/dialog";
 import { actions, type Action } from "@/components/command/shortcuts";
@@ -127,10 +127,12 @@ function copy(text: string, done: string) {
   (navigator.clipboard?.writeText(text) ?? Promise.reject()).then(
     () => {
       play("copy");
-      haptic();
       toast(done);
     },
-    () => toast(`${commandCopy.copyFailed} ${text}`, true),
+    () => {
+      play("error");
+      toast(`${commandCopy.copyFailed} ${text}`, true);
+    },
   );
 }
 
@@ -144,6 +146,7 @@ function perform(action: Action) {
       if (off) localStorage.setItem("shortcuts", "off");
       else localStorage.removeItem("shortcuts");
     } catch {}
+    play(off ? "toggleOff" : "toggle");
     toast(off ? commandCopy.keysNowOff : commandCopy.keysNowOn);
   } else if (action.control) {
     // The theme toggle owns the reveal from its own position, so press it,
@@ -269,10 +272,8 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
     chosen.current = true;
     // Close first: the page is inert while the modal is open, and focus goes back before any jump.
     dialog.current?.close();
-    if (!action.control && action.id !== "sound" && action.id !== "keys" && !action.id.startsWith("copy")) {
-      play("tap");
-      haptic();
-    }
+    // Every action plays one voice: these have their own (the theme toggle, the sound pair, copy).
+    if (!action.control && action.id !== "sound" && action.id !== "keys" && !action.id.startsWith("copy")) play("tap");
     perform(action);
   };
 
@@ -293,7 +294,6 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
       return;
     }
     play("open");
-    haptic();
     // Phones: keep the box above the on-screen keyboard, which shrinks only the visual viewport.
     const viewport = window.visualViewport;
     const fit = () => viewport && dialog.current?.style.setProperty("--visible-height", `${viewport.height}px`);
