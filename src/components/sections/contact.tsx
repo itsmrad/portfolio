@@ -35,8 +35,9 @@ export function Contact() {
             </p>
           )}
           <div className="flex flex-wrap gap-2" data-print="hide">
-            <BookCall href={site.calUrl} variant="default" />
+            {/* The same pair, order and weight as the hero: the resume is the one filled button. */}
             <ResumeDownload />
+            <BookCall href={site.calUrl} />
           </div>
         </div>
       )}
