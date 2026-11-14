@@ -117,9 +117,9 @@ function CommitIcon() {
 /** The one place the strip uses the signal colour: the "live" state. */
 function LiveDot() {
   return (
-    <span className="relative grid size-[15px] shrink-0 place-items-center" aria-hidden>
-      <span className="absolute size-2 animate-ping rounded-full bg-signal opacity-40 motion-reduce:hidden" />
-      <span className="size-1.5 rounded-full bg-signal" />
-    </span>
+    <span
+      className="relative grid size-[15px] shrink-0 place-items-center before:size-1.5 before:rounded-full before:bg-signal after:absolute after:size-2 after:animate-ping after:rounded-full after:bg-signal after:opacity-40 motion-reduce:after:hidden"
+      aria-hidden
+    />
   );
 }

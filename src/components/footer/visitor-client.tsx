@@ -2,33 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { cubicBezier, prefersReducedMotion, whenNear } from "./dom";
+import { whenNear } from "./dom";
 
-const ENDPOINT = "/api/visit";
 // Set once a browser has been counted; setting it by hand opts a browser out (the owner's own, say).
 const COUNTED = "visit-counted";
 const DIGITS = 6;
-const COUNT_FROM = 24; // the last numbers roll up, like an odometer catching up
-const DURATION = 1400;
-const EASE = cubicBezier(0.2, 0.7, 0.2, 1);
 
-/** The total, or null on any failure. Never throws. */
-async function fetchCount(method: "GET" | "POST") {
+/** The total from this browser's own counted visit, or null. Never throws. */
+async function countVisit() {
   try {
-    const response = await fetch(ENDPOINT, { method });
+    const response = await fetch("/api/visit", { method: "POST" });
     const { count } = (await response.json()) as { count?: unknown };
-    return response.ok && typeof count === "number" ? count : null;
+    return response.ok && Number.isSafeInteger(count) ? (count as number) : null;
   } catch {
     return null;
   }
 }
 
 /**
- * Counts this browser once and shows the total. The cell stays hidden (the
+ * The total and, under it, who is here right now. The cell stays hidden (the
  * title block's hatch shows) until a real total arrives, and for good if none
  * does; there is never a made-up number or a waiting state.
  */
-export function Counter({ unit }: { unit: string }) {
+export function Counter({ unit, alone, many }: { unit: string; alone: string; many: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
@@ -42,24 +38,21 @@ export function Counter({ unit }: { unit: string }) {
     } catch {
       // No storage, no way to count only once: read without counting.
     }
-    const load = async () => {
-      if (first) {
-        const count = await fetchCount("POST");
+    let posted: Promise<number | null> | undefined;
+    const post = () =>
+      (posted ??= countVisit().then((count) => {
         if (count !== null) {
           try {
             localStorage.setItem(COUNTED, "1");
           } catch {}
-          return count;
         }
-      }
-      return fetchCount("GET");
-    };
+        return count;
+      }));
     // A first visit is counted soon after load even if the footer is never reached,
     // but not while the page is only prerendered.
-    let pending: Promise<number | null> | undefined;
     const count = () => {
       const idle = window.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1000));
-      idle(() => (pending ??= load()));
+      idle(() => void post());
     };
     if (first) {
       if ((document as Document & { prerendering?: boolean }).prerendering) {
@@ -67,26 +60,21 @@ export function Counter({ unit }: { unit: string }) {
       } else count();
     }
 
-    let frame = 0;
+    // The rest (reading, rolling the numbers, the live line) loads with the footer.
+    let detach = () => {};
+    let gone = false;
     const stop = whenNear(element, () => {
-      void (pending ??= load()).then((count) => {
-        if (count === null) return;
-        element.closest("dd")?.parentElement?.style.setProperty("visibility", "visible");
-        setTotal(count);
-        if (prefersReducedMotion()) return setShown(count);
-        const from = Math.max(0, count - COUNT_FROM);
-        const start = performance.now();
-        const tick = (now: number) => {
-          const t = Math.min(1, (now - start) / DURATION);
-          setShown(Math.round(from + (count - from) * EASE(t)));
-          if (t < 1) frame = requestAnimationFrame(tick);
-        };
-        tick(start);
-      });
+      void Promise.all([first ? post() : null, import("./visitors")]).then(
+        ([mine, visitors]) => {
+          if (!gone) detach = visitors.showCounter(element, mine, { total: setTotal, shown: setShown });
+        },
+        () => {},
+      );
     });
     return () => {
+      gone = true;
       stop();
-      cancelAnimationFrame(frame);
+      detach();
       document.removeEventListener("prerenderingchange", count);
     };
   }, []);
@@ -95,12 +83,19 @@ export function Counter({ unit }: { unit: string }) {
   const lead = Math.max(0, DIGITS - String(shown ?? 0).length);
 
   return (
-    <span ref={ref} className="font-pixel text-base/5 tracking-[0.12em]">
-      <span aria-hidden>
+    <span ref={ref} className="flex flex-col gap-1.5">
+      <span aria-hidden className="font-pixel text-base/5 tracking-[0.12em]">
         <span className="text-muted-foreground/60">{digits.slice(0, lead)}</span>
         {digits.slice(lead)}
       </span>
       {total !== null && <span className="sr-only">{`${total.toLocaleString("en-IN")} ${unit}`}</span>}
+      {/* Who is here right now, written by the footer's lazy code; two lines reserved so nothing moves. */}
+      <span
+        data-live
+        data-alone={alone}
+        data-many={many}
+        className="h-7 font-mono text-[0.625rem]/3.5 tracking-wider text-muted-foreground uppercase before:mr-1.5 before:hidden before:size-1.5 before:rounded-full before:bg-signal before:align-[0.0625rem] data-shown:before:inline-block"
+      />
     </span>
   );
 }
