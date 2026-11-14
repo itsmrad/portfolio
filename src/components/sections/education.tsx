@@ -4,6 +4,7 @@ import { education } from "@/content/site";
 import { formatMonth } from "@/lib/markdown";
 import { Section, SectionHeader } from "@/components/layout/section";
 
+import { Tile } from "./experience";
 import styles from "./experience.module.css";
 
 export function Education() {
@@ -13,9 +14,7 @@ export function Education() {
       <ul>
         {education.map((entry) => (
           <li key={entry.school} className={`${styles.school} screen-line-bottom last:after:content-none`}>
-            <span className={styles.tile} aria-hidden>
-              {entry.short[0]}
-            </span>
+            <Tile name={entry.short} />
             <h3 className={`${styles.org} text-balance`}>
               {entry.school} <span className="font-normal text-muted-foreground">({entry.short})</span>
             </h3>

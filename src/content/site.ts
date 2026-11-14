@@ -130,7 +130,6 @@ export type Experience = {
   end?: string | null;
   /** Organisation site. Omitted where the owner wants no link. */
   url?: string;
-  logo?: StaticImageData;
   summary: string;
   highlights: string[];
   links?: { label: string; href: string }[];
