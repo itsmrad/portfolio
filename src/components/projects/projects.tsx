@@ -67,9 +67,7 @@ function ProjectArticle({ project }: { project: Project }) {
         <a href={project.url ?? project.repo} target="_blank" rel="noopener noreferrer" className="link-underline">
           <ProjectLogo slug={project.slug} />
           {project.name}
-          <span aria-hidden className={styles.arrow}>
-            ↗
-          </span>
+          <span aria-hidden className={styles.arrow} />
         </a>
       </h3>
       <p className={s.tagline}>
@@ -96,7 +94,7 @@ function ProjectArticle({ project }: { project: Project }) {
       {parts.map(([title, body], i) => (
         <div key={title} className={s.part} data-print="hide">
           <h4>
-            <span aria-hidden>{String(i + 1).padStart(2, "0")}</span>
+            <span aria-hidden data-n={String(i + 1).padStart(2, "0")} />
             {title}
           </h4>
           {body}

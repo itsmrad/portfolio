@@ -17,7 +17,7 @@ import styles from "./contact.module.css";
 export function Contact() {
   return (
     <Section id="contact">
-      <SectionHeader id="contact" index={8} label="contact" title="Say hi" />
+      <SectionHeader id="contact" index={9} label="contact" title="Say hi" />
       {(site.email || site.calUrl || resumePdf()) && (
         <div className="screen-line-bottom px-4 pt-5 pb-5">
           {site.email && (

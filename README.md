@@ -37,6 +37,8 @@ The limits in `tests/budget.spec.ts` and `scripts/lighthouse.mjs` are hard gates
 
 **Connect the visitor counter.** In Vercel: Storage, Create Database, Upstash for Redis (free plan). Connect it to **Production only** and leave the variable prefix empty, so `KV_REST_API_URL` and `KV_REST_API_TOKEN` are set. Redeploy production; the "Visitors" cell appears with that build. Only production traffic counts (`VERCEL_ENV === "production"`), once per address per day. To leave your own browser out, run `localStorage.setItem("visit-counted", "1")` in its console on the live site. With no variables the cell is not rendered and `/api/visit` answers 404.
 
+**Search and assistants.** To verify the site with a meta tag instead of DNS, paste the token into `site.googleVerification` or `site.bingVerification` in `src/content/site.ts` (or set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` in Vercel); nothing renders while they are empty. When the page's facts change, edit them in `src/content/site.ts` and `src/content/faq.ts` and bump `site.updated`: it is the sitemap's `lastmod`, the structured data's `dateModified` and the visible "Updated" line. IndexNow pings Bing and the other IndexNow engines after every production deploy (`.github/workflows/indexnow.yml`, key in `public/<key>.txt`); to ping by hand run `node scripts/indexnow.mjs`.
+
 No other environment variables are needed.
 
 ## Layout

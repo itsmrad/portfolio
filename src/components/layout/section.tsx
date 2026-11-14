@@ -50,14 +50,14 @@ export function SectionHeader({
         <p className="eyebrow" aria-hidden>
           {String(index).padStart(2, "0")} / {label}
         </p>
-        <h2 id={`${id}-title`} className="mt-1 font-serif text-3xl/[1.1] tracking-[-0.01em]">
+        {/* The count is drawn by CSS from data-count, so it stays out of the heading's text
+            and accessible name (crawlers would read "Experience03"). */}
+        <h2
+          id={`${id}-title`}
+          data-count={count != null ? String(count).padStart(2, "0") : undefined}
+          className="mt-1 font-serif text-3xl/[1.1] tracking-[-0.01em] data-count:after:relative data-count:after:-top-[0.75em] data-count:after:ml-1 data-count:after:font-pixel data-count:after:text-xs data-count:after:leading-none data-count:after:tracking-normal data-count:after:text-muted-foreground data-count:after:content-[attr(data-count)]"
+        >
           {title}
-          {count != null && (
-            // Decorative: kept out of the heading's and the region's accessible name.
-            <sup aria-hidden className="-top-[0.75em] ml-1 font-pixel text-xs tracking-normal text-muted-foreground">
-              {String(count).padStart(2, "0")}
-            </sup>
-          )}
         </h2>
       </div>
       {children}

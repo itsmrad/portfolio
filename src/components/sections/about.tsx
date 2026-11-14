@@ -19,7 +19,7 @@ function withMarks(text: string) {
     return project ? (
       <Link key={index} href={`/#${project.slug}`} prefetch={false} className={styles.chip}>
         {part}
-        <span aria-hidden>↘</span>
+        <span aria-hidden />
       </Link>
     ) : (
       <strong key={index} className="font-medium">

@@ -35,7 +35,12 @@ export function DimensionLine({
     <div className={cn("flex items-center", vertical ? "flex-col py-px" : "px-px", className)} {...props}>
       <Arrow vertical={vertical} />
       <div className={stroke} />
-      {children != null && <DimensionValue className={vertical ? "py-1" : "px-1"}>{children}</DimensionValue>}
+      {children != null &&
+        (typeof children === "number" || typeof children === "string" ? (
+          <DimensionValue className={vertical ? "py-1" : "px-1"} value={String(children)} />
+        ) : (
+          <DimensionValue className={vertical ? "py-1" : "px-1"}>{children}</DimensionValue>
+        ))}
       <div className={stroke} />
       <Arrow vertical={vertical} className={vertical ? "-scale-y-100" : "-scale-x-100"} />
     </div>
@@ -53,8 +58,15 @@ export function DimensionExtension({
   );
 }
 
-export function DimensionValue({ className, ...props }: React.ComponentProps<"span">) {
-  return <span className={cn("font-mono text-xs/none text-dimension-foreground tabular-nums", className)} {...props} />;
+/** The label is drawn by CSS from data-value: decorative numbers stay out of the page's text, which crawlers read. */
+export function DimensionValue({ className, value, ...props }: React.ComponentProps<"span"> & { value?: string }) {
+  return (
+    <span
+      data-value={value}
+      className={cn("font-mono text-xs/none text-dimension-foreground tabular-nums before:content-[attr(data-value)]", className)}
+      {...props}
+    />
+  );
 }
 
 function Arrow({ vertical, className }: { vertical: boolean; className?: string }) {
