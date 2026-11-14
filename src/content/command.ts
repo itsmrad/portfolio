@@ -31,6 +31,8 @@ export const commandCopy = {
   linkCopied: "Link copied",
   emailCopied: "Email copied",
   copyFailed: "Could not copy. Select it here:",
+  arcade: "Open the arcade",
+  play: "Play",
   keysOff: "Turn keyboard shortcuts off",
   keysOn: "Turn keyboard shortcuts on",
   keysNowOff: "Keyboard shortcuts off. Ctrl K still opens this menu.",

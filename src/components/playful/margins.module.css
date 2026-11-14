@@ -216,8 +216,13 @@
 .bed:hover > svg:last-child {
   color: var(--signal);
 }
-.bed[data-away] > svg:last-child {
-  opacity: 0.2;
+/* Out for a walk: the bed is empty and nothing points at it. */
+.bed[data-away] > svg {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 180ms var(--ease),
+    visibility 0s 180ms;
 }
 .bed [data-pose="sleepA"] {
   animation: nap-a 1.2s infinite;
@@ -257,6 +262,8 @@
   position: absolute;
   inset-block: 0;
   left: 1rem;
+  /* Above the arcade's cartridges, so its section names stay readable when one scrolls past. */
+  z-index: 2;
   display: none;
 }
 @media (min-width: 80rem) {

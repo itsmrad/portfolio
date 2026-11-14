@@ -25,7 +25,7 @@ export const playful = {
    * section `in` whose text contains `text` (or the section itself), `dy` px
    * lower. Same truth rule as `notes`: every word and number must match the
    * content beside it; if that text changes, the item disappears rather than lie.
-   * Kinds: `note` handwriting with an arrow; `ratio` a mono reading over a
+   * Kinds: `note` handwriting with an arrow (`arrow: "long"` to reach past a ruled line); `ratio` a mono reading over a
    * scale; `balloons` numbered callouts, one per item of the list holding
    * `text`; `toy` a small press-toy with a voice.
    */
@@ -53,12 +53,15 @@ export const playful = {
     { kind: "note", side: "right", in: "xflow", text: "Twenty-minute dictations", dy: -10, note: "twenty minutes,\nno waiting" },
     { kind: "note", side: "left", in: "xflow", text: "Paste into whatever", dy: -10, note: "lands wherever\nyour cursor is" },
     { kind: "note", side: "right", in: "xflow", text: "Daemon and CLI", dy: -40, note: "the daemon is rust" },
-    { kind: "note", side: "left", in: "activity", dy: 90, note: "every square\nis one day" },
-    { kind: "note", side: "left", in: "stack", text: "AI/LLM", dy: -20, note: "the day job,\nrag and tools" },
+    { kind: "note", side: "right", in: "stack", text: "AI/LLM", dy: -20, note: "the day job,\nrag and tools" },
+    { kind: "note", side: "left", in: "faq", text: "Questions, answered", dy: -30, note: "nine questions,\nshort answers", arrow: "long" },
+    { kind: "note", side: "right", in: "faq", text: "How can I contact", dy: -40, note: "ask him the rest,\nit's just below" },
     { kind: "toy", toy: "term", side: "left", in: "education", dy: 70, caption: "final year", items: ["aug 2023", "aug 2027"] },
   ],
   /** The cat asleep beside "currently building"; clicking it wakes the cursor companion. */
   cat: "asleep on the job.\nclick to wake",
+  /** The bed's note while the cat is out: the bed is empty, so the arrow goes. Clicking calls it back. */
+  catAway: "gone for a walk.\nclick to call back",
   /** Mono readout at the foot of the margin, followed by m:ss. */
   timer: "here for",
   stickers: {

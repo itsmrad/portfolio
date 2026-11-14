@@ -54,30 +54,43 @@ export const site = {
   resume: { pdf: "/Anupam-Das-Resume.pdf", fileName: "Anupam-Das-Resume.pdf", updated: "2026-09" },
   // The site's own repository is deliberately not linked anywhere on the page.
   license: "MIT",
-  /** Search Console meta tag; empty means not emitted (DNS verification is preferred). */
+  /**
+   * Search engine ownership tokens. Empty means nothing is emitted; the build also reads
+   * GOOGLE_SITE_VERIFICATION and BING_SITE_VERIFICATION. A DNS record needs neither.
+   */
   googleVerification: "" as string,
+  bingVerification: "" as string,
   created: "2026-11-13",
-  updated: "2026-11-13",
+  /** The last content change: sitemap lastmod, dateModified and the visible "updated" line. */
+  updated: "2026-11-14",
   /** Cal.com booking page. While empty no "Book a call" action is rendered anywhere. */
   calUrl: "https://cal.com/itsmrad" as string,
 } as const;
 
 export const seo = {
   /** At most 60 characters. */
-  title: "Anupam Das — Software Engineer (Rust, TypeScript, AI)",
+  title: "Anupam Das — Software & AI Engineer in New Delhi",
   /** 140 to 160 characters. */
   description:
-    "Anupam Das is a software engineer in New Delhi building AI products and native developer tools: Codenaya, a browser IDE with a coding agent, and xflow.",
+    "Anupam Das is a software and AI engineer in New Delhi, India. He builds Codenaya, a browser IDE with a coding agent, and xflow, a fast Rust dictation tool.",
+  /** The resume's own summary line. */
+  jobTitle: ["Software Engineer", "AI/LLM Engineer"],
   ogTagline: "AI products and fast native tools, built end to end.",
+  /** Each one is shown on the page (stack, projects or experience). */
   knowsAbout: [
-    "Rust",
+    "Agentic AI",
+    "RAG systems",
+    "LLM tool calling",
+    "Developer tools",
+    "System design",
     "TypeScript",
     "Python",
-    "React",
+    "Rust",
     "Next.js",
-    "AI coding agents",
-    "Large language model applications",
-    "Developer tools",
+    "React",
+    "FastAPI",
+    "LangGraph",
+    "Docker",
   ],
 } as const;
 
@@ -99,7 +112,7 @@ export const nav: NavItem[] = [
 
 /** Three short paragraphs. `**bold**` marks the key phrase of each. */
 export const about: string[] = [
-  "I'm a final-year B.Tech student at BPIT in New Delhi and an **AI/LLM Intern at PlanCover**. I like owning a product end to end: the interface, the backend, the release pipeline and the numbers that show it works.",
+  "I'm Anupam Das, a software and AI engineer in New Delhi, India: an **AI/LLM Intern at PlanCover** and a final-year B.Tech student at BPIT. I like owning a product end to end: the interface, the backend, the release pipeline and the numbers that show it works.",
   "**Codenaya** is my own product: a browser IDE where a coding agent writes your app file by file, runs it in a cloud sandbox with a live preview and exports it to GitHub. It is live at codenaya.tech.",
   "**xflow** is the systems side: a native Rust dictation daemon for macOS and Linux that idles at 3 MiB of memory and returns text a median 255 ms after you stop speaking. The benchmarks are published in the repo.",
 ];
@@ -117,7 +130,6 @@ export type Experience = {
   end?: string | null;
   /** Organisation site. Omitted where the owner wants no link. */
   url?: string;
-  logo?: StaticImageData;
   summary: string;
   highlights: string[];
   links?: { label: string; href: string }[];

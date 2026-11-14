@@ -54,11 +54,10 @@ const typing: Game = (ctx) => {
       shake = 1;
       ctx.play("tick");
     }
-    ctx.score(wpm(), `${wpm()} wpm · ${accuracy()}%`);
+    ctx.score(wpm(), `${wpm()} wpm`);
     if (at >= text.length) {
       done = true;
       ctx.play("success");
-      ctx.score(wpm(), `${wpm()} wpm · ${accuracy()}%`);
       ctx.over(`${wpm()} words a minute at ${accuracy()}% accuracy.`);
     }
   });

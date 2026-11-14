@@ -12,6 +12,9 @@
  * Every key but Ctrl/Cmd+K can be switched off with the "keys" action.
  * Shift+R is left free for the hot-reload easter egg.
  */
+import { games as gamesA } from "@/components/arcade/games/registry-a";
+import { games as gamesB } from "@/components/arcade/games/registry-b";
+import { games as gamesC } from "@/components/arcade/games/registry-c";
 import { commandCopy as copy, pageIndex } from "@/content/command";
 import { nav, projects, site, socials } from "@/content/site";
 
@@ -21,7 +24,7 @@ const { calUrl } = site as typeof site & { calUrl?: string | null };
 export type Action = {
   id: string;
   label: string;
-  group: "Navigate" | "Projects" | "Links" | "General" | "Preferences";
+  group: "Navigate" | "Projects" | "Arcade" | "Links" | "General" | "Preferences";
   /** Icon name, resolved by the palette. */
   icon: string;
   /** Single key, works anywhere outside a text field. */
@@ -78,6 +81,16 @@ export const actions: Action[] = [
         ]
       : []),
   ]),
+  // The margin arcade: listed only where it shows (the palette filters by width); `href` is the section it sits in.
+  { id: "arcade", label: copy.arcade, group: "Arcade", icon: "game", keywords: "games play margins", href: "/#about" },
+  ...[...gamesA, ...gamesB, ...gamesC].map((game) => ({
+    id: `arcade-${game.id}`,
+    label: `${copy.play} ${game.name}`,
+    group: "Arcade" as const,
+    icon: "game",
+    keywords: "game arcade",
+    href: `/#${game.section}`,
+  })),
   ...socials.map((social) => ({
     id: `social-${social.label.toLowerCase()}`,
     label: social.label,

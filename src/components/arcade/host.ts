@@ -33,15 +33,6 @@ const TOKENS: Record<keyof Colors, string> = {
   ...(Object.fromEntries(HUES.map((hue) => [hue, `--arcade-${hue}`])) as Record<(typeof HUES)[number], string>),
 };
 
-/** Whether a CSS colour has (almost) no hue, in whatever colour space the browser reports it. */
-function grey(color: string) {
-  const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
-  probe.fillStyle = color;
-  probe.fillRect(0, 0, 1, 1);
-  const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
-  return Math.max(r!, g!, b!) - Math.min(r!, g!, b!) < 24;
-}
-
 export function host(canvas: HTMLCanvasElement, options: Options) {
   const { width: W, height: H } = options;
   const g = canvas.getContext("2d")!;
@@ -74,12 +65,6 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       // Palette hues fall back to ink where the arcade's tokens are not defined (the 404).
       canvas.style.color = `var(${token}, var(--foreground))`;
       colors[name as keyof Colors] = getComputedStyle(canvas).color;
-    }
-    // shortcut: before rebuild-accent lands, --accent is still the grey hover surface; a colourless accent
-    // means "not here yet", so take the starting value. Delete once the accent branch is merged.
-    if (grey(colors.accent)) {
-      canvas.style.color = "var(--arcade-accent-fallback, var(--foreground))";
-      colors.accent = getComputedStyle(canvas).color;
     }
     canvas.style.color = "";
     for (const listener of themes) listener();
@@ -230,7 +215,8 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       g.clearRect(0, 0, canvas.width, canvas.height);
     },
     stop() {
-      this.reset();
+      // The last frame stays: a closing card folds with it.
+      this.reset(false);
       cancelAnimationFrame(raf);
       for (const [target, type, listener] of events) target.removeEventListener(type, listener);
       theme.disconnect();

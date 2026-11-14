@@ -75,7 +75,7 @@
     background-color 0.15s;
 }
 .pill:hover {
-  background: var(--accent);
+  background: var(--muted);
   color: var(--foreground);
 }
 .pill > svg {
@@ -223,7 +223,7 @@
 }
 .toggle:hover,
 .dock:has(:popover-open) .toggle {
-  background: var(--accent);
+  background: var(--muted);
 }
 /* The two bars cross while the menu is open. */
 .toggle > span {
@@ -284,7 +284,7 @@
 }
 .menu a:hover,
 .menu a:focus-visible {
-  background: var(--accent);
+  background: var(--muted);
 }
 
 /* Copy confirmation: above the dock on phones, bottom centre from `sm`. */

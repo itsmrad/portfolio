@@ -36,6 +36,11 @@
   visibility: hidden;
 }
 
+/* A note whose arrow has to cross a ruled line to reach its target. */
+.long {
+  height: 4.5rem;
+}
+
 /* --- Reading over a scale: the fill is the share, ticks every tenth ------- */
 .ratio {
   width: 9.5rem;

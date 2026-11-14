@@ -56,6 +56,8 @@ test.describe("arcade at 1440", () => {
       const card = page.locator(`[data-arcade-card="${game.id}"]`);
       const play = card.getByRole("button", { name: /^Play / });
       await play.scrollIntoViewIfNeeded();
+      // Let what scrolling brings into view (the footer's own chunk near Contact) land first.
+      await settle(page);
       // Its own chunk, fetched by the click and no earlier.
       const bytes = await scriptBytesAddedBy(page, () => play.click());
       console.log(`${game.id} chunk: ${kb(bytes)} brotli`);
@@ -66,7 +68,8 @@ test.describe("arcade at 1440", () => {
       await expect(canvas).toBeFocused();
       await expect(canvas).toHaveAttribute("aria-label", /game$/);
       await expect(canvas).toHaveAttribute("aria-describedby", `arcade-${game.id}-how`);
-      await page.waitForTimeout(game.wait ?? 300);
+      // About as soon as a person would press a key after Play.
+      await page.waitForTimeout(game.wait ?? 500);
 
       // A game key changes the field, and neither scrolls the page nor reaches the shortcuts or eggs.
       const scroll = await page.evaluate(() => scrollY);
@@ -163,7 +166,7 @@ for (const width of WIDTHS) {
       await page.waitForTimeout(500);
       const report = await page.evaluate(() => {
         const column = document.querySelector('[data-slot="frame"]')!.getBoundingClientRect();
-        // The scroll ruler (from 80rem), plus room for the section names it writes on hover.
+        // The scroll ruler (from 80rem).
         const ruler = document.querySelector("[data-rail]")?.parentElement?.getBoundingClientRect();
         const visible = (element: Element) => getComputedStyle(element).visibility !== "hidden" && element.getBoundingClientRect().height > 0;
         const boxes = [...document.querySelectorAll("[data-arcade-card], [data-life], [data-note], [data-cat-bed]")]
@@ -180,7 +183,8 @@ for (const width of WIDTHS) {
         );
         const touching = boxes.filter((box) => box.right > column.left - 8 && box.left < column.right + 8).map((box) => box.name);
         const cards = boxes.filter((box) => document.querySelector(`[data-arcade-card="${box.name}"]`));
-        const onRuler = ruler ? cards.filter((box) => box.left < ruler.right + 100).map((box) => box.name) : [];
+        // Its ticks and tracker; its section names draw above the cards.
+        const onRuler = ruler ? cards.filter((box) => box.left < ruler.right + 8).map((box) => box.name) : [];
         // Screens from the top of Work to the end of xflow: what each margin holds.
         const work = document.getElementById("work")!.getBoundingClientRect().top + scrollY;
         const end = document.getElementById("building")!.getBoundingClientRect().top + scrollY;
