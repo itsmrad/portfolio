@@ -186,25 +186,37 @@
 }
 
 /* --- The cat's bed --------------------------------------------------------- */
+/* Label, arrow, then the cat at twice its drawn size (4px a cell, so the pixels stay crisp). */
 .bed {
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto 4rem;
+  grid-template-areas: "hand hand" "arrow cat";
+  justify-items: end;
+  align-items: end;
+  gap: 0 0.25rem;
   cursor: pointer;
   pointer-events: auto;
 }
 .bed > .hand {
-  font-size: 1.0625rem;
+  grid-area: hand;
+  margin-right: 2.5rem;
 }
-.root .bed:not(:hover) > .hand {
-  opacity: 0;
-  translate: 0 4px;
+.bed > .arrow {
+  grid-area: arrow;
+  margin-bottom: 1.5rem;
 }
-.bed > svg {
-  flex-shrink: 0;
-  transition: opacity 180ms var(--ease);
+.bed > svg:last-child {
+  grid-area: cat;
+  width: 4rem;
+  height: 4rem;
+  transition:
+    opacity 180ms var(--ease),
+    color 180ms var(--ease);
 }
-.bed[data-away] > svg {
+.bed:hover > svg:last-child {
+  color: var(--signal);
+}
+.bed[data-away] > svg:last-child {
   opacity: 0.2;
 }
 .bed [data-pose="sleepA"] {

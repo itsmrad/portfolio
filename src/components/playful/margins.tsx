@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type RefObject } from "react";
 
 import { play } from "@/lib/sound";
 
@@ -24,7 +24,8 @@ import styles from "./margins.module.css";
 const SECTIONS = ["top", "about", "experience", "work", "building", "activity", "stack", "education", "contact"];
 const WIDE = "(min-width: 64rem) and (pointer: fine)";
 /** Where a note sits below the top of its section, and which way its arrow goes. */
-const PLACE: Record<string, { dy: number; arrow?: "up" }> = { top: { dy: 214, arrow: "up" } };
+// Codenaya's note points at its stat cells, below the cartridge beside the capture.
+const PLACE: Record<string, { dy: number; arrow?: "up" }> = { top: { dy: 214, arrow: "up" }, codenaya: { dy: 620 } };
 
 type Note = { at: string; side: "left" | "right"; text: string };
 type Box = { top: number; height: number };
@@ -254,9 +255,34 @@ function Bed({ hint, box }: { hint: string; box: Box }) {
       onClick={() => dispatchEvent(new CustomEvent("playful:summon", { detail: "cat" }))}
     >
       <span className={styles.hand}>{hint}</span>
+      {/* The label's arrow lands on the cat, so it reads as something to press. */}
+      <svg className={styles.arrow} viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path pathLength={1} d="M32 4c2 14-5 25-21 29M19 37l-8.5-3.5 6.5-7" />
+      </svg>
       <Sprite poses={["sleepA", "sleepB"]} />
     </div>
   );
+}
+
+/**
+ * The working notes below the hero (life.tsx): their own chunk, fetched once
+ * Experience reaches the viewport, so the first input costs no more than before.
+ */
+function Life({ side }: { side: "left" | "right" }) {
+  const [Piece, setPiece] = useState<ComponentType<{ side: "left" | "right" }> | null>(null);
+  useEffect(() => {
+    const target = document.getElementById("experience");
+    if (!target) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      observer.disconnect();
+      // Decoration: a failed fetch leaves the margin as it was.
+      import("./life").then((module) => setPiece(() => module.Life), () => {});
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+  return Piece && <Piece side={side} />;
 }
 
 /** "here for 0:42": time on the sheet, ticking only while it is on screen. */
@@ -323,6 +349,7 @@ export function Left({ data }: { data: { notes: readonly Note[]; cat: string } }
         {boxes.building && <Bed hint={data.cat} box={boxes.building} />}
         {present.length > 1 && <Rail ids={present} />}
       </div>
+      <Life side="left" />
     </div>
   );
 }
@@ -338,6 +365,7 @@ export function Right({ data }: { data: { notes: readonly Note[]; timer: string 
         <Notes notes={data.notes} boxes={boxes} />
         {boxes.contact && <Timer label={data.timer} />}
       </div>
+      <Life side="right" />
     </div>
   );
 }
