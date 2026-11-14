@@ -8,6 +8,7 @@ import { Activity } from "@/components/sections/activity";
 import { Contact } from "@/components/sections/contact";
 import { Education } from "@/components/sections/education";
 import { Experience } from "@/components/sections/experience";
+import { Faq } from "@/components/sections/faq";
 import { Hero } from "@/components/sections/hero";
 import { Stack } from "@/components/sections/stack";
 
@@ -36,6 +37,8 @@ export default function Home() {
       <Stack />
       <Separator />
       <Education />
+      <Separator />
+      <Faq />
       <Separator />
       <Contact />
     </>
