@@ -1,3 +1,5 @@
+import { standIn } from "./stand-in";
+
 export type CounterStore = { url: string; token: string };
 
 /**
@@ -10,5 +12,7 @@ export type CounterStore = { url: string; token: string };
 export function counterStore(): CounterStore | null {
   const url = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
-  return url && token ? { url, token } : null;
+  if (url && token) return { url, token };
+  // A local preview's stand-in answers in place of a store (stand-in.ts); never on Vercel.
+  return standIn() ? { url: "", token: "stand-in" } : null;
 }
