@@ -120,11 +120,29 @@
   scrollbar-gutter: stable;
 }
 
-/* Phone dock, below `sm`: a 96px fade, a floating pill 8px above the safe area,
-   and a spacer as tall as the fade at the end of the page. */
+/* Phone dock, below `sm`: a 64px fade (the pill's 48px band plus a soft edge), a
+   floating pill 8px above the safe area, and a spacer as tall as the fade at the
+   end of the page. */
 .fade,
 .spacer {
-  height: calc(6rem + env(safe-area-inset-bottom, 0px));
+  height: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+/* The first screen belongs to the hero: its fact rows and email reach the bottom of
+   short phones. The dock and its fade arrive over the first 48px of scroll, and
+   leave again at the very top. Where scroll timelines are missing they simply stay. */
+@supports (animation-timeline: scroll()) {
+  .fade,
+  .dock {
+    animation: dock-arrive linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 48px;
+  }
+}
+@keyframes dock-arrive {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 .fade {
   position: fixed;
@@ -169,7 +187,7 @@
 /* Focus moved by the keyboard never ends under the dock. */
 @media (max-width: 39.999rem) {
   :global(html):has(.dock) {
-    scroll-padding-bottom: 6rem;
+    scroll-padding-bottom: 4.5rem;
   }
 }
 .search {

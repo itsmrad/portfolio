@@ -11,7 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { notFound } from "@/content/sound";
 
-import styles from "./not-found.module.css";
+/**
+ * The numerals settle in one after another, each at its own slight tilt. Inline
+ * rather than a CSS module: the App Router hoists a not-found module into the
+ * root layout as a preload on every page, where it is never used.
+ */
+const DIGITS =
+  ".nf-digit{display:inline-block;animation:nf-rise .52s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i)*65ms)}" +
+  ".nf-digit>span{display:inline-block}.nf-digit:nth-child(1)>span{rotate:-9deg}.nf-digit:nth-child(2)>span{rotate:3deg}.nf-digit:nth-child(3)>span{rotate:8deg}" +
+  "@keyframes nf-rise{from{opacity:0;translate:0 20px}}@media (prefers-reduced-motion:reduce){.nf-digit{animation:none}}";
 
 export const metadata: Metadata = { title: "Page not found" };
 
@@ -19,6 +27,7 @@ export default function NotFound() {
   const { game, search } = notFound;
   return (
     <section aria-labelledby="not-found-title">
+      <style>{DIGITS}</style>
       <div className="px-4 pt-10 pb-10">
         <p className="eyebrow" aria-hidden>
           {notFound.eyebrow}
@@ -26,7 +35,7 @@ export default function NotFound() {
         <h1 id="not-found-title" className="mt-4">
           <span className="block font-serif text-[clamp(8rem,28vw,12.75rem)] leading-none tracking-tight">
             {[...notFound.code].map((digit, i) => (
-              <span key={i} className={styles.digit} style={{ "--i": i } as React.CSSProperties}>
+              <span key={i} className="nf-digit" style={{ "--i": i } as React.CSSProperties}>
                 <span>{digit}</span>
               </span>
             ))}

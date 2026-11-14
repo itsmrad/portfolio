@@ -147,7 +147,8 @@ function perform(action: Action) {
       else localStorage.removeItem("shortcuts");
     } catch {}
     play(off ? "toggleOff" : "toggle");
-    toast(off ? commandCopy.keysNowOff : commandCopy.keysNowOn);
+    const mac = document.documentElement.dataset.platform === "mac";
+    toast(off ? commandCopy.keysNowOff.replace("Ctrl", mac ? "Cmd" : "Ctrl") : commandCopy.keysNowOn);
   } else if (action.control) {
     // The theme toggle owns the reveal from its own position, so press it,
     // once the palette has faded: the scrim must not be frozen into the old half.

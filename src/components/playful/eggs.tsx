@@ -46,6 +46,14 @@ function toast(text: string) {
 }
 
 const quiet = () => {};
+// The palette's "shortcuts off" setting: then / and ? open nothing.
+const shortcutsOff = () => {
+  try {
+    return localStorage.getItem("shortcuts") === "off";
+  } catch {
+    return false;
+  }
+};
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 
@@ -105,7 +113,7 @@ export function Eggs({ data }: { data: Data }) {
       // Checked before the text-field test: it also notices the palette has opened, ending the wait.
       if (palette()) return;
       if (event.ctrlKey || event.metaKey || event.altKey || typing(event.target)) return;
-      if (k === "/" || k === "?") return paletteRequested();
+      if ((k === "/" || k === "?") && !shortcutsOff()) return paletteRequested();
       if (event.key === "Escape") {
         // An open dialog or menu owns Escape.
         if (document.querySelector('dialog[open], [role="dialog"], [role="menu"]')) return;

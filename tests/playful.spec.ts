@@ -68,10 +68,11 @@ test.describe("phone", () => {
     await expect(page.locator('link[rel="preload"][href*="caveat" i]')).toHaveCount(0);
     await expect(toast(page)).toHaveCount(0);
 
-    // Every sticker stays off the name, the tagline, the portrait and any control in the hero.
+    // Every sticker stays off the name, the tagline, the portrait and any control in the hero
+    // (the monogram's button spans the whole cover; the stickers sit on its empty paper, in the corners).
     const overlaps = await page.evaluate(() => {
       const boxes = (selector: string) => [...document.querySelectorAll(selector)].map((element) => element.getBoundingClientRect());
-      const content = boxes("#top :is(h1, p, a, button, img)");
+      const content = boxes('#top :is(h1, p, a, img, ul, button:not([aria-label*="monogram"]))');
       const shown = boxes("[data-sticker]").filter((sticker) => sticker.width > 0);
       return shown.filter((sticker) =>
         content.some((box) => sticker.left < box.right && box.left < sticker.right && sticker.top < box.bottom && box.top < sticker.bottom),
@@ -189,6 +190,18 @@ test.describe("wide", () => {
       return [style.backgroundSize, style.width, style.height];
     });
     expect(box).toEqual(["1.25px 100%, 1.25px 100%", "40px", "40px"]);
+  });
+
+  test("a keyboard-only visitor's first egg works: keys typed while the eggs load are replayed", async ({ page }) => {
+    await page.goto("/");
+    await settle(page);
+    // No mouse at all, and the layer's chunks held back, so every key lands before the eggs listen.
+    await page.route("**/_next/static/chunks/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    await page.keyboard.type("kitty", { delay: 40 });
+    await expect(page.locator("[data-cat]")).toHaveCount(1);
   });
 
   test("keys typed while the palette opens are its search, never an egg", async ({ page }) => {

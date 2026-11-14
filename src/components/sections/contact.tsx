@@ -28,6 +28,7 @@ export function Contact() {
               <CopyButton
                 value={site.email}
                 data-slot="button"
+                data-js=""
                 className={`${buttonVariants({ variant: "outline", size: "sm" })} font-mono`}
               >
                 copy

@@ -29,13 +29,9 @@ test.describe("hero", () => {
     const portrait = page.locator("#top img");
     await expect(portrait).toHaveAttribute("alt", /Anupam Das/);
     expect((await portrait.locator("xpath=ancestor::div[3]").boundingBox())?.width).toBe(96);
-    // Every line is in the page; the role, which the facts below already state, comes last.
-    await expect(page.locator("#top h1 + ul li")).toHaveText([
-      "Building Codenaya",
-      "Building xflow in Rust",
-      "Final-year B.Tech at BPIT",
-      "AI/LLM Intern at PlanCover",
-    ]);
+    // The rotation names both products and never repeats the role, which the first fact row states.
+    await expect(page.locator("#top h1 + ul li")).toHaveText(["Building Codenaya", "Building xflow in Rust", "Final-year B.Tech at BPIT"]);
+    await expect(page.locator("#top ul").last().locator("li").first()).toContainText("AI/LLM Intern at PlanCover");
     expect(errors).toEqual([]);
   });
 
@@ -126,8 +122,8 @@ test.describe("hero", () => {
       expect(await sink(page)).toBe(0);
       expect(await page.locator("#top radialGradient").getAttribute("cx")).toBe(glow);
       const lines = page.locator("#top h1 + ul li");
-      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).animationName))).toEqual(["none", "none", "none", "none"]);
-      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).opacity))).toEqual(["1", "0", "0", "0"]);
+      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).animationName))).toEqual(["none", "none", "none"]);
+      expect(await lines.evaluateAll((items) => items.map((item) => getComputedStyle(item).opacity))).toEqual(["1", "0", "0"]);
     });
   });
 
@@ -390,6 +386,30 @@ test.describe("stack, education, contact", () => {
       await page.locator("#top [data-copy]").click();
       await expect(page.locator("#top [data-copy]")).toHaveAttribute("data-copied", "");
       expect(errors).toEqual([]);
+    });
+  });
+
+  test("a refused copy selects the address and says so", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("denied")) } });
+    });
+    await page.goto("/");
+    for (const where of ["#top", "#contact"]) {
+      await page.locator(`${where} [data-copy]`).click();
+      await expect(page.locator(`${where} [data-copy] [role=status]`)).toHaveText(/Copy failed/);
+      expect(await page.evaluate(() => getSelection()?.toString())).toBe("itsmrad@gmail.com");
+    }
+  });
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("no control that needs a script is shown", async ({ page }) => {
+      await page.goto("/");
+      const shown = await page.locator("[data-js], [data-sound-control]").evaluateAll((items) => items.filter((item) => getComputedStyle(item).display !== "none").length);
+      expect(shown).toBe(0);
+      // The addresses themselves stay: the hero's line and the contact link.
+      await expect(page.locator('#contact a[href^="mailto:"]')).toBeVisible();
     });
   });
 });

@@ -434,15 +434,24 @@ test.describe("desktop", () => {
     expect(await page.evaluate(() => [document.documentElement.classList.contains("dark"), localStorage.getItem("theme")])).toEqual([true, "dark"]);
     await expect.poll(() => page.evaluate(() => document.documentElement.style.cssText)).toBe("");
 
-    // A skipped transition (the window resized mid-reveal) still switches and logs nothing.
+    // A skipped transition (the window resized mid-reveal) still switches, logs nothing and
+    // releases the toggle within a second, whatever the browser does with the transition.
+    const switching = () => page.evaluate(() => /switching/.test(document.documentElement.className));
     await page.keyboard.press("d");
     await page.setViewportSize({ width: 1200, height: 800 });
-    await page.waitForTimeout(700);
-    expect(await page.evaluate(() => localStorage.getItem("theme"))).toBeNull();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBeNull();
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
+
+    // A press during a reveal is never ignored: it finishes the reveal and switches back.
+    await page.keyboard.press("d");
+    await page.keyboard.press("d");
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBeNull();
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
 
     // No flash on reload: dark from the first frame.
     await page.keyboard.press("d");
-    await page.waitForTimeout(700);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("theme")), { timeout: 1500 }).toBe("dark");
+    await expect.poll(switching, { timeout: 2500, intervals: [100] }).toBe(false);
     await page.reload();
     expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
     await page.waitForLoadState("networkidle");
@@ -459,10 +468,12 @@ test.describe("desktop", () => {
 
   test("the listener stays within 1 KB", () => {
     const chunks = readdirSync(".next/static/chunks").filter((name) => name.endsWith(".js"));
-    const source = chunks.map((name) => readFileSync(`.next/static/chunks/${name}`, "utf8")).find((text) => text.includes("data-command-open"));
+    // The eggs chunk also mentions data-command-open; only the listener closes the palette by its selector.
+    const marker = "dialog[data-palette][open]";
+    const source = chunks.map((name) => readFileSync(`.next/static/chunks/${name}`, "utf8")).find((text) => text.includes(marker));
     expect(source, "chunk with the listener").toBeTruthy();
     // Turbopack writes each module as `,<id>,e=>{…}`; take the one that defines the listener.
-    const fragment = source!.split(/(?=,\d+,\(?\w\)?=>)/).find((part) => part.includes("data-command-open"))!;
+    const fragment = source!.split(/(?=,\d+,\(?\w\)?=>)/).find((part) => part.includes(marker))!;
     console.log(`listener ${brotli(Buffer.from(fragment))} B brotli`);
     expect(brotli(Buffer.from(fragment))).toBeLessThanOrEqual(1024);
   });
@@ -489,6 +500,9 @@ test.describe("phone", () => {
     const errors = collectErrors(page);
     await ready(page);
     const dock = page.getByRole("button", { name: "Search…" });
+    // The first screen belongs to the hero; the dock arrives once the page scrolls.
+    await expect(dock).toBeHidden();
+    await page.mouse.wheel(0, 200);
     await expect(dock).toBeVisible();
     await expect(dock).toHaveAttribute("data-slot", "button");
     await expect(page.getByRole("banner").getByRole("button", { name: "Search" })).toBeHidden();
@@ -521,6 +535,23 @@ test.describe("phone", () => {
     expect(footerBottom).toBeLessThanOrEqual(fadeTop + 1);
     expect(errors).toEqual([]);
   });
+});
+
+test.describe("short phones", () => {
+  test.use({ hasTouch: true });
+
+  for (const [width, height] of [[360, 640], [360, 740], [375, 667], [390, 844], [412, 915]] as const) {
+    test(`${width}x${height}: nothing floats over the hero's facts on the first screen`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await ready(page);
+      const floating = await page.evaluate(() => {
+        const dock = [...document.querySelectorAll("[data-command-open]")].at(-1)!.parentElement!;
+        const fade = dock.previousElementSibling!;
+        return [dock, fade].map((element) => getComputedStyle(element).visibility);
+      });
+      expect(floating).toEqual(["hidden", "hidden"]);
+    });
+  }
 });
 
 test("the dock is not shown from sm up", async ({ page }) => {

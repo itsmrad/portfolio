@@ -283,6 +283,15 @@ test.describe("404", () => {
     await context.close();
   });
 
+  test("the home page preloads no stylesheet it does not use (the 404's styles are inline)", async ({ page }) => {
+    await page.goto("/");
+    const unused = await page.evaluate(() => {
+      const used = new Set([...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].map((link) => link.href));
+      return [...document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="style"]')].map((link) => link.href).filter((href) => !used.has(href));
+    });
+    expect(unused).toEqual([]);
+  });
+
   test("numerals settle in, and do not move under reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/no-such-page");

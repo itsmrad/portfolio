@@ -17,7 +17,7 @@ export function Dock() {
     <>
       <div aria-hidden data-print="hide" className={styles.fade} />
       <div data-print="hide" className={styles.dock}>
-        <button type="button" data-slot="button" data-command-open aria-haspopup="dialog" className={`${styles.search} touch-target`}>
+        <button type="button" data-slot="button" data-js="" data-command-open aria-haspopup="dialog" className={`${styles.search} touch-target`}>
           <SearchIcon className="size-4" />
           Search…
         </button>
