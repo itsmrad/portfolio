@@ -25,7 +25,7 @@ export function PlayfulLayer() {
     <>
       {/* Anchors the global hover rules; see hand-drawn.module.css. */}
       <i hidden className={styles.hooks} />
-      <Lazy piece="eggs" when="(hover: hover) and (pointer: fine)" data={playful.eggs} />
+      <Lazy piece="eggs" when="(hover: hover) and (pointer: fine)" data={playful.eggs} replayKeys />
     </>
   );
 }

@@ -191,6 +191,18 @@ test.describe("wide", () => {
     expect(box).toEqual(["1.25px 100%, 1.25px 100%", "40px", "40px"]);
   });
 
+  test("a keyboard-only visitor's first egg works: keys typed while the eggs load are replayed", async ({ page }) => {
+    await page.goto("/");
+    await settle(page);
+    // No mouse at all, and the layer's chunks held back, so every key lands before the eggs listen.
+    await page.route("**/_next/static/chunks/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    await page.keyboard.type("kitty", { delay: 40 });
+    await expect(page.locator("[data-cat]")).toHaveCount(1);
+  });
+
   test("keys typed while the palette opens are its search, never an egg", async ({ page }) => {
     await openWide(page);
     // Cold: the palette chunk is held back, so "kitty" lands while it is still opening.

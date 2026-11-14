@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 
 /**
  * The loader of the playful layer, and nearly all of its always-loaded code.
@@ -20,8 +20,29 @@ const INPUTS = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"];
 type Pieces = typeof pieces;
 type Data<K extends keyof Pieces> = Parameters<Awaited<ReturnType<Pieces[K]>>>[0] extends { data: infer D } ? D : null;
 
-export function Lazy<K extends keyof Pieces>({ piece, when, data }: { piece: K; when: string; data: Data<K> }) {
+/** Keys pressed while a piece loads, kept to replay once it is listening (at most 16; text fields excluded). */
+type Keys = KeyboardEventInit[];
+const record = (keys: Keys) => (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (!(event instanceof KeyboardEvent) || keys.length > 15 || target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+  const { key, code, shiftKey, ctrlKey, metaKey, altKey } = event;
+  keys.push({ key, code, shiftKey, ctrlKey, metaKey, altKey });
+};
+
+/** `replayKeys`: the keys typed while the chunk loads (the first one included) reach the piece once it has mounted. */
+export function Lazy<K extends keyof Pieces>({ piece, when, data, replayKeys }: { piece: K; when: string; data: Data<K>; replayKeys?: boolean }) {
   const [Piece, setPiece] = useState<ComponentType<{ data: Data<K> }> | null>(null);
+  const pending = useRef<{ keys: Keys; listener: (event: Event) => void } | null>(null);
+
+  // After the piece's own effects: its listeners are attached. Replayed on window, so only window listeners
+  // (the piece's, not the page's shortcuts on document) hear them again.
+  useEffect(() => {
+    const buffer = pending.current;
+    if (!Piece || !buffer) return;
+    pending.current = null;
+    removeEventListener("keydown", buffer.listener, true);
+    buffer.keys.forEach((init) => dispatchEvent(new KeyboardEvent("keydown", init)));
+  }, [Piece]);
 
   useEffect(() => {
     const media = matchMedia(when);
@@ -36,11 +57,23 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data }: { piece: K; 
       unlisten();
       media.removeEventListener("change", arm);
     };
-    const load = () => {
+    const load = (event: Event) => {
       stop();
+      if (replayKeys) {
+        const keys: Keys = [];
+        const listener = record(keys);
+        listener(event);
+        addEventListener("keydown", listener, true);
+        pending.current = { keys, listener };
+      }
+      const drop = () => pending.current && removeEventListener("keydown", pending.current.listener, true);
       (pieces[piece]() as Promise<ComponentType<{ data: Data<K> }>>).then(
-        (loaded) => cancelled || setPiece(() => loaded),
-        () => {}, // Decoration: a failed fetch leaves the page as it was.
+        (loaded) => (cancelled ? drop() : setPiece(() => loaded)),
+        () => {
+          // Decoration: a failed fetch leaves the page as it was.
+          drop();
+          pending.current = null;
+        },
       );
     };
     media.addEventListener("change", arm);
@@ -49,7 +82,7 @@ export function Lazy<K extends keyof Pieces>({ piece, when, data }: { piece: K; 
       cancelled = true;
       stop();
     };
-  }, [piece, when]);
+  }, [piece, when, replayKeys]);
 
   return Piece && <Piece data={data} />;
 }
