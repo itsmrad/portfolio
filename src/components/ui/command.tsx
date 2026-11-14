@@ -29,7 +29,7 @@ export function CommandItem({ selected, ...props }: React.ComponentProps<"div"> 
     <div
       role="option"
       aria-selected={selected}
-      className="group/row flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors select-none aria-selected:bg-accent aria-selected:text-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:opacity-70"
+      className="group/row flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors select-none aria-selected:bg-muted aria-selected:text-foreground [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:opacity-70 data-accent:font-medium data-accent:[&>svg]:text-accent data-accent:[&>svg]:opacity-100"
       {...props}
     />
   );

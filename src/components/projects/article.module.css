@@ -103,6 +103,15 @@
   font-size: 11px;
   line-height: 0.875rem;
 }
+/* Highlight (3): a headline figure in accent numerals, with an accent rule over its cell
+   so it still stands out without colour (print, forced colours). */
+.metrics [data-accent] {
+  padding-top: calc(0.75rem - 2px);
+  border-top: 2px solid var(--accent);
+}
+.metrics [data-accent] dd:first-of-type {
+  color: var(--accent);
+}
 .source {
   margin-top: 0.5rem;
   color: var(--muted-foreground);
@@ -123,6 +132,10 @@
 .part h4 span {
   color: var(--muted-foreground);
   font: 0.75rem/1 var(--font-pixel);
+}
+/* The number is drawn by CSS so the heading's text is the title alone. */
+.part h4 span::before {
+  content: attr(data-n);
 }
 
 .built {

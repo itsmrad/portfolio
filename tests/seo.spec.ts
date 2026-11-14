@@ -69,7 +69,7 @@ test("JSON-LD is one linked graph with no dangling references", async ({ request
   const blocks = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map((m) => JSON.parse(m[1]!));
   const nodes: Node[] = blocks.flatMap((block) => block["@graph"]);
   const ids = new Set(nodes.map((node) => node["@id"]));
-  for (const id of [`${SITE_URL}/#website`, `${SITE_URL}/#person`, `${SITE_URL}/#profile`, `${SITE_URL}/#codenaya`, `${SITE_URL}/#xflow`]) {
+  for (const id of [`${SITE_URL}/#website`, `${SITE_URL}/#person`, `${SITE_URL}/#profile`, `${SITE_URL}/#codenaya`, `${SITE_URL}/#xflow`, `${SITE_URL}/#faq`]) {
     expect(ids, id).toContain(id);
   }
 
@@ -88,9 +88,14 @@ test("JSON-LD is one linked graph with no dangling references", async ({ request
   expect(person.email).toBe(EMAIL);
   expect(person.contactPoint).toMatchObject({ "@type": "ContactPoint", url: "https://cal.com/itsmrad" });
   expect(JSON.stringify(person.sameAs)).not.toContain("youtube");
-  // Named, with no link to the company or its repositories.
-  expect(person.worksFor).toEqual({ "@type": "Organization", name: "PlanCover" });
-  expect((person.alumniOf as Node[]).map((entry) => entry.name)).toEqual([
+  // Named with the role held, with no link to the company or its repositories.
+  expect(person.worksFor).toEqual({
+    "@type": "EmployeeRole",
+    roleName: "AI/LLM Intern",
+    startDate: "2026-09",
+    worksFor: { "@type": "Organization", name: "PlanCover" },
+  });
+  expect((person.alumniOf as Node[]).map((entry) => entry.name ?? (entry.alumniOf as Node).name)).toEqual([
     "Bhagwan Parshuram Institute of Technology",
     "Dasgupta Maiti & Associates",
     "Syuniqe",
@@ -109,10 +114,24 @@ test("sitemap lists exactly the canonical URLs, with content dates", async ({ re
   expect(xml).not.toMatch(/<priority>|<changefreq>/);
 });
 
-test("robots allows everything and points at the sitemap", async ({ request }) => {
+test("robots welcomes search and AI crawlers by name, keeps only the API out, points at the sitemap", async ({ request }) => {
   const robots = await (await request.get("/robots.txt")).text();
-  expect(robots).toMatch(/User-Agent: \*\s+Allow: \//i);
-  expect(robots).not.toMatch(/Disallow/i);
+  // Each group: its user agents, then exactly Allow: / and Disallow: /api/.
+  const groups = robots
+    .trim()
+    .split(/\n\s*\n/)
+    .filter((group) => /User-Agent:/i.test(group))
+    .map((group) => {
+      const lines = group.split("\n").map((line) => line.split(":").map((part) => part.trim()));
+      return {
+        agents: lines.filter(([key]) => /^user-agent$/i.test(key!)).map(([, value]) => value),
+        rules: lines.filter(([key]) => !/^user-agent$/i.test(key!)).map(([key, value]) => `${key}: ${value}`),
+      };
+    });
+  const agents = groups.flatMap((group) => group.agents);
+  for (const agent of ["*", "Googlebot", "Bingbot", "Google-Extended", "OAI-SearchBot", "GPTBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Applebot-Extended"])
+    expect(agents, agent).toContain(agent);
+  for (const group of groups) expect(group.rules, group.agents.join()).toEqual(["Allow: /", "Disallow: /api/"]);
   expect(robots).toContain(`Sitemap: ${SITE_URL}/sitemap.xml`);
 });
 
@@ -135,6 +154,7 @@ test("content rules: no phone, only the owner's email, no YouTube, PlanCover unl
     links: hrefs.join("\n"),
     "/index.md": await (await request.get("/index.md")).text(),
     "/llms.txt": await (await request.get("/llms.txt")).text(),
+    "/llms-full.txt": await (await request.get("/llms-full.txt")).text(),
     // The 404 markup, minus scripts and the "telephone=no" format-detection hint.
     "/no-such-page": (await (await request.get("/no-such-page")).text()).replace(/<script.*?<\/script>|<meta name="format-detection"[^>]*>/gs, ""),
   };

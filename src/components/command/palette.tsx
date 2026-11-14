@@ -337,7 +337,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
             type="button"
             onClick={() => show("")}
             aria-label="Back to all commands"
-            className="-ml-1.5 flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="-ml-1.5 flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <ArrowLeft className="size-4" aria-hidden />
           </button>
@@ -389,7 +389,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
               input.current?.focus();
             }}
             aria-label="Clear search"
-            className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <X className="size-3.5" aria-hidden />
           </button>
@@ -426,6 +426,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
                     key={`${section.heading}-${action.id}`}
                     id={optionId(i)}
                     selected={i === active}
+                    data-accent={action.id === "resume" || undefined}
                     onPointerMove={() => i !== active && setActive(i)}
                     onClick={() => choose(action)}
                   >
