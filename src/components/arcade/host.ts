@@ -215,7 +215,8 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       g.clearRect(0, 0, canvas.width, canvas.height);
     },
     stop() {
-      this.reset();
+      // The last frame stays: a closing card folds with it.
+      this.reset(false);
       cancelAnimationFrame(raf);
       for (const [target, type, listener] of events) target.removeEventListener(type, listener);
       theme.disconnect();
