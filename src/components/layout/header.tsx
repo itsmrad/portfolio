@@ -53,7 +53,7 @@ export function Header() {
         <SoundToggle />
         <ThemeToggle />
         {resume && (
-          <Button asChild size="sm" className="ml-1">
+          <Button asChild variant="accent" size="sm" className="ml-1">
             <a href={resume} download={site.resume.fileName}>
               <DownloadIcon className="size-3.5" />
               Resume

@@ -417,6 +417,7 @@ export function Palette({ open, view, request, resume, take, onView, onClose }: 
                     key={`${section.heading}-${action.id}`}
                     id={optionId(i)}
                     selected={i === active}
+                    data-accent={action.id === "resume" || undefined}
                     onPointerMove={() => i !== active && setActive(i)}
                     onClick={() => choose(action)}
                   >
