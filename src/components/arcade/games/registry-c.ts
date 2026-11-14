@@ -16,7 +16,7 @@
 import type { Entry } from "../contract";
 
 export const games: Entry[] = [
-  { id: "redline", name: "Redline", howTo: "Click the line with the bug, or arrows and Space, before the countdown ends.", section: "codenaya", near: "A build check before it says done", load: () => import("./redline") },
-  { id: "parts", name: "Loose parts", howTo: "Left and right turn, Up thrusts, Space fires; or aim with the mouse. Split every part.", section: "xflow", near: "Paste into whatever has focus", load: () => import("./parts") },
-  { id: "stack", name: "Stack layers", howTo: "Arrows move, Up turns, Space drops; or the mouse. Fill a row to lay a layer.", section: "stack", load: () => import("./stack") },
+  { id: "redline", name: "Redline", howTo: "Click the buggy line, or pick it with W/S or the arrows and Space, before time runs out.", section: "codenaya", near: "A build check before it says done", load: () => import("./redline") },
+  { id: "parts", name: "Loose parts", howTo: "A/D or the arrows turn, W thrusts, Space fires; or aim with the mouse. Split every part.", section: "xflow", near: "Paste into whatever has focus", load: () => import("./parts") },
+  { id: "stack", name: "Stack layers", howTo: "A/D or the arrows move, W turns, S lowers, Space drops; or the mouse. Fill rows.", section: "stack", load: () => import("./stack") },
 ];

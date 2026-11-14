@@ -458,12 +458,15 @@ export function Arcade() {
       if (id === undefined) return;
       delete dataset.arcade;
       // shortcut: a fixed wait for the cards' first placement; tie it to the layout if it ever races.
-      setTimeout(() => open(id), 300);
+      clearTimeout(waiting);
+      waiting = setTimeout(() => open(id), 300);
     };
+    let waiting: ReturnType<typeof setTimeout> | undefined;
     onRequest();
     addEventListener("arcade:play", onPlay);
     addEventListener("arcade:request", onRequest);
     return () => {
+      clearTimeout(waiting);
       removeEventListener("arcade:play", onPlay);
       removeEventListener("arcade:request", onRequest);
     };
@@ -475,13 +478,15 @@ export function Arcade() {
   }, [places, active]);
 
   const index = places[INDEX.id];
+  // Page order (top to bottom) for the numbers, the index and the tab order, whatever the registry order.
+  const ordered = [...GAMES].sort((a, b) => (places[a.id]?.top ?? Infinity) - (places[b.id]?.top ?? Infinity));
   return (
     <section ref={root} aria-label={copy.label} className={styles.arcade}>
       {index && (
         <Card entry={{ id: INDEX.id, name: copy.index, howTo: copy.indexHowTo }} place={index} active={false}>
           {() => (
             <ul className={styles.list}>
-              {GAMES.map((game, i) => (
+              {ordered.map((game, i) => (
                 <li key={game.id}>
                   <button type="button" className="link-underline" onClick={() => start(game.id)}>
                     <span className="eyebrow mr-2 tabular-nums">{String(i + 1).padStart(2, "0")}</span>
@@ -493,7 +498,7 @@ export function Arcade() {
           )}
         </Card>
       )}
-      {GAMES.map((game, i) => {
+      {ordered.map((game, i) => {
         const place = places[game.id];
         return (
           place && (

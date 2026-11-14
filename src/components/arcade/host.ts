@@ -24,6 +24,8 @@ type Options = {
 };
 
 const KEYS: Record<string, Key> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", " ": "action", Enter: "action" };
+/** WASD by physical position (ZQSD on an AZERTY board), like a proper game. Typing games read `event.key`, so they still get letters. */
+const WASD: Record<string, Key> = { KeyW: "up", KeyA: "left", KeyS: "down", KeyD: "right" };
 const TOKENS: Record<keyof Colors, string> = {
   ink: "--foreground",
   muted: "--muted-foreground",
@@ -100,6 +102,8 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
   let last = 0;
   let onScreen = false;
   let running = false;
+  /** A round has ended: no game is listening, so the loop rests until the next round (review S6). */
+  let idle = false;
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
     const dt = last ? Math.min(100, now - last) : 0;
@@ -107,7 +111,7 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
     paint(dt, now);
   };
   const sync = () => {
-    const next = onScreen && !document.hidden && (!options.pauseOnBlur || document.activeElement === canvas);
+    const next = !idle && onScreen && !document.hidden && (!options.pauseOnBlur || document.activeElement === canvas);
     if (next === running) return;
     running = next;
     cancelAnimationFrame(raf);
@@ -135,7 +139,7 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       }
       return;
     }
-    const key = KEYS[event.key] ?? null;
+    const key = KEYS[event.key] ?? (event.shiftKey ? undefined : WASD[event.code]) ?? null;
     if (!key && !options.exclusive) return;
     // The page's shortcut listener skips prevented events; this also stops arrows and Space scrolling.
     event.preventDefault();
@@ -214,6 +218,9 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       pointers = [];
       themes = [];
       held.clear();
+      // Keeping the last frame means the round is over; clearing means a new one starts.
+      idle = !clear;
+      sync();
       if (!clear) return;
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.clearRect(0, 0, canvas.width, canvas.height);
