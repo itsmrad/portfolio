@@ -1,4 +1,5 @@
 import { homeGraph, homeMetadata, jsonLd } from "@/lib/seo";
+import { ArcadeSlot } from "@/components/arcade/slot";
 import { FrameDimension } from "@/components/layout/dimension";
 import { Separator } from "@/components/layout/section";
 import { Building } from "@/components/projects/building";
@@ -41,6 +42,8 @@ export default function Home() {
       <Faq />
       <Separator />
       <Contact />
+      {/* Home only, never the 404: the margin arcade (renders nothing on the server). */}
+      <ArcadeSlot />
     </>
   );
 }

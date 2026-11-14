@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
+
 import { expect, test, type Page } from "@playwright/test";
 
-import { collectErrors, resources, scriptBytesAddedBy, settle, THEMES, VIEWPORTS } from "./helpers";
+import { collectErrors, resources, settle, THEMES, VIEWPORTS } from "./helpers";
 
 const projectImages = async (page: Page) =>
   (await resources(page)).filter((r) => r.type === "image" && /codenaya-|xflow-/.test(decodeURIComponent(r.url))).map((r) => decodeURIComponent(r.url));
@@ -198,10 +200,14 @@ test.describe("projects interaction", () => {
     await settle(page);
     await page.mouse.move(300, 300);
     await settle(page);
-    const added = await scriptBytesAddedBy(page, async () => {
-      await page.locator("#building").scrollIntoViewIfNeeded();
-      await page.locator("#codenaya a").first().hover();
-    });
-    expect(added).toBe(0);
+    const before = new Set((await resources(page)).map((resource) => resource.url));
+    await page.locator("#building").scrollIntoViewIfNeeded();
+    await page.locator("#codenaya a").first().hover();
+    await settle(page);
+    // The margins' notes and the arcade (rebuild-arcade) arrive as the page passes Experience: they sit beside
+    // the section, they are not its code, and tests/arcade.spec.ts holds them to their own budget.
+    const margins = (url: string) => /arcade:(play|layout)/.test(readFileSync(`.next${new URL(url).pathname.replace("/_next", "")}`, "utf8"));
+    const added = (await resources(page)).filter((resource) => resource.type === "script" && !before.has(resource.url) && !margins(resource.url));
+    expect(added.map((script) => script.url)).toEqual([]);
   });
 });
