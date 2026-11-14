@@ -373,7 +373,8 @@ export function toggle(button: HTMLElement) {
     shots = shots.filter((shot) => {
       shot.y -= H * 1.5 * s;
       const f = foes.find((f) => (f.state === "home" || f.state === "dive" || f.state === "enter") && Math.abs(f.x - shot.x) < S / 2 + 1.5 * u && Math.abs(f.y - shot.y) < S / 2 + 2 * u);
-      if (!f) return shot.y > 0;
+      // Shots end at the heads-up line: they never cross the score or the graph.
+      if (!f) return shot.y > TOP - 6 * u;
       f.flash = 1;
       f.hp--;
       if (f.hp > 0) ctx.play("tick", { x: f.x });
