@@ -7,7 +7,7 @@
 import type { Game } from "../contract";
 
 const CELL = 12;
-const HUES = ["red", "amber", "green", "teal", "violet"] as const;
+const HUES = ["accent", "amber", "green", "teal", "violet"] as const;
 type Point = [number, number];
 
 const snake: Game = (ctx) => {
@@ -116,7 +116,7 @@ const snake: Game = (ctx) => {
 
     // The line through the cell centres, a tick across it at every cell, the arrowhead at the head.
     const points = body.map(center);
-    g.strokeStyle = dead ? colors.red : colors.ink;
+    g.strokeStyle = dead ? colors.accent : colors.ink;
     g.lineWidth = 1.5;
     g.lineJoin = "round";
     g.beginPath();
@@ -148,7 +148,7 @@ const snake: Game = (ctx) => {
     }
     g.stroke();
     const [hx, hy] = points[0]!;
-    g.fillStyle = dead ? colors.red : colors.signal;
+    g.fillStyle = dead ? colors.accent : colors.signal;
     g.beginPath();
     g.moveTo(hx + dir[0] * 6, hy + dir[1] * 6);
     g.lineTo(hx - dir[0] * 2 + dir[1] * 4, hy - dir[1] * 2 + dir[0] * 4);
