@@ -3,7 +3,7 @@ import { cubicBezier, prefersReducedMotion } from "./dom";
 /**
  * The visitor data shared by the counter cell and the globe, loaded lazily
  * when the footer comes near. One stats read and one heartbeat loop per page:
- * - stats (total, live, map cells) on load and every 2 minutes, CDN-cached;
+ * - stats (total, live, map cells) on load and every 5 minutes, CDN-cached;
  * - a heartbeat every 60 s while the tab is visible, for at most 30 minutes,
  *   stopped on pagehide; it is also how the server tells this visitor, and
  *   only them, their own coarse place and distance from Anupam.
@@ -13,7 +13,8 @@ export type Cell = [lat: number, lon: number, visits: number];
 export type Distance = { value: number; unit: "km" | "mi" } | { same: true };
 export type Visitors = { total?: number; live?: number; cells: Cell[]; you?: [number, number]; distance?: Distance };
 
-const STATS_EVERY = 120_000;
+// The CDN holds the shared numbers for five minutes; asking more often would only read the cache.
+const STATS_EVERY = 300_000;
 const BEAT_EVERY = 60_000;
 const SESSION = 30 * 60_000;
 const TAB = "visit-tab";

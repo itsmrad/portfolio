@@ -25,15 +25,15 @@ export const KEYS = {
 /** One count per client address per day. */
 const MARKER_TTL = 86400;
 /** Store writes allowed per UTC day, visits and heartbeats together; real traffic is a few a day. */
-export const DAILY_WRITES = 2000;
+export const DAILY_WRITES = 1000;
 /** A tab is live while it has sent a heartbeat this recently (it beats every 60 s). */
 export const LIVE_WINDOW = 130_000;
 /** At most this many map cells, busiest first. */
 export const MAX_CELLS = 300;
 const MAX_COUNT = 1_000_000_000;
 const TIMEOUT = 3000;
-/** Shared reads: one store read per two minutes per CDN region, however many requests. */
-export const SHARED = "public, s-maxage=120, stale-while-revalidate=600";
+/** Shared reads: at most one store read per five minutes per CDN region, however many requests. */
+export const SHARED = "public, s-maxage=300, stale-while-revalidate=600";
 /** Anupam's place: New Delhi. */
 export const HOME = { lat: 28.61, lon: 77.21 };
 /** Countries whose everyday distances are in miles. */
