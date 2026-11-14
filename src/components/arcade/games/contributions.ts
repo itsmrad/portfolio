@@ -238,7 +238,11 @@ export function toggle(button: HTMLElement) {
     if (phase === "over") return type === "down" && restart();
     if (type !== "up") target = px;
     if (type === "down") {
-      canvas.setPointerCapture(event.pointerId);
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch {
+        // A pointer the browser no longer tracks: firing still stops on its up.
+      }
       firing = true;
       fire();
     } else if (type === "up") firing = false;
@@ -290,7 +294,8 @@ export function toggle(button: HTMLElement) {
     if (ctx.held("right")) x += v;
     if (target !== null) x += clamp(target - x, -v * 1.6, v * 1.6);
     x = clamp(x, 12 * u, W - 12 * u);
-    if (ctx.held("action") || firing || (touch && target !== null && phase === "play")) fire();
+    // On a touch screen it fires by itself; the finger only steers.
+    if (ctx.held("action") || firing || (touch && phase === "play")) fire();
     if (gone) {
       gone = Math.max(0, gone - dt);
       if (!gone) safe = 1600;
