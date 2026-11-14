@@ -165,6 +165,41 @@ test.describe("the commit readings", () => {
     });
   }
 
+  test("loads the same where CSS scroll-driven animations are missing (Safari before 26, Firefox)", async ({ page }) => {
+    // Round 4: the owner's browser showed the end state. Report no support for scroll timelines at all.
+    await page.addInitScript(() => {
+      const supports = CSS.supports.bind(CSS);
+      CSS.supports = ((...args: [string, string?]) => (/timeline|view\(/.test(args.join(" ")) ? false : supports(...(args as [string])))) as typeof CSS.supports;
+    });
+    await wake(page);
+    await page.locator('[data-ratio="777"]').waitFor({ state: "attached" });
+    expect(await page.evaluate(() => CSS.supports("animation-timeline: view()"))).toBe(false);
+    const { hits: base } = await at(page, 777, -0.5);
+    expect((await at(page, 777, -0.3)).n).toBe(0);
+    const half = await at(page, 777, 0.5);
+    expect(half.n).toBeGreaterThan(777 * 0.3);
+    expect(half.n).toBeLessThan(777 * 0.7);
+    const landed = await at(page, 777, 1.2);
+    expect(landed).toMatchObject({ n: 777, hit: "", hits: base + 1 });
+  });
+
+  test("rests with the bar and its tick at 777 of 801, not at the end of the scale", async ({ page }) => {
+    await wake(page);
+    const reading = page.locator('[data-ratio="777"]');
+    await reading.waitFor({ state: "attached" });
+    await at(page, 777, 1.3);
+    const geometry = await reading.evaluate((element) => {
+      const width = element.clientWidth;
+      // The first background layer is the bar: its width, as a share of the scale (computed as a percentage or px).
+      const size = getComputedStyle(element).backgroundSize.split(",")[0]!.trim().split(" ")[0]!;
+      const fill = size.endsWith("%") ? parseFloat(size) / 100 : parseFloat(size) / width;
+      const tick = element.querySelector("i")!;
+      return { fill, tick: (tick.offsetLeft + tick.offsetWidth / 2) / width };
+    });
+    expect(geometry.fill).toBeCloseTo(777 / 801, 2);
+    expect(geometry.tick).toBeCloseTo(777 / 801, 2);
+  });
+
   test.describe("reduced motion", () => {
     test.use({ reducedMotion: "reduce" });
     test("stays a still reading with its numbers", async ({ page }) => {

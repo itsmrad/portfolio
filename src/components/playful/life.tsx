@@ -48,19 +48,22 @@ function Note({ item, top }: { item: Extract<Item, { kind: "note" }>; top: numbe
 }
 
 /**
- * A reading over a scale that loads as it scrolls into view (round 3): the fill and the count are a CSS scroll
- * timeline (reversible, off the main thread); arriving at the value strikes its tick in the accent, the count
- * pops and settles, and one voice plays, once per arrival. Static where scroll timelines are missing or motion is
- * reduced. The JS below only watches for the arrival; the range must match `animation-range` in life.module.css.
+ * A reading over a scale that loads as it scrolls into view: the bar fills and the count runs up with the
+ * reading's progress through the viewport (reversible); arriving at the value strikes its tick in the accent,
+ * the count pops and settles, and one voice plays, once per arrival. Static under reduced motion.
+ *
+ * Script-driven in every engine (round 4): a CSS scroll timeline was used at first, and on the owner's
+ * browser it reported support yet sat at its end state, so feature detection cannot be trusted to pick a
+ * fallback. One small path, run only while the reading is near the viewport, behaves the same everywhere.
  */
 const RANGE = [0.1, 0.4] as const;
 function Ratio({ item, top }: { item: Extract<Item, { kind: "ratio" }>; top: number }) {
   const element = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     const reading = element.current!;
-    if (!CSS.supports("animation-timeline: view()") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     reading.setAttribute("data-reading", "");
-    // Progress through the timeline's range, from where its top meets the viewport's foot.
+    // Progress through the loading range: 0 a tenth of the way into view, 1 four tenths in (RANGE).
     const progress = () => {
       const box = reading.getBoundingClientRect();
       const cover = innerHeight + box.height;
@@ -70,9 +73,18 @@ function Ratio({ item, top }: { item: Extract<Item, { kind: "ratio" }>; top: num
     let landed = progress() >= 1;
     let hits = 0;
     let frame = 0;
+    let shown = -1;
     const check = () => {
       frame = 0;
       const at = progress();
+      // The fill and the count follow the scroll both ways; written only when the count changes.
+      const share = Math.min(1, Math.max(0, at));
+      const n = Math.round(share * item.value);
+      if (n !== shown) {
+        shown = n;
+        reading.style.setProperty("--fill", String((share * item.value) / item.of));
+        reading.style.setProperty("--n", String(n));
+      }
       if (!landed && at >= 1) {
         landed = true;
         reading.removeAttribute("data-hit");
@@ -94,6 +106,7 @@ function Ratio({ item, top }: { item: Extract<Item, { kind: "ratio" }>; top: num
       else removeEventListener("scroll", onScroll);
     });
     observer.observe(reading);
+    check();
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
