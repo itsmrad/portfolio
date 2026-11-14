@@ -55,7 +55,15 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Previews never compete with production in search, whatever the Vercel project settings.
+          ...(preview ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] : []),
         ],
+      },
+      {
+        // The resume stays downloadable and readable by agents, but out of search results:
+        // the PDF carries a phone number, and the page is the result that should rank.
+        source: "/Anupam-Das-Resume.pdf",
+        headers: [{ key: "X-Robots-Tag", value: "noindex" }],
       },
     ];
   },
@@ -63,6 +71,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/blog", destination: "/", permanent: true },
       { source: "/blog/:path*", destination: "/", permanent: true },
+      { source: "/resume", destination: "/Anupam-Das-Resume.pdf", permanent: true },
     ];
   },
   async rewrites() {
