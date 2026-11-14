@@ -45,6 +45,8 @@ async function start(page: Page, id: string, sequence = [0]) {
   await expect(canvas).toBeFocused();
   await expect(card.locator('[data-phase="loading"]')).toHaveCount(0);
   await centre(page, id);
+  // The card unfolds before its game takes keys.
+  await page.waitForTimeout(400);
   return { card, canvas };
 }
 

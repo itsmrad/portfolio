@@ -30,6 +30,8 @@ const sheets: Game = (ctx) => {
   // The points the last move earned and how long ago, for the "+8" that rises under the total.
   let gain = 0;
   let since = 1e9;
+  // A blocked move nudges the board towards the press and back.
+  let bump: [number, number, number] = [0, 0, 0];
 
   const at = (x: number, y: number) => tiles.find((tile) => !tile.gone && tile.x === x && tile.y === y);
   const spawn = () => {
@@ -84,7 +86,10 @@ const sheets: Game = (ctx) => {
         }
       }
     }
-    if (!moved) return ctx.play("tap");
+    if (!moved) {
+      bump = [dx, dy, 1];
+      return ctx.play("tap");
+    }
     t = 0;
     spawn();
     if (merged) {
@@ -139,6 +144,10 @@ const sheets: Game = (ctx) => {
   ctx.frame((dt) => {
     t = ctx.reduced ? 1 : Math.min(1, t + dt / SLIDE);
     g.clearRect(0, 0, W, ctx.height);
+    bump[2] = Math.max(0, bump[2] - dt / 160);
+    const push = Math.sin(bump[2] * Math.PI) * (ctx.reduced ? 1 : 2);
+    g.save();
+    g.translate(bump[0] * push, bump[1] * push);
     g.textAlign = "center";
     g.textBaseline = "middle";
     g.lineWidth = 1;
@@ -169,6 +178,8 @@ const sheets: Game = (ctx) => {
       text(n, ox + s / 2, oy + s / 2 + 3, n.length > 3 ? 11 : n.length > 2 ? 13 : 16, ctx.fonts.pixel, colors.paper);
       text(`A${TOP - k}`, ox + s / 2, oy + 9, 8, ctx.fonts.mono, colors.paper);
     }
+
+    g.restore();
 
     // The A-series diagram: A0 halved again and again, each piece filled once that size is made.
     let [x, y, w, h] = [190, 16, 42, 59];
