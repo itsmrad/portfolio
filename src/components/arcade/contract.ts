@@ -48,7 +48,10 @@ export const ARCADE_WIDE = "(min-width: 80rem) and (pointer: fine)";
 
 export const HUES = ["accent", "amber", "green", "teal", "blue", "violet"] as const;
 
-/** Arrow keys map to directions, Space and Enter to "action"; any other key is null (read `event.key`, e.g. for typing). */
+/**
+ * Arrow keys and W/A/S/D (by position: ZQSD on AZERTY) map to directions, Space and Enter to "action"; any other key
+ * is null. A game that takes typed letters reads `event.key` and ignores `key`, so W, A, S and D still type.
+ */
 export type Key = "up" | "down" | "left" | "right" | "action" | null;
 
 export type GameContext = {

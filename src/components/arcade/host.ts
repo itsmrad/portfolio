@@ -24,6 +24,8 @@ type Options = {
 };
 
 const KEYS: Record<string, Key> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", " ": "action", Enter: "action" };
+/** WASD by physical position (ZQSD on an AZERTY board), like a proper game. Typing games read `event.key`, so they still get letters. */
+const WASD: Record<string, Key> = { KeyW: "up", KeyA: "left", KeyS: "down", KeyD: "right" };
 const TOKENS: Record<keyof Colors, string> = {
   ink: "--foreground",
   muted: "--muted-foreground",
@@ -135,7 +137,7 @@ export function host(canvas: HTMLCanvasElement, options: Options) {
       }
       return;
     }
-    const key = KEYS[event.key] ?? null;
+    const key = KEYS[event.key] ?? (event.shiftKey ? undefined : WASD[event.code]) ?? null;
     if (!key && !options.exclusive) return;
     // The page's shortcut listener skips prevented events; this also stops arrows and Space scrolling.
     event.preventDefault();
