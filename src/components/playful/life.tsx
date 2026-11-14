@@ -102,8 +102,10 @@ function Ratio({ item, top }: { item: Extract<Item, { kind: "ratio" }>; top: num
     };
     const onScroll = () => (frame ||= requestAnimationFrame(check));
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) addEventListener("scroll", onScroll, { passive: true });
-      else removeEventListener("scroll", onScroll);
+      if (!entry?.isIntersecting) return removeEventListener("scroll", onScroll);
+      addEventListener("scroll", onScroll, { passive: true });
+      // Arriving by a jump (an anchor, the palette) fires its scroll before this: measure now, not at the next one.
+      onScroll();
     });
     observer.observe(reading);
     check();
