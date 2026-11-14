@@ -23,7 +23,8 @@ async function play(page: Page, id: string) {
   await card.getByRole("button", { name: /^Play / }).click();
   const canvas = card.locator("canvas");
   await expect(canvas).toBeFocused();
-  await canvas.evaluate((element) => element.scrollIntoView({ block: "center" }));
+  // Instantly: the page scrolls smoothly, and a test that compares scrollY must not start mid-scroll.
+  await canvas.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
   await page.mouse.move(2, 2);
   await page.waitForTimeout(300);
   return { card, canvas, frame: () => canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL()) };
@@ -123,7 +124,8 @@ test.describe("the commit readings", () => {
         const reading = document.querySelector(`[data-ratio="${value}"]`)!;
         const box = reading.getBoundingClientRect();
         const cover = innerHeight + box.height;
-        scrollTo(0, box.top + scrollY - innerHeight + (0.1 + 0.3 * q) * cover);
+        // Instantly: the page scrolls smoothly, and a test must not read the reading halfway through a scroll.
+        scrollTo({ top: box.top + scrollY - innerHeight + (0.1 + 0.3 * q) * cover, behavior: "instant" });
       },
       { value, q },
     );

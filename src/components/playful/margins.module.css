@@ -332,6 +332,8 @@
 .row::after {
   content: "/ " attr(data-rail);
   position: absolute;
+  /* A label only: it draws over the cartridges (the ruler sits above them) and must never take their presses. */
+  pointer-events: none;
   top: 50%;
   left: 3.5rem;
   translate: -4px -50%;
