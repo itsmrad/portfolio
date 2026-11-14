@@ -1,21 +1,21 @@
 import type { MetadataRoute } from "next";
 
+import { seo, site } from "@/content/site";
+import { THEME_COLOR } from "@/lib/theme";
+
 export default function manifest(): MetadataRoute.Manifest {
-	return {
-		name: "Anupam Das — Full Stack Developer",
-		short_name: "Anupam Das",
-		description:
-			"Portfolio of Anupam Das — Full Stack Developer specializing in React, Next.js, TypeScript, and Node.js. Based in New Delhi, India.",
-		start_url: "/",
-		display: "standalone",
-		background_color: "#000000",
-		theme_color: "#000000",
-		icons: [
-			{
-				src: "/favicon.ico",
-				sizes: "any",
-				type: "image/x-icon",
-			},
-		],
-	};
+  return {
+    name: site.name,
+    short_name: site.givenName,
+    description: seo.description,
+    start_url: "/",
+    display: "standalone",
+    background_color: THEME_COLOR.dark,
+    theme_color: THEME_COLOR.dark,
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
 }

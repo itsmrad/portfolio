@@ -1,0 +1,16 @@
+/* The ink is one dash as long as the path (pathLength=1); the offset hides or shows it. */
+.ink {
+  stroke-dasharray: 1 2;
+}
+
+.pen {
+  opacity: 0;
+}
+
+/* Unsigned until the pen gets to it, but only when a script will sign it. */
+@media (scripting: enabled) {
+  .ink {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+}

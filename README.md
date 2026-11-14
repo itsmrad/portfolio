@@ -1,216 +1,59 @@
-<div align="center">
-  
-# 👨‍💻 Anupam Das | Portfolio
+# anupamdas.me
 
-[![Website](https://img.shields.io/badge/Website-anupamdas.me-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.anupamdas.me)
-[![GitHub](https://img.shields.io/badge/GitHub-itsmrad-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/itsmrad)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-itsmrad-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/itsmrad)
-[![Twitter](https://img.shields.io/badge/X-@anupamio-1DA1F2?style=for-the-badge&logo=x&logoColor=white)](https://x.com/anupamio)
-[![YouTube](https://img.shields.io/badge/YouTube-@anupamio-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@anupamio)
+The portfolio of Anupam Das: one static page drawn like a technical sheet, with a command palette, single-key shortcuts, code-generated sounds, a playable 404 and a few easter eggs.
 
-**Software Engineer turned Fullstack Developer**  
-_Building scalable systems • Hackathon enthusiast • Open source contributor_
+**Stack:** Next.js 16 (static output on Vercel), React 19, Tailwind CSS 4, TypeScript. No animation or UI framework: native `<dialog>` and popover, Web Audio for sound, CSS for motion. One dynamic route, `/api/visit`, for the visitor counter.
 
-📍 New Delhi, India | 📧 itsmrad@gmail.com
+## Develop
 
-</div>
-
----
-
-## 🚀 About Me
-
-I am an undergraduate **Information Technology student** with experience building and shipping full-stack systems and participating in multiple hackathons. I am deeply interested in how large-scale software systems work under the hood, particularly **runtime behavior**, **observability**, and **distributed system failures**.
-
-My goal is to become a **systems-oriented engineer** focused on designing, debugging, and scaling infrastructure-level systems.
-
----
-
-## 🛠️ Tech Stack
-
-<div align="center">
-
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
-![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
-
-</div>
-
----
-
-## 💼 Experience
-
-### 🏢 **Namespace Society** | _Tech Team Member_
-
-**Nov 2023 - Present** | Remote  
-Building innovative solutions and contributing to the tech community.
-
-### 🏢 **Syuniqe** | _Full Stack Software Engineer_
-
-**Jun 2025 - Jul 2025** | Remote  
-Developed the official company website with complex animations using Next.js, Framer Motion, and integrated Clerk & SMTP services.
-
-### 🏢 **SheBuilds** | _Social Media Manager & Video Editor_
-
-**Feb 2025 - Apr 2025** | Remote  
-Managed social media presence and created engaging video content for the community.
-
----
-
-## 🎓 Education
-
-**🎓 Bachelor of Technology, Information Technology**  
-_Bhagwan Parshuram Institute Of Technology_ | 2023 - 2027
-
-**💻 WEB Dev + AI + WEB3 + DSA Bootcamp**  
-_100xdevs_ | 2026 - Present
-
-**🏫 Higher Secondary School**  
-_Bankura Christian Collegiate School_ | 2020 - 2022
-
----
-
-## 🏆 Featured Projects
-
-### 🌐 [**SolScan - Solana Wallet Explorer**](https://github.com/itsmrad/SolScan)
-
-Native mobile wallet explorer for Solana blockchain with real-time RPC API integration.  
-**Tech:** React Native • Expo • TypeScript • Solana RPC API
-
-### 💰 [**Dash Wallet**](https://dash-wallet-beta.vercel.app/)
-
-Static, read-only Solana wallet generator with deterministic address creation.  
-**Tech:** Next.js • TypeScript • Tailwind CSS • ShadCN UI
-
-### 📝 [**Blogfolio**](https://blogfolio-five-liard.vercel.app)
-
-High-performance blog with Better Auth integration and optimized SEO.  
-**Tech:** Next.js 16 • Convex • Better Auth • TypeScript • Tailwind CSS
-
-### 🏢 [**Syuniqe's Official Website**](https://syuniqe.com)
-
-Company website with complex animations and seamless backend integration.  
-**Tech:** Next.js • Clerk • SMTP • Framer Motion • Vercel
-
-### 🏠 [**AirBnb Clone**](https://airbnb-6m7n.onrender.com)
-
-Full-stack rental marketplace with property listings and booking management.  
-**Tech:** React • Vite • React Router • Axios • Tailwind CSS
-
-### ♻️ [**Rewaste**](https://rewaste.netlify.app)
-
-Sustainable marketplace platform with Stripe payment integration.  
-**Tech:** Next.js • Cosmic CMS • Stripe • Sass
-
----
-
-## 🏅 Hackathons & Achievements
-
-### 🥇 **HackHound 3.0** | _Top 10_
-
-**Feb 27-28, 2025** | Modinagar, UP  
-Built **Zenden** - Real-time collaborative productivity platform with AI-powered editing.
-
-### 🥇 **HackWiE 3.0** | _Top 10_
-
-**Jan 29-31, 2025** | New Delhi  
-Developed **Rewaste** - Full-stack waste management platform.
-
-### 🎯 **Avensis'25 HackFormers**
-
-**Jan 29-30, 2025** | New Delhi  
-Participated with Rewaste project.
-
-### 🎯 **HackHazards**
-
-**Mar 16-17, 2024** | New Delhi  
-Created **Codecommune** - Gamified coding competition platform.
-
----
-
-## 🎨 Portfolio Features
-
-✨ **Modern Tech Stack** - Built with Next.js 14, React, TypeScript, Shadcn/UI, TailwindCSS, Framer Motion, and Magic UI  
-⚡ **Lightning Fast** - Optimized for performance and deployed on Vercel  
-📱 **Fully Responsive** - Seamless experience across all devices  
-📝 **Integrated Blog** - Share thoughts and technical insights  
-🎯 **Easy Configuration** - Single config file setup in minutes
-
----
-
-## 🚀 Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/itsmrad/portfolio
-
-# Navigate to directory
-cd portfolio
-
-# Install dependencies
-bun install
-
-# Start development server
-bun run dev
-
-# Open http://localhost:3000
+```sh
+npm ci
+npm run dev
 ```
 
-### ⚙️ Configuration
+All copy and data live in `src/content/`: `site.ts` for identity, experience, projects and stack, and one file per feature beside it (`home.ts`, `command.ts`, `sound.ts`, `playful.ts`, `footer.ts`). No copy is written inside a component. The content rules are at the top of `site.ts` and `tests/seo.spec.ts` enforces them (no phone number anywhere, only the owner's email, no audience claims).
 
-Edit the single config file at [`src/data/resume.tsx`](./src/data/resume.tsx) to customize:
+## Scripts
 
-- Personal information
-- Work experience
-- Projects
-- Skills
-- Social links
-- And more!
+| Script | What it does |
+|---|---|
+| `npm run dev` | development server |
+| `npm run build` / `npm start` | production build / serve it |
+| `npm run lint`, `npm run typecheck` | ESLint, TypeScript |
+| `npm test` | Playwright against the production build (build first) |
+| `npm run lighthouse` | Lighthouse gate, mobile, median of three; add `-- --strict-timing` to fail on LCP and blocking time too (use an idle machine) |
+| `npm run check` | all of the above in order |
+| `npm run fonts`, `npm run icons` | re-subset the fonts, re-render the icons |
 
----
+The browser gates use the Chromium Playwright resolves (`PLAYWRIGHT_BROWSERS_PATH`, or `npx playwright install chromium` once). They serve the build on `GATE_PORT` and the two ports after it (default 3210).
 
-## 📦 Tech Stack Details
+The limits in `tests/budget.spec.ts` and `scripts/lighthouse.mjs` are hard gates: first-load JavaScript, HTML size and element count (the page is close to its 1400-element limit), fonts, images, layout shift with late fonts, Lighthouse scores. Fix the code, not the number.
 
-This portfolio is built with:
+## Owner tasks
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **UI Components:** Shadcn/UI + Magic UI
-- **Animations:** Framer Motion
-- **Deployment:** Vercel
-- **Package Manager:** Bun
+**Swap the resume.** Replace `public/Anupam-Das-Resume.pdf` with the new file under the same name (or change `site.resume` in `src/content/site.ts`). Every download button, the `r` key, the palette row, `llms.txt` and `index.md` follow. The PDF is served as is: check it before publishing.
 
----
+**Add a project clip.** Each project in `src/content/site.ts` has an `OWNER CLIP SLOT` comment. Put the WebM in `public/clips/`, a poster still in `src/assets/projects/`, import the poster at the top of `site.ts` and set `clip: { src: "/clips/<name>.webm", poster: <import>, caption: "<one line>" }`. It renders under "The product" and plays only on request.
 
-## 📄 License
+**Connect the visitor counter.** In Vercel: Storage, Create Database, Upstash for Redis (free plan). Connect it to **Production only** and leave the variable prefix empty, so `KV_REST_API_URL` and `KV_REST_API_TOKEN` are set. Redeploy production; the "Visitors" cell appears with that build. Only production traffic counts (`VERCEL_ENV === "production"`), once per address per day. To leave your own browser out, run `localStorage.setItem("visit-counted", "1")` in its console on the live site. With no variables the cell is not rendered and `/api/visit` answers 404.
 
-Licensed under the [MIT License](./LICENSE.md) - feel free to use this template for your own portfolio!
+**Search and assistants.** To verify the site with a meta tag instead of DNS, paste the token into `site.googleVerification` or `site.bingVerification` in `src/content/site.ts` (or set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` in Vercel); nothing renders while they are empty. When the page's facts change, edit them in `src/content/site.ts` and `src/content/faq.ts` and bump `site.updated`: it is the sitemap's `lastmod`, the structured data's `dateModified` and the visible "Updated" line. IndexNow pings Bing and the other IndexNow engines after every production deploy (`.github/workflows/indexnow.yml`, key in `public/<key>.txt`); to ping by hand run `node scripts/indexnow.mjs`.
 
----
+No other environment variables are needed.
 
-## 🤝 Connect With Me
+## Layout
 
-<div align="center">
+```
+src/content/            all copy and data
+src/app/                the page, the 404, metadata routes, llms.txt, index.md, /api/visit, globals.css (tokens)
+src/components/layout/  the frame: header, footer, sections, rules, dimension lines
+src/components/ui/      button, key cap, image, icons, dialog
+src/components/…        one folder per feature: sections, projects, command, theme, sound, game, playful, footer
+src/lib/                seo, markdown, theme, fonts, sound facade and engine, haptics
+tests/                  Playwright specs, one per area
+scripts/                Lighthouse gate, font subsetting, icon rendering
+```
 
-[![Email](https://img.shields.io/badge/Email-itsmrad@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:itsmrad@gmail.com)
-[![Portfolio](https://img.shields.io/badge/Portfolio-anupamdas.me-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.anupamdas.me)
-[![GitHub](https://img.shields.io/badge/GitHub-itsmrad-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/itsmrad)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-itsmrad-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/itsmrad)
+## License
 
-</div>
-
----
-
-<div align="center">
-
-**⭐ Star this repo if you found it helpful!**
-
-Made with ❤️ by [Anupam Das](https://github.com/itsmrad)
-
-</div>
+MIT. Fonts in `src/assets` and `src/components/playful/fonts` are under the SIL Open Font License; their licences sit beside them.

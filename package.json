@@ -1,55 +1,44 @@
 {
-	"name": "porfolio",
-	"version": "0.1.0",
-	"private": true,
-	"engines": {
-		"node": ">=18.0.0"
-	},
-	"scripts": {
-		"dev": "next dev",
-		"build": "next build",
-		"start": "next start",
-		"lint": "eslint",
-		"lint:fix": "eslint --fix"
-	},
-	"dependencies": {
-		"@content-collections/mdx": "^0.2.2",
-		"@radix-ui/react-accordion": "^1.2.12",
-		"@radix-ui/react-avatar": "^1.1.11",
-		"@radix-ui/react-icons": "^1.3.2",
-		"@radix-ui/react-separator": "^1.1.8",
-		"@radix-ui/react-slot": "^1.2.4",
-		"@radix-ui/react-tooltip": "^1.2.8",
-		"@tailwindcss/postcss": "^4.1.18",
-		"class-variance-authority": "^0.7.1",
-		"clsx": "^2.1.1",
-		"content-collections": "^0.2.1",
-		"lucide-react": "^0.562.0",
-		"motion": "^12.33.0",
-		"next": "16.1.1",
-		"next-themes": "^0.4.6",
-		"react": "^19.2.4",
-		"react-dom": "^19.2.4",
-		"react-markdown": "^10.1.0",
-		"rehype-pretty-code": "^0.14.1",
-		"remark-gfm": "^4.0.1",
-		"shiki": "^3.22.0",
-		"tailwind-merge": "^3.4.0",
-		"tailwindcss": "^4.1.18",
-		"tailwindcss-animate": "^1.0.7",
-		"tw-animate-css": "^1.4.0"
-	},
-	"devDependencies": {
-		"@content-collections/core": "^0.13.1",
-		"@content-collections/next": "^0.2.10",
-		"@tailwindcss/typography": "^0.5.19",
-		"@types/node": "^25.2.2",
-		"@types/react": "^19.2.13",
-		"@types/react-dom": "^19.2.3",
-		"eslint": "^9.39.2",
-		"eslint-config-next": "16.1.1",
-		"postcss": "^8.5.6",
-		"typescript": "^5.9.3",
-		"zod": "^4.3.6"
-	}
+  "name": "portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anupam Das: software engineer portfolio",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "playwright test",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "check": "npm run lint && npm run typecheck && npm run build && npm run test && npm run lighthouse"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.5.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.72.0",
+    "next": "16.4.6",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.6",
+    "lighthouse": "^13.6.0",
+    "tailwindcss": "^4.3.5",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5.9.3"
+  }
 }

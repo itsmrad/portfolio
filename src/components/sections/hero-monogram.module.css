@@ -1,0 +1,96 @@
+.button {
+  display: block;
+  width: 100%;
+  border-radius: 0.375rem;
+  /* Only the drawn solid is pressable, not the empty paper around it. */
+  pointer-events: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.button:focus-visible {
+  outline-offset: 6px;
+}
+
+.mark {
+  --pattern: color-mix(in oklab, var(--foreground) 12%, var(--background));
+  --stroke: color-mix(in oklab, var(--foreground) 16%, var(--background));
+  /* The cursor highlight: zinc 700 fading out through zinc 400 (white through zinc 600 in the dark). */
+  --glow-from: light-dark(oklch(0.37 0.013 285.805), #fff);
+  --glow-to: light-dark(oklch(0.705 0.015 286.067), oklch(0.442 0.017 285.786));
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* One paint for outline and highlight: at each stop, the highlight at its
+   remaining opacity over the plain outline colour. */
+.mark stop {
+  --rest: calc((1 - var(--t)) * 100%);
+  stop-color: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--glow-from) var(--rest), var(--glow-to)) var(--rest),
+    var(--stroke)
+  );
+}
+
+.paper {
+  fill: var(--background);
+}
+
+.hatch {
+  stroke: var(--pattern);
+}
+
+.guides {
+  stroke: var(--line);
+  stroke-dasharray: 4 2;
+}
+
+.walls path,
+.faces path {
+  stroke: url(#ad-glow);
+  stroke-linejoin: round;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.walls path {
+  fill: var(--background);
+}
+
+.faces path {
+  fill: url(#ad-hatch);
+}
+
+.angle {
+  stroke: var(--dimension);
+  stroke-linejoin: round;
+}
+
+.angle path:nth-child(n + 3) {
+  fill: var(--background);
+}
+
+.angle text {
+  fill: var(--dimension-foreground);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Too small to read on a phone. */
+@media (max-width: 40rem) {
+  .angle {
+    display: none;
+  }
+}
+
+@media print {
+  .guides,
+  .angle {
+    display: none;
+  }
+}

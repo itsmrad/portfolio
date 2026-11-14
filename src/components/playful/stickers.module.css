@@ -1,0 +1,287 @@
+.root {
+  position: absolute;
+  inset: 0;
+  /* Above the hatch band the small ones overlap; below the sticky header. */
+  z-index: 1;
+  /* Springs of (0.35s, bounce 0.3) and (0.6s, bounce 0.38), sampled. */
+  --gesture: linear(0, 0.069, 0.225, 0.411, 0.59, 0.743, 0.861, 0.945, 0.999, 1.03, 1.044, 1.046, 1.041, 1.033, 1.025, 1.017, 1.01, 1.005, 1.002, 1, 0.998, 0.998, 0.998, 0.998, 1);
+  --enter: linear(0, 0.083, 0.27, 0.487, 0.69, 0.853, 0.969, 1.04, 1.075, 1.083, 1.076, 1.06, 1.042, 1.025, 1.011, 1.002, 0.996, 0.994, 0.993, 0.994, 0.995, 0.997, 0.998, 0.999, 1);
+}
+
+/* --- Placement -------------------------------------------------------------
+   Below 64rem: three small ones on the 32px hatch band under the hero, 6px
+   proud of it above and below, so they clear whatever the hero holds.
+   From 64rem: all five in the margins beside the hero, within 12rem of the
+   column so the narrowest margin still shows them whole. */
+.slot {
+  position: absolute;
+  top: calc(100% - 6px);
+  width: 44px;
+  animation: enter 600ms var(--enter) backwards;
+  animation-delay: calc(var(--i) * 100ms);
+}
+.keycap {
+  right: 20px;
+  --rest: -8deg;
+}
+.gear {
+  right: 76px;
+  --rest: 10deg;
+}
+.spark {
+  right: 130px;
+  --rest: -4deg;
+}
+.terminal,
+.stamp {
+  display: none;
+}
+/* Phones (below 40rem): the dock floats over the bottom of the screen, so the three
+   small ones move up into the cover's empty paper instead: the key cap and the spark
+   in the top-left corner above the A, the gear under the D's lower edge. The gear's
+   height follows the monogram, which scales with the width (385/555 of the column). */
+@media (max-width: 39.999rem) {
+  .keycap {
+    top: 6px;
+    right: auto;
+    left: 10px;
+  }
+  .spark {
+    top: 14px;
+    right: auto;
+    left: 62px;
+  }
+  .gear {
+    top: calc(24px + (100vw - 2 * var(--frame-gutter) - 2rem) * 0.555);
+    right: 14px;
+  }
+}
+/* At 44px the legends are specks: the small ones go without. */
+@media not (min-width: 64rem) {
+  .keycap text,
+  .gear text {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .terminal,
+  .stamp {
+    display: block;
+  }
+  .keycap {
+    top: 26px;
+    right: calc(100% + 44px);
+    width: 84px;
+  }
+  .spark {
+    top: 122px;
+    right: calc(100% + 104px);
+    width: 64px;
+    --rest: 8deg;
+  }
+  .terminal {
+    top: 14px;
+    left: calc(100% + 42px);
+    width: 128px;
+    --rest: 4deg;
+  }
+  /* The narrowest margin is 192px: the gear and the stamp step down it, apart. */
+  .gear {
+    top: 112px;
+    right: auto;
+    left: calc(100% + 34px);
+    width: 64px;
+  }
+  .stamp {
+    top: 150px;
+    left: calc(100% + 104px);
+    width: 68px;
+    --rest: -12deg;
+  }
+}
+/* Room to spread out. */
+@media (min-width: 80rem) {
+  .keycap {
+    right: calc(100% + 56px);
+    width: 92px;
+  }
+  .spark {
+    top: 134px;
+    right: calc(100% + 152px);
+    width: 72px;
+  }
+  .terminal {
+    top: 10px;
+    left: calc(100% + 48px);
+    width: 136px;
+  }
+  .gear {
+    top: 124px;
+    left: calc(100% + 44px);
+    width: 88px;
+  }
+  .stamp {
+    top: 100px;
+    left: calc(100% + 172px);
+    width: 104px;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+    scale: 0.9;
+    rotate: calc(var(--tilt) * -1);
+  }
+}
+
+/* --- One sticker ----------------------------------------------------------- */
+.sticker {
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  /* --x and --y are written by the pointer spring. */
+  translate: calc(var(--x, 0) * 1px) calc(var(--y, 0) * 1px);
+  transform: rotateX(calc(var(--y, 0) * -0.5deg)) rotateY(calc(var(--x, 0) * 1deg));
+  transition:
+    scale 350ms var(--gesture),
+    rotate 350ms var(--gesture),
+    opacity 150ms;
+}
+.sticker > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  rotate: var(--rest);
+  /* The first shadow is the cut edge, the second the lift off the sheet. */
+  filter: drop-shadow(0 0 0.75px rgb(0 0 0 / 0.35)) drop-shadow(0 5px 9px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .sticker:hover {
+    scale: 1.075;
+    rotate: var(--tilt);
+  }
+}
+.sticker:active {
+  scale: 0.94;
+  rotate: calc(var(--tilt) * -0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sticker:hover {
+    scale: none;
+    rotate: none;
+    opacity: 0.8;
+  }
+  .sticker:active {
+    scale: none;
+    rotate: none;
+    opacity: 0.65;
+  }
+}
+
+/* --- The drawing ----------------------------------------------------------- */
+.paper > * {
+  fill: var(--card);
+  stroke: var(--card);
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+.ink,
+.stamp svg {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ink text,
+.stamp text {
+  fill: var(--foreground);
+  stroke: none;
+  transition: fill 150ms;
+}
+.dim {
+  fill: var(--muted-foreground);
+  stroke: var(--muted-foreground);
+}
+text > .dim {
+  stroke: none;
+}
+.centre {
+  stroke: var(--dimension-foreground);
+  stroke-width: 0.75;
+  stroke-dasharray: 9 2 1.5 2;
+}
+
+/* The key sinks under a press. */
+.cap > rect {
+  fill: var(--card);
+}
+.cap {
+  transition: translate 80ms;
+}
+.sticker:active .cap {
+  translate: 0 3px;
+}
+/* The gear turns one tooth under the pointer. */
+.cog {
+  transform-origin: 46px 46px;
+  transition: rotate 350ms var(--gesture);
+}
+.cog > path {
+  fill: var(--card);
+}
+.cursor {
+  fill: var(--foreground);
+}
+/* Only where there is a mouse: lean.tsx, which pauses the blink off screen, loads only there. */
+@media (hover: hover) {
+  .sticker:hover .cog {
+    rotate: 45deg;
+  }
+  .cursor {
+    animation: blink 1.06s steps(1) infinite;
+  }
+  .root[data-idle] .cursor {
+    animation-play-state: paused;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.stars > path {
+  transition: fill 150ms;
+}
+
+/* A stamp is ink on the sheet: no paper, no shadow, a little faded. */
+.stamp svg {
+  stroke: var(--muted-foreground);
+  filter: none;
+  transition: stroke 150ms;
+}
+.stamp text {
+  fill: var(--muted-foreground);
+}
+
+/* The one colour, only while under the pointer. */
+@media (hover: hover) {
+  .sticker:hover .cap text,
+  .sticker:hover .cursor {
+    fill: var(--signal);
+  }
+  .sticker:hover .stars > path:nth-child(2) {
+    fill: var(--signal);
+  }
+  .stamp .sticker:hover svg {
+    stroke: var(--signal);
+  }
+  .stamp .sticker:hover text {
+    fill: var(--signal);
+  }
+}

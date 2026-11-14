@@ -1,0 +1,329 @@
+/* Ctrl, or the Command key once ./commands marks <html> on Apple devices. */
+.cmd {
+  display: none;
+}
+:global(html[data-platform="mac"]) .ctrl {
+  display: none;
+}
+:global(html[data-platform="mac"]) .cmd {
+  display: inline-flex;
+}
+
+/* Palette: the box opens from 98% with a 4px lift and fades out the same way
+   (150ms, ease-out-quint); the blurred scrim fades in 120ms. Its top edge sits
+   where the full-height box would be centred, so filtering shrinks it
+   downwards instead of moving it. */
+.dialog {
+  --top: max(4rem, calc(50dvh - 13.5rem));
+  top: var(--top);
+  /* --visible-height is the visual viewport, set while open: it shrinks under an on-screen keyboard. */
+  max-height: min(27rem, 56dvh, calc(var(--visible-height, 100dvh) - var(--top) - 1rem));
+  opacity: 0;
+  scale: 0.98;
+  translate: 0 2px;
+  transition:
+    opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
+}
+.dialog[open] {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+}
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    scale: 0.98;
+    translate: 0 4px;
+  }
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.1);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition:
+    opacity 0.12s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.12s allow-discrete,
+    overlay 0.12s allow-discrete;
+}
+.dialog[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Header pill: 32px tall, about 90px wide, hidden below `sm`. */
+.pill {
+  display: none;
+  align-items: center;
+  gap: 0.125rem;
+  height: 2rem;
+  margin-right: 0.25rem;
+  padding: 0 0.375rem 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--surface);
+  color: var(--muted-foreground);
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+.pill:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.pill > svg {
+  margin-right: 0.25rem;
+}
+.pill kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.125rem;
+  background: var(--background);
+  font: 0.6875rem/1 var(--font-geist-mono), ui-monospace, monospace;
+}
+.pill .ctrl,
+.pill .cmd {
+  width: 2rem;
+}
+.pill .cmd {
+  display: none;
+}
+@media (min-width: 40rem) {
+  .pill {
+    display: inline-flex;
+  }
+}
+
+/* Phones and touch screens: near the top, clear of the on-screen keyboard. */
+@media (max-width: 39.999rem), (pointer: coarse) {
+  .dialog {
+    --top: calc(4rem + env(safe-area-inset-top, 0px));
+    max-height: min(27rem, calc(var(--visible-height, 100dvh) - var(--top) - 1rem));
+  }
+}
+
+/* The page stays put behind the open palette; the gutter keeps a classic scrollbar's width, so nothing shifts. */
+:global(html):has(.dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+/* Phone dock, below `sm`: a 64px fade (the pill's 48px band plus a soft edge), a
+   floating pill 8px above the safe area, and a spacer as tall as the fade at the
+   end of the page. */
+.fade,
+.spacer {
+  height: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+/* The first screen belongs to the hero: its fact rows and email reach the bottom of
+   short phones. The dock and its fade arrive over the first 48px of scroll, and
+   leave again at the very top. Where scroll timelines are missing they simply stay. */
+@supports (animation-timeline: scroll()) {
+  .fade,
+  .dock {
+    animation: dock-arrive linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 48px;
+  }
+}
+@keyframes dock-arrive {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.fade {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 40;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--background));
+}
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+  translate: -50% 0;
+}
+.dock,
+.menu {
+  border-radius: 0.75rem;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow:
+    0 0 0 1px light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.2)),
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+/* The spacer continues the frame's side rules, so the page ends inside the drawing. */
+.spacer {
+  width: min(var(--frame-width), calc(100% - 2 * var(--frame-gutter)));
+  margin-inline: auto;
+  border-inline: 1px solid var(--line);
+}
+@media (min-width: 40rem) {
+  .fade,
+  .spacer,
+  .dock {
+    display: none;
+  }
+}
+/* Focus moved by the keyboard never ends under the dock. */
+@media (max-width: 39.999rem) {
+  :global(html):has(.dock) {
+    scroll-padding-bottom: 4.5rem;
+  }
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 5rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+.search:active {
+  color: var(--foreground);
+}
+.rule {
+  width: 1px;
+  height: 1.5rem;
+  margin: 0 0.25rem 0 0.625rem;
+  background: var(--border);
+}
+.toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+}
+.toggle:hover,
+.dock:has(:popover-open) .toggle {
+  background: var(--muted);
+}
+/* The two bars cross while the menu is open. */
+.toggle > span {
+  width: 1rem;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--foreground);
+  transition:
+    translate 0.2s ease,
+    rotate 0.2s ease;
+}
+.dock:has(:popover-open) .toggle > span:first-child {
+  translate: 0 3px;
+  rotate: 45deg;
+}
+.dock:has(:popover-open) .toggle > span:last-child {
+  translate: 0 -3px;
+  rotate: -45deg;
+}
+
+/* The section menu grows from the dock (150ms, ease-out-quint). */
+.menu {
+  inset: auto auto calc(3.75rem + env(safe-area-inset-bottom, 0px)) 50%;
+  width: 12rem;
+  /* A short landscape screen scrolls the menu instead of cutting off its top. */
+  max-height: calc(100dvh - 5rem - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  flex-direction: column;
+  opacity: 0;
+  scale: 0.96;
+  translate: -50% 0;
+  transform-origin: bottom center;
+  transition:
+    opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
+}
+.menu:popover-open {
+  display: flex;
+  opacity: 1;
+  scale: 1;
+}
+@starting-style {
+  .menu:popover-open {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+.menu a {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  transition: background-color 0.15s;
+}
+.menu a:hover,
+.menu a:focus-visible {
+  background: var(--muted);
+}
+
+/* Copy confirmation: above the dock on phones, bottom centre from `sm`. */
+.toast {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100vw - 2rem);
+  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  pointer-events: none;
+  opacity: 0;
+  translate: -50% 0.5rem;
+  transition:
+    opacity 0.2s ease,
+    translate 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toast[data-show] {
+  opacity: 1;
+  translate: -50% 0;
+}
+/* A failed copy stays up, wraps and can be selected by hand. */
+.toast[data-show="hold"] {
+  white-space: normal;
+  user-select: text;
+  pointer-events: auto;
+}
+@media (min-width: 40rem) {
+  .toast {
+    bottom: 1.5rem;
+  }
+}

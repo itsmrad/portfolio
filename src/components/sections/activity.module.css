@@ -1,0 +1,175 @@
+/* Shared by the calendar and its legend: five steps of the one colour. */
+.calendar,
+.legend {
+  --level-0: light-dark(oklch(0.92 0 0), oklch(0.28 0 0));
+  --level-1: light-dark(oklch(0.882 0.057 254.128), oklch(0.379 0.08 254.128));
+  --level-2: light-dark(oklch(0.707 0.165 254.624), oklch(0.488 0.14 254.624));
+  --level-3: light-dark(oklch(0.488 0.243 264.376), oklch(0.627 0.18 264.376));
+  --level-4: light-dark(oklch(0.379 0.146 265.522), oklch(0.707 0.165 254.624));
+}
+
+.calendar [data-level="0"] {
+  --level: var(--level-0);
+}
+.calendar [data-level="1"],
+.legend [data-level="1"] {
+  --level: var(--level-1);
+}
+.calendar [data-level="2"],
+.legend [data-level="2"] {
+  --level: var(--level-2);
+}
+.calendar [data-level="3"],
+.legend [data-level="3"] {
+  --level: var(--level-3);
+}
+.calendar [data-level="4"],
+.legend [data-level="4"] {
+  --level: var(--level-4);
+}
+
+.calendar {
+  position: relative;
+}
+
+.days {
+  border-radius: 2px;
+}
+
+.days:focus-visible {
+  outline-offset: 4px;
+}
+
+.months {
+  position: relative;
+  height: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1rem;
+  color: var(--muted-foreground);
+}
+
+.months span {
+  position: absolute;
+}
+
+.days svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+
+/* Days: square-capped dots, 10 wide on a 12 pitch. */
+.days g path {
+  stroke: var(--level, var(--level-0));
+  stroke-width: 10;
+  stroke-linecap: square;
+}
+
+/* The day being read: an outline a little larger than its cell. */
+.days rect {
+  fill: none;
+  stroke: var(--foreground);
+  opacity: 0;
+  transition: opacity 0.16s;
+}
+
+.days rect[data-on] {
+  opacity: 1;
+}
+
+/* Also the live region a screen reader hears. */
+.tip {
+  position: absolute;
+  z-index: 2;
+  left: clamp(5.5rem, var(--x, 50%), 100% - 5.5rem);
+  translate: -50% 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tip:empty {
+  display: none;
+}
+
+/* The wave: weeks appear one at a time behind a leading edge in the signal
+   colour. Started by script, once, when the calendar scrolls into view. */
+.days svg > path {
+  stroke: color-mix(in srgb, var(--signal) 70%, transparent);
+  stroke-width: 10;
+  opacity: 0;
+}
+
+.days[data-wave="wait"] g {
+  visibility: hidden;
+}
+
+.days[data-wave="in"] g {
+  animation: calendar-wave 0.9s steps(var(--weeks)) backwards;
+}
+
+.days[data-wave="in"] svg > path {
+  animation: calendar-edge 0.9s steps(var(--weeks)) backwards;
+}
+
+@keyframes calendar-wave {
+  from {
+    clip-path: inset(0 100% 0 0) view-box;
+  }
+  to {
+    clip-path: inset(0 0 0 0) view-box;
+  }
+}
+
+@keyframes calendar-edge {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    translate: var(--end);
+  }
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+
+.legend i {
+  width: 0.625rem;
+  height: 0.625rem;
+  background: var(--level, var(--level-0));
+}
+
+.legend i:first-of-type {
+  margin-left: 0.375rem;
+}
+
+.legend i:last-of-type {
+  margin-right: 0.375rem;
+}
+
+@media print {
+  .days,
+  .legend {
+    print-color-adjust: exact;
+  }
+  /* A calendar still waiting for its wave prints whole. */
+  .days[data-wave] g {
+    visibility: visible;
+    animation: none;
+  }
+}

@@ -1,0 +1,46 @@
+/*
+ * The Konami egg: an exploded view. Every section is a part pulled out of the
+ * frame, alternately left and right, outlined in construction dashes and
+ * tagged with its id. CSS only, loaded on first use; eggs.tsx flips
+ * data-exploded on <html> between "on" and "off".
+ */
+:global(html[data-exploded] #main section) {
+  /* A spring of (0.6s, bounce 0.38), sampled. */
+  transition:
+    translate 600ms linear(0, 0.083, 0.27, 0.487, 0.69, 0.853, 0.969, 1.04, 1.075, 1.083, 1.076, 1.06, 1.042, 1.025, 1.011, 1.002, 0.996, 0.994, 0.993, 0.994, 0.995, 0.997, 0.998, 0.999, 1),
+    rotate 600ms linear(0, 0.083, 0.27, 0.487, 0.69, 0.853, 0.969, 1.04, 1.075, 1.083, 1.076, 1.06, 1.042, 1.025, 1.011, 1.002, 0.996, 0.994, 0.993, 0.994, 0.995, 0.997, 0.998, 0.999, 1),
+    box-shadow 300ms;
+}
+:global(html[data-exploded="on"] #main section) {
+  z-index: 1;
+  background: var(--background);
+  outline: 1px dashed color-mix(in oklab, var(--signal) 70%, transparent);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.12);
+  translate: -36px 0;
+  rotate: -0.7deg;
+}
+:global(html[data-exploded="on"] #main section:nth-of-type(even)) {
+  translate: 36px 0;
+  rotate: 0.7deg;
+}
+:global(html[data-exploded="on"] #main section)::after {
+  content: "#" attr(id);
+  position: absolute;
+  inset: auto auto 100% 0;
+  width: auto;
+  height: auto;
+  padding: 2px 6px;
+  background: var(--signal);
+  color: var(--signal-foreground);
+  font:
+    500 11px/1.35 var(--font-geist-mono),
+    ui-monospace,
+    monospace;
+}
+/* The working notes step back while the parts are out. */
+:global(html[data-exploded] [data-slot="gutter"]) {
+  transition: opacity 300ms;
+}
+:global(html[data-exploded="on"] [data-slot="gutter"]) {
+  opacity: 0.25;
+}

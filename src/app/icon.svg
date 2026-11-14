@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke-width="2.5" stroke-linecap="square">
+  <style>
+    path { stroke: #09090b; }
+    @media (prefers-color-scheme: dark) { path { stroke: #fafafa; } }
+  </style>
+  <path d="M3 26 9.5 6 16 26M5.6 19h7.8"/>
+  <path d="M20 6h5l4 4v12l-4 4h-5Z"/>
+</svg>

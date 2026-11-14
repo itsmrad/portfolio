@@ -1,0 +1,64 @@
+/* The cursor cat: one 32px cell, moved by cat.tsx, posed by data-pose. */
+.cat {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  display: none;
+  width: 32px;
+  height: 32px;
+  color: var(--foreground);
+  pointer-events: none;
+}
+.cat[data-on] {
+  display: block;
+}
+.cat[data-left] > svg {
+  scale: -1 1;
+}
+.cat g {
+  opacity: 0;
+}
+.cat[data-pose="runA"] [data-pose="runA"],
+.cat[data-pose="runB"] [data-pose="runB"] {
+  opacity: 1;
+}
+/* Caught up: it sits for three seconds, then sleeps. */
+.cat[data-pose="idle"] [data-pose="sit"] {
+  animation: sit 3s forwards;
+}
+.cat[data-pose="idle"] [data-pose="sleepA"] {
+  animation: doze-a 1.2s 3s infinite;
+}
+.cat[data-pose="idle"] [data-pose="sleepB"] {
+  animation: doze-b 1.2s 3s infinite;
+}
+@keyframes sit {
+  0%,
+  99.9% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes doze-a {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes doze-b {
+  0%,
+  49.9% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
