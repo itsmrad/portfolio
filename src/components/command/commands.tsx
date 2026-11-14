@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ComponentType } from "react";
 
-import { toggleSound } from "@/lib/sound";
+import { play, toggleSound } from "@/lib/sound";
 import type { PaletteProps, View } from "@/components/command/palette";
 
 import keyStyles from "./keys.module.css";
@@ -106,7 +106,10 @@ export function Commands({ keys, chords, resume }: { keys: Record<string, string
       if (value === undefined) return;
       event.preventDefault();
       if (value === "" || value === "shortcuts") open(value);
-      else if (value[0] === "/") location.assign(value);
+      else if (value[0] === "/") {
+        play("key");
+        location.assign(value);
+      }
       else if (value === "sound") toggleSound();
       else if (value === "click") document.querySelector<HTMLElement>(`[aria-keyshortcuts="${key}"]`)?.click();
       else load().then((module) => module.run(value), noop);

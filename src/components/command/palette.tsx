@@ -170,7 +170,10 @@ function perform(action: Action) {
 /** Runs an action by id for the single-key listener. */
 export function run(id: string) {
   const action = actions.find((item) => item.id === id);
-  if (action) perform(action);
+  if (!action) return;
+  // A shortcut's voice; copying has its own.
+  if (!action.id.startsWith("copy")) play("key");
+  perform(action);
 }
 
 // --- Palette -----------------------------------------------------------------
