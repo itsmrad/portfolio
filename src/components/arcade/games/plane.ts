@@ -11,7 +11,8 @@ const COL_W = 20;
 const SPACING = 112;
 const GRAVITY = 0.00055;
 const FLAP = -0.16;
-const HUES = ["amber", "green", "teal", "blue", "violet"] as const;
+// No blue: that is the signal colour, the player's own.
+const HUES = ["amber", "green", "teal", "violet"] as const;
 
 type Column = { x: number; gap: number; size: number; hue: number; passed?: boolean };
 

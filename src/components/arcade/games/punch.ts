@@ -9,7 +9,8 @@ import type { Game } from "../contract";
 
 const ROUND = 20000;
 const R = 13;
-const HUES = ["amber", "green", "teal", "blue", "violet"] as const;
+// No blue: that is the signal colour, the player's own.
+const HUES = ["amber", "green", "teal", "violet"] as const;
 const TOP = 20;
 
 const punch: Game = (ctx) => {
