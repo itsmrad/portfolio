@@ -498,6 +498,9 @@ test.describe("phone", () => {
     const errors = collectErrors(page);
     await ready(page);
     const dock = page.getByRole("button", { name: "Search…" });
+    // The first screen belongs to the hero; the dock arrives once the page scrolls.
+    await expect(dock).toBeHidden();
+    await page.mouse.wheel(0, 200);
     await expect(dock).toBeVisible();
     await expect(dock).toHaveAttribute("data-slot", "button");
     await expect(page.getByRole("banner").getByRole("button", { name: "Search" })).toBeHidden();
@@ -530,6 +533,23 @@ test.describe("phone", () => {
     expect(footerBottom).toBeLessThanOrEqual(fadeTop + 1);
     expect(errors).toEqual([]);
   });
+});
+
+test.describe("short phones", () => {
+  test.use({ hasTouch: true });
+
+  for (const [width, height] of [[360, 640], [360, 740], [375, 667], [390, 844], [412, 915]] as const) {
+    test(`${width}x${height}: nothing floats over the hero's facts on the first screen`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await ready(page);
+      const floating = await page.evaluate(() => {
+        const dock = [...document.querySelectorAll("[data-command-open]")].at(-1)!.parentElement!;
+        const fade = dock.previousElementSibling!;
+        return [dock, fade].map((element) => getComputedStyle(element).visibility);
+      });
+      expect(floating).toEqual(["hidden", "hidden"]);
+    });
+  }
 });
 
 test("the dock is not shown from sm up", async ({ page }) => {

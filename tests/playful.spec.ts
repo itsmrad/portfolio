@@ -68,10 +68,11 @@ test.describe("phone", () => {
     await expect(page.locator('link[rel="preload"][href*="caveat" i]')).toHaveCount(0);
     await expect(toast(page)).toHaveCount(0);
 
-    // Every sticker stays off the name, the tagline, the portrait and any control in the hero.
+    // Every sticker stays off the name, the tagline, the portrait and any control in the hero
+    // (the monogram's button spans the whole cover; the stickers sit on its empty paper, in the corners).
     const overlaps = await page.evaluate(() => {
       const boxes = (selector: string) => [...document.querySelectorAll(selector)].map((element) => element.getBoundingClientRect());
-      const content = boxes("#top :is(h1, p, a, button, img)");
+      const content = boxes('#top :is(h1, p, a, img, ul, button:not([aria-label*="monogram"]))');
       const shown = boxes("[data-sticker]").filter((sticker) => sticker.width > 0);
       return shown.filter((sticker) =>
         content.some((box) => sticker.left < box.right && box.left < sticker.right && sticker.top < box.bottom && box.top < sticker.bottom),
