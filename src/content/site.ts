@@ -62,7 +62,7 @@ export const site = {
   bingVerification: "" as string,
   created: "2026-11-13",
   /** The last content change: sitemap lastmod, dateModified and the visible "updated" line. */
-  updated: "2026-11-14",
+  updated: "2026-11-16",
   /** Cal.com booking page. While empty no "Book a call" action is rendered anywhere. */
   calUrl: "https://cal.com/itsmrad" as string,
 } as const;
@@ -290,7 +290,7 @@ export type Benchmarks = {
 
 /**
  * Project entries: add fields or entries, never reorder. Every number here was
- * checked against the repositories and GitHub on 2026-11-13.
+ * checked against the repositories and GitHub on 2026-11-16.
  */
 export const projects: Project[] = [
   {
@@ -319,7 +319,7 @@ export const projects: Project[] = [
       "Vitest",
     ],
     started: "2026-02",
-    updated: "2026-11-07",
+    updated: "2026-11-16",
     screenshots: [
       {
         src: codenayaIde,
@@ -331,17 +331,17 @@ export const projects: Project[] = [
       "Live preview in a cloud sandbox with boot steps, a terminal and a device toggle.",
       "Bring your own key: API keys are sealed with AES-256-GCM envelope encryption and never enter run history.",
       "CodeMirror 6 editor with ghost-text suggestions, quick edit, checkpoints and restore, and GitHub import and export.",
-      "Engineering process: 10 architecture decision records, CI, 170 unit test files and 69 Playwright end-to-end specs.",
+      "Engineering process: 14 architecture decision records, CI, 346 unit test files and 93 Playwright end-to-end specs.",
     ],
     metrics: [
-      { label: "Merged pull requests", value: "218", note: "206 of them his" },
-      { label: "Unit test files", value: "170" },
-      { label: "End-to-end specs", value: "69" },
-      { label: "Decision records", value: "10" },
+      { label: "Merged pull requests", value: "546", note: "516 of them his" },
+      { label: "Unit test files", value: "346" },
+      { label: "End-to-end specs", value: "93" },
+      { label: "Decision records", value: "14" },
       { label: "Models", value: "Unlimited", note: "15 hosted, any with your own key" },
       { label: "Projects built", value: "100+" },
     ],
-    metricsSource: { label: "Counts from the public repository, 2026-11-13", href: "https://github.com/itsmrad/codenaya" },
+    metricsSource: { label: "Counts from the public repository, 2026-11-16", href: "https://github.com/itsmrad/codenaya" },
     links: [
       { label: "codenaya.tech", href: "https://codenaya.tech" },
       { label: "Source", href: "https://github.com/itsmrad/codenaya" },
@@ -350,7 +350,7 @@ export const projects: Project[] = [
     schema: "WebApplication",
     free: true,
     category: "AI browser IDE",
-    authorship: "His product: 777 of its 801 commits are his.",
+    authorship: "His product: 1,367 of its 1,442 commits are his.",
     // OWNER CLIP SLOT: clip: { src: "/clips/codenaya-session.webm", poster: <import>, caption: "…" },
     layers: [
       { layer: "Interface", tools: "Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, CodeMirror 6" },
@@ -387,12 +387,12 @@ export const projects: Project[] = [
       },
     ],
     built: [
-      "An agent with 15 tools for files, builds and the web, on OpenRouter, OpenAI, Anthropic or Groq models.",
+      "An agent with 17 tools for files, builds and the web, on OpenRouter, OpenAI, Anthropic or Groq models.",
       "Three AI features in the CodeMirror 6 editor: ghost-text completions, Cmd+K quick edit and a selection tooltip.",
       "Two runtimes for the generated app: WebContainer in the browser and E2B cloud sandboxes, with a live preview and a terminal.",
-      "Two-tier access control: Clerk sign-in with a per-project ownership check for people, and a shared internal key on all 37 mutations that background jobs call.",
+      "Two-tier access control: Clerk sign-in with a per-project ownership check for people, and a shared internal key on all 38 mutations that background jobs call.",
       "Bring your own key for OpenRouter, OpenAI, Anthropic, Groq or any OpenAI-compatible endpoint.",
-      "Engineering process: 10 architecture decision records, CI, unit and end-to-end tests.",
+      "Engineering process: 14 architecture decision records, CI, unit and end-to-end tests.",
     ],
   },
   {
@@ -408,7 +408,7 @@ export const projects: Project[] = [
     repo: "https://github.com/itsmrad/xflow",
     stack: ["Rust", "clap", "ratatui", "CPAL", "SQLite", "Swift", "Nix", "GitHub Actions"],
     started: "2026-09",
-    updated: "2026-11-09",
+    updated: "2026-11-15",
     screenshots: [
       {
         src: xflowCliDark,
@@ -430,7 +430,7 @@ export const projects: Project[] = [
       "A Rust workspace of four crates with about 1,000 tests.",
     ],
     metrics: [
-      { label: "Merged pull requests", value: "138", note: "all his" },
+      { label: "Merged pull requests", value: "139", note: "all his" },
       { label: "Latest release", value: "0.2.1-beta", note: "2026-11-02" },
       { label: "Lines of Rust", value: "~98,000", note: "tests included" },
       { label: "Tests", value: "~1,000" },
@@ -438,7 +438,7 @@ export const projects: Project[] = [
       { label: "Stop to text, p50", value: "255 ms", note: "30 live Groq dictations, 7 s clip, paste excluded" },
     ],
     metricsSource: {
-      label: "Repository counts 2026-11-13; benchmarks 2026-10-29, macOS 26.7.1",
+      label: "Repository counts 2026-11-16; benchmarks 2026-10-29, macOS 26.7.1",
       href: "https://github.com/itsmrad/xflow/blob/main/docs/benchmarks/scoreboard-macos.json",
     },
     links: [
@@ -452,7 +452,7 @@ export const projects: Project[] = [
     version: "0.2.1-beta",
     free: true,
     category: "Native dictation daemon",
-    authorship: "Sole author: all 494 commits are his.",
+    authorship: "Sole author: all 496 commits are his.",
     // OWNER CLIP SLOT: clip: { src: "/clips/xflow-dictation.webm", poster: <import>, caption: "…" },
     figure: {
       caption:
@@ -548,7 +548,7 @@ export const building = [
     name: "larpcc",
     line: "A Rust CLI that keeps separate Claude Code and Codex profile directories from colliding.",
     repo: "https://github.com/itsmrad/larpcc",
-    updated: "2026-11-12",
+    updated: "2026-11-14",
   },
   {
     name: "vidura",

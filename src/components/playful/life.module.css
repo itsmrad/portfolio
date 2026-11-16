@@ -42,7 +42,7 @@
 }
 
 /* --- Reading over a scale: the fill is the share, ticks every tenth ------- */
-/* At rest the bar ends at the value's share of the scale (777 of 801: 97%), the tick on that point. While it
+/* At rest the bar ends at the value's share of the scale (1,367 of 1,442: 95%), the tick on that point. While it
    loads (life.tsx) the script writes --fill and --n from the reading's progress through the viewport. */
 .ratio {
   --fill: var(--p);
