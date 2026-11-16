@@ -139,8 +139,8 @@ test.describe("the commit readings", () => {
   };
 
   for (const [value, of] of [
-    [777, 801],
-    [494, 494],
+    [1367, 1442],
+    [496, 496],
   ] as const) {
     test(`${value} / ${of}: fills and counts with the scroll, strikes once per arrival, and runs back`, async ({ page }) => {
       await wake(page);
@@ -174,22 +174,22 @@ test.describe("the commit readings", () => {
       CSS.supports = ((...args: [string, string?]) => (/timeline|view\(/.test(args.join(" ")) ? false : supports(...(args as [string])))) as typeof CSS.supports;
     });
     await wake(page);
-    await page.locator('[data-ratio="777"]').waitFor({ state: "attached" });
+    await page.locator('[data-ratio="1367"]').waitFor({ state: "attached" });
     expect(await page.evaluate(() => CSS.supports("animation-timeline: view()"))).toBe(false);
-    const { hits: base } = await at(page, 777, -0.5);
-    expect((await at(page, 777, -0.3)).n).toBe(0);
-    const half = await at(page, 777, 0.5);
-    expect(half.n).toBeGreaterThan(777 * 0.3);
-    expect(half.n).toBeLessThan(777 * 0.7);
-    const landed = await at(page, 777, 1.2);
-    expect(landed).toMatchObject({ n: 777, hit: "", hits: base + 1 });
+    const { hits: base } = await at(page, 1367, -0.5);
+    expect((await at(page, 1367, -0.3)).n).toBe(0);
+    const half = await at(page, 1367, 0.5);
+    expect(half.n).toBeGreaterThan(1367 * 0.3);
+    expect(half.n).toBeLessThan(1367 * 0.7);
+    const landed = await at(page, 1367, 1.2);
+    expect(landed).toMatchObject({ n: 1367, hit: "", hits: base + 1 });
   });
 
-  test("rests with the bar and its tick at 777 of 801, not at the end of the scale", async ({ page }) => {
+  test("rests with the bar and its tick at 1367 of 1442, not at the end of the scale", async ({ page }) => {
     await wake(page);
-    const reading = page.locator('[data-ratio="777"]');
+    const reading = page.locator('[data-ratio="1367"]');
     await reading.waitFor({ state: "attached" });
-    await at(page, 777, 1.3);
+    await at(page, 1367, 1.3);
     const geometry = await reading.evaluate((element) => {
       const width = element.clientWidth;
       // The first background layer is the bar: its width, as a share of the scale (computed as a percentage or px).
@@ -198,18 +198,18 @@ test.describe("the commit readings", () => {
       const tick = element.querySelector("i")!;
       return { fill, tick: (tick.offsetLeft + tick.offsetWidth / 2) / width };
     });
-    expect(geometry.fill).toBeCloseTo(777 / 801, 2);
-    expect(geometry.tick).toBeCloseTo(777 / 801, 2);
+    expect(geometry.fill).toBeCloseTo(1367 / 1442, 2);
+    expect(geometry.tick).toBeCloseTo(1367 / 1442, 2);
   });
 
   test.describe("reduced motion", () => {
     test.use({ reducedMotion: "reduce" });
     test("stays a still reading with its numbers", async ({ page }) => {
       await wake(page);
-      const reading = page.locator('[data-ratio="777"]');
+      const reading = page.locator('[data-ratio="1367"]');
       await reading.scrollIntoViewIfNeeded();
       await expect(reading).not.toHaveAttribute("data-reading");
-      await expect(reading).toContainText("777 / 801");
+      await expect(reading).toContainText("1367 / 1442");
     });
   });
 });

@@ -59,7 +59,8 @@ function Calendar({ data, label }: { data: Contributions; label: string }) {
       >
         <div className={styles.months} aria-hidden>
           {months.map(({ week, name }) => (
-            <span key={week} style={{ left: `${((week * PITCH) / width) * 100}%` }}>
+            // Three mono letters are a hair wider than three weeks on a 360px phone: the last label stays inside.
+            <span key={week} style={{ left: `min(${((week * PITCH) / width) * 100}%, 100% - 3ch)` }}>
               {name}
             </span>
           ))}
